@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartShop</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="{{ url_for('static', filename='js/java.js') }}"></script>
+  
+<body>
+
+<div class="nav-wrapper">
+  <nav id="navbar" onmouseleave="closeMenu()">
+    
+    <div class="nav-top">
+      <a class="logo" href="#">
+        <img src="Screenshot 2026-03-16 220253.png" alt="My Logo" style="height: 70px; width: auto;" />
+        <span class="logo-text"></span>
+      </a>
+      
+      <ul class="nav-links">
+        <li><a href="#" onmouseenter="closeMenu()">New Arrivals</a></li>
+        <li>
+          <a href="#" onmouseenter="openMenu('collections')">Collections 
+            <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+        </li>
+        <li>
+          <a href="#" onmouseenter="openMenu('brands')">Brands 
+            <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+        </li>
+        <li><a href="#" onmouseenter="closeMenu()">Sale</a></li>
+      </ul>
+      
+      <div class="nav-right">
+        <button class="icon-btn" title="Search">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <button class="login-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Sign in
+        </button>
+        <button class="primary-btn">
+          Cart
+          <span class="cart-badge">0</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mega-menu" id="megaMenu">
+      <div class="mega-menu-inner">
+        
+        <div id="menu-collections" class="menu-content" style="display:none;">
+          <div class="menu-grid">
+            <div class="menu-col">
+              <h4>Apparel</h4>
+              <a href="#">T-Shirts & Tops</a>
+              <a href="#">Outerwear</a>
+              <a href="#">Denim</a>
+            </div>
+            <div class="menu-col">
+              <h4>Accessories</h4>
+              <a href="#">Bags & Backpacks</a>
+              <a href="#">Watches</a>
+              <a href="#">Sunglasses</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="menu-brands" class="menu-content" style="display:none;">
+          <div class="menu-grid">
+            <div class="menu-col">
+              <h4>Electronics Parts</h4>
+              <a href="#">Apple</a>
+              <a href="#">Samsung</a>
+              <a href="#"></a>
+            </div>
+            <div class="menu-col">
+              <h4>Travel</h4>
+              <a href="#">Carhartt WIP</a>
+              <a href="#">New Balance</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+  </nav>
+</div>
+
+<div class="hero-placeholder">
+</div>
+
+<script src="java.js"></script>
+</body>
+</html>
