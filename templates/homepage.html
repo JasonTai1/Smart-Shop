@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartShop</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="{{ url_for('static', filename='js/java.js') }}"></script>
+
   
 <body>
-
+<script src="{{ url_for('static', filename='js/java.js') }}"></script>
 <div class="nav-wrapper">
   <nav id="navbar" onmouseleave="closeMenu()">
     
     <div class="nav-top">
       <a class="logo" href="#">
-        <img src="Screenshot 2026-03-16 220253.png" alt="My Logo" style="height: 70px; width: auto;" />
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="My Logo" style="height: 70px;">
         <span class="logo-text"></span>
       </a>
       
@@ -93,6 +93,19 @@
 <div class="hero-placeholder">
 </div>
 
-<script src="java.js"></script>
+<div class="marquee-section">
+    <div class="marquee-track" id="marqueeTrack">
+        <span class="marquee-item">Free shipping above RM200 <span class="marque-dot"></span>
+        <span class="marquee-item">Free returns within 7 days <span class="marque-dot"></span>
+        <span class="marquee-item">Premium members save extra 20%  <span class="marque-dot"></span> </span>
+    </div>
+</div>
+
+
+<footer class="footer text-center">
+  © 2026 SmartShop
+</footer>
+
 </body>
+
 </html>
