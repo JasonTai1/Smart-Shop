@@ -3,42 +3,46 @@ body {
     background: linear-gradient(to right, #800000, #b30000);
     margin: 0;
     padding: 0;
+    display: flex;       
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-/* 卡片 */
+/* container */
 .container {
-    width: 320px;
-    margin: 100px auto;
+    width: 450px;
+    margin: 120px auto;
     background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 20px rgba(0,0,0,0.2);
     text-align: center;
 }
 
-/* 标题 */
+/* title */
 h2 {
     color: #800000;
     margin-bottom: 20px;
 }
 
-/* 输入框 */
+/* type */
 input, select {
-    width: 90%;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
+    width: 100%;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 6px;
     border: 1px solid #ccc;
 }
 
-/* 按钮 */
+/* button */
 button {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     background: #800000;
     border: none;
     color: white;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
 }
 
@@ -56,4 +60,23 @@ a {
     text-decoration: none;
     color: #800000;
     font-weight: bold;
+}
+
+.logo {
+    display: block;
+    width: 140px;
+    margin-bottom: 0 auto 15px;
+}
+
+.back-btn {
+    display: inline-block;
+    text-align: left;
+    margin-bottom: 10px;
+    color: #800000;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.back-btn:hover {
+    text-decoration: underline;
 }
