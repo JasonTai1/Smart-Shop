@@ -2,16 +2,23 @@
 <html>
 <head>
     <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-<h2>Welcome</h2>
+<div class="container">
 
-<p>Email: {{email}}</p>
-<p>Role: {{role}}</p>
+    <h2>Welcome</h2>
 
-<a href="/logout">Logout</a>
+    <p><strong>Email:</strong> {{ email }}</p>
+    <p><strong>Role:</strong> {{ role }}</p>
+
+    <br>
+
+    <a href="/logout">Logout</a>
+
+</div>
 
 </body>
 </html>

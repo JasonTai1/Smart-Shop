@@ -54,9 +54,11 @@ def register():
 
     return render_template("register.html")
 
-#  Login
+# login 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    error = None
+
     if request.method == "POST":
 
         email = request.form["email"]
@@ -65,25 +67,26 @@ def login():
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
-        cursor.execute(
-            "SELECT * FROM users WHERE email=? AND password=?",
-            (email, password)
-        )
-
+        # check email first 
+        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
         user = cursor.fetchone()
+
         conn.close()
 
-        if user:
+        if user is None:
+            error = "User not registered"
+
+        elif user[3] != password:
+            error = "Wrong password"
+
+        else:
             session["user_id"] = user[0]
             session["email"] = user[2]
             session["role"] = user[4]
 
             return redirect("/profile")
 
-        else:
-            return "Invalid Email or Password"
-
-    return render_template("login.html")
+    return render_template("login.html", error=error)
 
 # Profile
 @app.route("/profile")

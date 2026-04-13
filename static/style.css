@@ -1,0 +1,59 @@
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #800000, #b30000);
+    margin: 0;
+    padding: 0;
+}
+
+/* 卡片 */
+.container {
+    width: 320px;
+    margin: 100px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+/* 标题 */
+h2 {
+    color: #800000;
+    margin-bottom: 20px;
+}
+
+/* 输入框 */
+input, select {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* 按钮 */
+button {
+    width: 100%;
+    padding: 10px;
+    background: #800000;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #a00000;
+}
+
+/* Register link */
+.top-right {
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+a {
+    text-decoration: none;
+    color: #800000;
+    font-weight: bold;
+}
