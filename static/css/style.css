@@ -1,0 +1,55 @@
+:root {
+  --gold: #dbc47f;
+  --ink: #1a1a1a;
+}
+
+/* container */
+.marquee-section {
+  background: var(--gold);
+  padding: 14px 0;
+  overflow: hidden;
+}
+
+/* scrolling track */
+.marquee-track {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee 20s linear infinite;
+}
+
+/* hover */
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* frame */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/*  every item */
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 40px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+
+.marquee-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0.5;
+}
