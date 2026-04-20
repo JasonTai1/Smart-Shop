@@ -1,24 +1,19 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Profile</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-
 <body>
-
 <div class="container">
 
-    <h2>Welcome</h2>
+    <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
 
-    <p><strong>Email:</strong> {{ email }}</p>
-    <p><strong>Role:</strong> {{ role }}</p>
+    <h2>Profile</h2>
 
-    <br>
+    <p>Username: {{ username }}</p>
+    <p>Email: {{ email }}</p>
+    <p>Role: {{ role }}</p>
+    <p>Location: {{ location }}</p>
 
     <a href="/logout">Logout</a>
 
 </div>
-
 </body>
 </html>

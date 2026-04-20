@@ -9,7 +9,7 @@
 
 <div class="container">
     
-    <a href="/login" class="back-btn">Login</a>
+    <a href="/login" class="back-btn">Back to Login</a>
 
     <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
 
@@ -23,18 +23,34 @@
 
         <input type="password" name="password" placeholder="Password" required>
 
-        <select name="role">
-            <option value="buyer">Buyer</option>
-            <option value="seller">Seller</option>
+        <select name="role" id="role" onchange="toggleLocation()">
+         <option value="buyer">Buyer</option>
+         <option value="seller">Seller</option>
         </select>
 
-        <input type="text" name="location" placeholder="City / State">
+        <div id="locationField" style="display: none;">
+          <input type="text" name="location" placeholder="Location">
+        </div>
 
         <button type="submit">Register</button>
 
     </form>
 
 </div>
+ <script>
+function toggleLocation() {
+    var role = document.getElementById("role").value;
+    var locationField = document.getElementById("locationField");
 
+    if (role === "seller") {
+        locationField.style.display = "block";
+    } else {
+        locationField.style.display = "none";
+    }
+}
+window.onload = function() {
+    toggleLocation();
+};
+</script>
 </body>
 </html>
