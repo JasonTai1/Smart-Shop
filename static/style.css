@@ -69,14 +69,20 @@ a {
 }
 
 .back-btn {
-    display: inline-block;
-    text-align: left;
-    margin-bottom: 10px;
-    color: #800000;
+    display: inline-block;  
+    margin-top: 15px;
+
+    padding: 6px 12px;       
     font-size: 14px;
+
+    border: 1px solid #800000;
+    border-radius: 6px;
+
+    color: #800000;
     text-decoration: none;
 }
 
 .back-btn:hover {
-    text-decoration: underline;
+    background: #800000;
+    color: white;
 }

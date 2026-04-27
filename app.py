@@ -37,6 +37,7 @@ def register():
         username = request.form["username"]
         email = request.form["email"]
         password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
         role = request.form["role"]
         location = request.form["location"]
 
@@ -55,6 +56,16 @@ def register():
             error = "Password must be at least 6 characters"
             conn.close()
             return render_template("register.html", error=error)
+        
+        # comfirm password
+        if password != confirm_password:
+            error = "Passwords do not match"
+            return render_template("register.html", error=error)
+        
+        # gmail validation
+        if not email.endswith("@gmail.com"):
+          error = "Email must be a Gmail account"
+          return render_template("register.html", error=error)
 
         # Insert user
         cursor.execute(
@@ -125,7 +136,7 @@ def seller_dashboard():
     if "user_id" not in session:
         return redirect("/login")
 
-    return render_template("seller.html")
+    return render_template("seller(testing).html")
 
 # Buyer Dashboard
 @app.route("/buyer_dashboard")
@@ -133,7 +144,7 @@ def buyer_dashboard():
     if "user_id" not in session:
         return redirect("/login")
 
-    return render_template("buyer.html")
+    return render_template("buyer(testing).html")
 
 # Logout
 @app.route("/logout")
