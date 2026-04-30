@@ -1,0 +1,185 @@
+<!-- about.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - SmartShop</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background-color: #111;
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+
+        /* HERO */
+        .hero {
+            background: url('https://picsum.photos/1200/400') no-repeat center;
+            background-size: cover;
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin: 0;
+        }
+
+        /* SECTION */
+        .section {
+            padding: 50px 80px;
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+        }
+
+        /* GRID */
+        .grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            flex: 1;
+            min-width: 250px;
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* TEAM */
+        .team-member {
+            text-align: center;
+        }
+
+        .team-member img {
+            width: 100px;
+            border-radius: 100%;
+        }
+
+        /* FOOTER */
+        .footer {
+            background: #111;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div><strong>SmartShop</strong></div>
+    <div>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+    </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>About Us</h1>
+    <p>Learn more about who we are</p>
+</div>
+
+<!-- ABOUT -->
+<div class="section">
+    <h2>Our Story</h2>
+    <p>
+        SmartShop was created to make online shopping easier, faster, and more enjoyable. 
+        We aim to provide high-quality products with a smooth and user-friendly experience.
+    </p>
+</div>
+
+<!-- MISSION & VISION -->
+<div class="section">
+    <h2>Mission & Vision</h2>
+    <div class="grid">
+        <div class="card">
+            <h3>Our Mission</h3>
+            <p>To deliver affordable and high-quality products to everyone.</p>
+        </div>
+        <div class="card">
+            <h3>Our Vision</h3>
+            <p>To become a leading e-commerce platform trusted by users worldwide.</p>
+        </div>
+    </div>
+</div>
+
+<!-- WHY CHOOSE US -->
+<div class="section">
+    <h2>Why Choose Us</h2>
+    <div class="grid">
+        <div class="card">✔ Fast Delivery</div>
+        <div class="card">✔ Secure Payment</div>
+        <div class="card">✔ 24/7 Support</div>
+    </div>
+</div>
+
+<!-- TEAM -->
+<div class="section">
+    <h2>Meet Our Team</h2>
+    <div class="grid">
+        <div class="card team-member">
+            <img src="{{ url_for('static', filename='images/hakurei.jpg') }}">
+            <h4>Tai Teck Hwa</h4>
+            <p>Developer</p>
+        </div>
+
+        <div class="card team-member">
+            <img src="{{ url_for('static', filename='images/bosoc.jpeg') }}">
+            <h4>Bosco Toh Zan Jun</h4>
+            <p>Developer</p>
+        </div>
+
+        <div class="card team-member">
+            <img src="{{ url_for('static', filename='images/alien.jpeg') }}">
+            <h4>Looi Zi Hong</h4>
+            <p>Developer</p>
+        </div>
+    </div>
+</div>
+
+<!-- CONTACT -->
+<div class="section">
+    <h2>Contact Us</h2>
+    <p>Email: Support@smartshop.com</p>
+    <p>Phone: +60 17 328 6455</p>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <p>© 2026 SmartShop. All rights reserved.</p>
+</div>
+
+</body>
+</html>

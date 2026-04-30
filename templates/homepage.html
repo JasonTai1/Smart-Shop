@@ -3,12 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmartShop</title>
+  <title>SmartShop Malaysia | 3 </title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
   
 <body>
-<script src="{{ url_for('static', filename='js/java.js') }}"></script>
+<script src="{{ url_for('static', filename='js/java.js') }}" defer></script>
+
+<div class="marquee-section">
+  <div class="marquee-track" id="marqueeTrack">
+
+    <span class="marquee-item">
+      Free shipping above RM200
+      <span class="marquee-dot"></span>
+    </span>
+
+    <span class="marquee-item">
+      Free returns within 7 days
+      <span class="marquee-dot"></span>
+    </span>
+
+    <span class="marquee-item">
+      Premium members save extra 20%
+      <span class="marquee-dot"></span>
+    </span>
+
+    <span class="marquee-item">
+      Flash Sale up to 50% OFF
+      <span class="marquee-dot"></span>
+    </span>
+</div>
+</div>
+
 <div class="nav-wrapper">
   <nav id="navbar" onmouseleave="closeMenu()">
     
@@ -21,16 +47,17 @@
       <ul class="nav-links">
         <li><a href="#" onmouseenter="closeMenu()">New Arrivals</a></li>
         <li>
-          <a href="#" onmouseenter="openMenu('collections')">Collections 
+          <a href="#" onmouseenter="openMenu(event, 'collections')">Collections 
             <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
           </a>
         </li>
         <li>
-          <a href="#" onmouseenter="openMenu('brands')">Brands 
+          <a href="#" onmouseenter="openMenu(event, 'brands')">Brands 
             <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
           </a>
         </li>
-        <li><a href="#" onmouseenter="closeMenu()">Sale</a></li>
+        <li><a href="#" onmouseenter="closeMenu()">Community</a></li>
+        <li><a href="#" onmouseenter="closeMenu()">Alert</a></li>
       </ul>
       
       <div class="nav-right">
@@ -39,7 +66,7 @@
         </button>
         <button class="login-btn">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Sign in
+          Sign up
         </button>
         <button class="primary-btn">
           Cart
@@ -71,54 +98,168 @@
         <div id="menu-brands" class="menu-content" style="display:none;">
           <div class="menu-grid">
             <div class="menu-col">
-              <h4>Electronics Parts</h4>
+              <h4>Mobile & Accessories</h4>
               <a href="#">Apple</a>
               <a href="#">Samsung</a>
-              <a href="#"></a>
+              <a href="#">Honor</a>
+              <a href="#">Xiami</a>
+              <a href="#">Huawei</a>
+              <a href="#">Redmi</a>
+              <a href="#">Vivo</a>
+              <a href="#">Realme</a>
             </div>
             <div class="menu-col">
               <h4>Travel</h4>
               <a href="#">Carhartt WIP</a>
               <a href="#">New Balance</a>
             </div>
+            <div class="menu-col">
+              <h4>Men clothes</h4>
+              <a href="#"></a>
+            </div>
+            <div class="menu-col">
+              <h4>Women clothes</h4>
+              <a href="#"></a>
+              <a href="#"></a>
+            </div>
           </div>
         </div>
 
       </div>
     </div>
-    
-  </nav>
 </div>
 
-<div class="marquee-section">
-  <div class="marquee-track" id="marqueeTrack">
+<div class="content">
+  <div class="main-banner">
+    <img src="{{ url_for('static', filename='images/banner1.png') }}">
+  </div>
+  
+</div>
 
-    <span class="marquee-item">
-      Free shipping above RM200
-      <span class="marquee-dot"></span>
-    </span>
+<div class="category-row">
 
-    <span class="marquee-item">
-      Free returns within 7 days
-      <span class="marquee-dot"></span>
-    </span>
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/laptop.png') }}">
+    <p>Computers & Laptops</p>
+  </div>
 
-    <span class="marquee-item">
-      Premium members save extra 20%
-      <span class="marquee-dot"></span>
-    </span>
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/iphone.png') }}">
+    <p>Mobiles & Tablets</p>
+  </div>
 
-    <span class="marquee-item">
-      Flash Sale up to 50% OFF
-      <span class="marquee-dot"></span>
-    </span>
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/home.jpg') }}">
+    <p>Home Appliances</p>
+  </div>
+
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/kitchen.png') }}">
+    <p>Kitchen Appliances</p>
+  </div>
+
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/cat3.png') }}">
+    <p>Digital gadgets</p>
+  </div>
+  
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/cat3.png') }}">
+    <p>Men clothes</p>
+  </div>
+
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/women.jpg') }}">
+    <p>Women clothes</p>
+  </div>
+  
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/toy.jpg') }}">
+    <p>Baby & Toys</p>
+  </div>
+
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/watch.png') }}">
+    <p>Watches</p>
+  </div>
+
+</div>
+
+<section class="popular">
+  <h2>Popular Products</h2>
+
+  <div class="product-grid">
+
+    <div class="product-card">
+      <img src="macbook.jpg" alt="">
+
+      <div class="info">
+        <p class="brand">Apple</p>
+        <p class="name">13-inch MacBook Neo</p>
+
+        <p class="price">From RM2,499.00</p>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <img src="iphone.jpg" alt="">
+
+      <div class="info">
+        <p class="brand">Apple</p>
+        <p class="name">iPhone 17e</p>
+
+        <p class="price">From RM2,949.00</p>
+      </div>
+    </div>
 
   </div>
-</div>
+</section>
 
 
-<footer class="footer text-center">
-  © 2026 SmartShop
+<footer class="footer">
+
+  <div class="footer-main">
+
+    <!-- Customer Service -->
+    <div class="footer-col">
+      <h4>Customer Service</h4>
+      <ul>
+        <li>Help Centre</li>
+        <li>Track Order</li>
+        <li>Return Policy</li>
+        <li>Warranty</li>
+      </ul>
+    </div>
+
+    <!-- About Us -->
+    <div class="footer-col">
+      <h4>About Us</h4>
+      <ul>
+        <a href="about.html" class="footer-link">About SmartShop</a>
+        <li>Careers</li>
+        <li>Privacy Policy</li>
+      </ul>
+    </div>
+
+    <!-- Social -->
+    <div class="footer-col">
+      <h4>Follow Us</h4>
+      <div class="social">
+        <a href="https://www.facebook.com/ShopeeMY" class="footer-link" target="_blank">
+          Facebook
+        </a>
+        <span>Instagram</span>
+        <span>TikTok</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 底部 -->
+  <div class="footer-bottom">
+    <p>© 2026 SmartShop. All Rights Reserved.</p>
+  </div>
+
 </footer>
 
 </body>
