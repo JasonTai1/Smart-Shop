@@ -14,6 +14,15 @@
     <div class="top-right">
         <a href="/register">Sign Up</a>
     </div>
+<!-- Flash message = one-time message shown once then disappears -->
+{% if session.get('flash') %}
+<div style="color:green; background:#f0fff0; padding:12px; 
+            border-radius:6px; margin-bottom:15px; 
+            border:1px solid #99dd99; font-size:14px;">
+    {{ session.get('flash') }}
+</div>
+{% set _ = session.pop('flash', None) %}
+{% endif %}
 
     <h2>Login</h2>
     {% if error %}

@@ -1,20 +1,135 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>My Profile - Smart Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { align-items: flex-start; padding-top: 30px; }
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #800000;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+        .badge-buyer  { background: #e8f4ff; color: #1a6cb8; }
+        .badge-seller { background: #fff3e0; color: #b36a00; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        td { padding: 10px 5px; border-bottom: 1px solid #f0f0f0; font-size: 14px; text-align: left; }
+        td:first-child { color: #888; width: 140px; }
+        td:last-child  { font-weight: 600; color: #333; }
+        .btn-logout {
+            display: block;
+            margin-top: 20px;
+            background: white;
+            border: 2px solid #800000;
+            color: #800000;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .btn-logout:hover { background: #800000; color: white; }
+        .btn-dashboard {
+            display: block;
+            margin-top: 12px;
+            background: #800000;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .btn-dashboard:hover { background: #600000; }
+    </style>
+</head>
 <body>
 <div class="container">
 
-    <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+    <img src="{{ url_for('static', filename='logo.PNG') }}" class="logo" alt="Smart Shop">
 
-    <h2>Profile</h2>
+    <!-- Avatar circle showing first letter of name -->
+    <div class="avatar">{{ first_name[0] | upper }}</div>
 
-    <p>Username: {{ username }}</p>
-    <p>Email: {{ email }}</p>
-    <p>Role: {{ role }}</p>
-   {% if location %}
-    <p><strong>Location:</strong> {{ location }}</p>
-   {% endif %}
+    <h2 style="text-align:center; margin-bottom:5px;">
+        {{ first_name }} {{ last_name }}
+    </h2>
 
-    <a href="/logout">Logout</a>
+    <!-- Role badge  -->
+    <div style="text-align:center;">
+        {% if role == "seller" %}
+            <span class="badge badge-seller">🏪 Seller </span>
+        {% else %}
+            <span class="badge badge-buyer">🛒 Buyer </span>
+        {% endif %}
+    </div>
+
+    <!-- Profile details table  -->
+    <table>
+        <tr>
+            <td>Username</td>
+            <td>{{ username }}</td>
+        </tr>
+        <tr>
+            <td>Email</td>
+            <td>{{ email }}</td>
+        </tr>
+        <tr>
+            <td>Phone</td>
+            <td>{{ phone if phone else 'Not set ' }}</td>
+        </tr>
+        <tr>
+            <td>Location</td>
+            <td>
+                {% if city and state %}
+                    {{ city }}, {{ state }}
+                {% elif city %}
+                    {{ city }}
+                {% elif state %}
+                    {{ state }}
+                {% else %}
+                    Not set
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Role</td>
+            <td>{{ role | capitalize }}</td>
+        </tr>
+        <tr>
+            <td>Member Since</td>
+            <td>{{ created_at[:10] if created_at else '—' }}</td>
+        </tr>
+    </table>
+
+    <!-- Go back to dashboard -->
+    {% if role == "seller" %}
+        <a href="/seller_dashboard" class="btn-dashboard">
+            Seller Dashboard
+        </a>
+    {% else %}
+        <a href="/buyer_dashboard" class="btn-dashboard">
+            Buyer Dashboard
+        </a>
+    {% endif %}
+
+    <a href="/logout" class="btn-logout"> Logout </a>
 
 </div>
 </body>

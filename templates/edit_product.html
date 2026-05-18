@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Product - Smart Shop</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+        body { background:#f5f5f5; min-height:100vh; padding:30px; }
+
+        .form-card {
+            max-width: 580px;
+            margin: 0 auto;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        .logo {
+            width: 80px;
+            display: block;
+            margin: 0 auto 15px;
+        }
+        h2 {
+            color: #800000;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+        .error-msg {
+            color: red;
+            background: #fff0f0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #ffcccc;
+            font-size: 14px;
+        }
+        .success-msg {
+            color: green;
+            background: #f0fff0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #99dd99;
+            font-size: 14px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .required { color: red; }
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #800000;
+            outline: none;
+        }
+        textarea { height: 90px; resize: vertical; }
+
+        /* Current image 当前图片 */
+        .current-img-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+            background: #fafafa;
+        }
+        .current-img-box img {
+            max-height: 150px;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+        .current-img-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        /* Upload area 上传区域 */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .upload-area:hover {
+            border-color: #800000;
+            background: #fff5f5;
+        }
+        #imageInput {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .upload-icon { font-size: 30px; }
+        .upload-text { color: #555; font-size: 13px; margin-top: 5px; }
+
+        /* New image preview 新图片预览 */
+        .preview-container {
+            display: none;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .preview-container img {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .remove-img {
+            display: inline-block;
+            margin-top: 8px;
+            color: red;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: underline;
+        }
+
+        /* Buttons 按钮 */
+        .btn-row { display: flex; gap: 12px; margin-top: 10px; }
+        .btn-submit {
+            flex: 2;
+            padding: 13px;
+            background: #800000;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-submit:hover { background: #600000; }
+        .btn-back {
+            flex: 1;
+            text-align: center;
+            padding: 13px;
+            border: 2px solid #800000;
+            color: #800000;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .btn-back:hover { background: #fff0f0; }
+    </style>
+</head>
+<body>
+<div class="form-card">
+
+    <img src="{{ url_for('static', filename='logo.PNG') }}"
+         class="logo" alt="Smart Shop">
+
+    <h2> Edit Product</h2>
+    <p class="subtitle">Edit Product Information</p>
+
+    {% if error %}
+    <div class="error-msg">❌ {{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+    <div class="success-msg">{{ success }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <label>
+            Product Name 
+            <span class="required">*</span>
+        </label>
+        <input type="text" name="name"
+               value="{{ product['name'] }}" required>
+        <!-- value="{{ product['name'] }}" = fills current value -->
+        <!-- 填入当前的值 -->
+
+        <label>Category </label>
+        <select name="category">
+            <option value="">Select ...</option>
+            {% for cat in ['Fashion ', 'Electronics ',
+                           'Food & Drinks ', 'Beauty ',
+                           'Sports ', 'Home & Living ',
+                           'Books ', 'Toys ', 'Others '] %}
+            <option {% if product['category'] == cat %}selected{% endif %}>
+                {{ cat }}
+            </option>
+            <!-- selected = marks the current category -->
+            <!-- selected = 标记当前的类别 -->
+            {% endfor %}
+        </select>
+
+        <label>Description </label>
+        <textarea name="description">{{ product['description'] or '' }}</textarea>
+
+        <label>
+            Price  (RM)
+            <span class="required">*</span>
+        </label>
+        <input type="number" name="price"
+               value="{{ product['price'] }}"
+               step="0.01" min="0.01" required>
+
+        <label>
+            Stock Quantity
+            <span class="required">*</span>
+        </label>
+        <input type="number" name="stock"
+               value="{{ product['stock'] }}"
+               min="0" required>
+
+        <!-- Current image 当前图片 -->
+        <label>Product Image </label>
+        {% if product['image_url'] %}
+        <div class="current-img-box">
+            <div class="current-img-label">
+                Current image :
+            </div>
+            <img src="{{ url_for('static', filename=product['image_url']) }}"
+                 alt="Current product image"
+                 onerror="this.style.display='none'">
+        </div>
+        {% endif %}
+
+        <!-- Upload new image 上传新图片 -->
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImg" src="" alt="New image preview">
+            <br>
+            <span class="remove-img" onclick="removeImage()">
+                 Remove 
+            </span>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <input type="file"
+                   name="image"
+                   id="imageInput"
+                   accept="image/*"
+                   onchange="previewImage(event)">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-text">
+                Click to upload new image 
+                <br>
+                <small style="color:#aaa;">Leave empty to keep current image </small>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button type="submit" class="btn-submit">
+                 Save Changes 
+            </button>
+            <a href="/seller_dashboard" class="btn-back">
+                 Back 
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<script>
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('uploadArea').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImage() {
+    document.getElementById('imageInput').value = '';
+    document.getElementById('previewImg').src = '';
+    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+}
+</script>
+</body>
+</html>

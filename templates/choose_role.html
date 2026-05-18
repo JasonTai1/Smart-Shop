@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Choose Role - Smart Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .role-card {
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 12px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: block;
+            color: #333;
+            background: white;
+        }
+        .role-card:hover {
+            border-color: #800000;
+            background: #fff5f5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(128,0,0,0.1);
+        }
+        .role-icon { font-size: 40px; margin-bottom: 8px; }
+        .role-title { font-size: 18px; font-weight: bold; color: #800000; }
+        .role-desc { font-size: 13px; color: #888; margin-top: 4px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <img src="{{ url_for('static', filename='logo.PNG') }}" class="logo" alt="Smart Shop">
+
+    <h2>Login As... </h2>
+    <p style="color:#888; font-size:14px; margin-bottom:20px;">
+        Your account has both roles. Please choose one.
+        <br>
+    </p>
+
+    <!-- Form to choose role  -->
+    <form method="POST">
+
+        <!-- Buyer card -->
+        <button type="submit" name="role" value="buyer" 
+                style="width:100%; border:none; background:none; padding:0; cursor:pointer;">
+            <div class="role-card">
+                <div class="role-title">Buyer</div>
+                <div class="role-desc">
+                    Browse and purchase products
+                    <br>
+                </div>
+            </div>
+        </button>
+
+        <!-- Seller card  -->
+        <button type="submit" name="role" value="seller"
+                style="width:100%; border:none; background:none; padding:0; cursor:pointer;">
+            <div class="role-card">
+                <div class="role-title">Seller</div>
+                <div class="role-desc">
+                    Manage your shop and products
+                    <br>
+                </div>
+            </div>
+        </button>
+
+    </form>
+
+    <a href="/logout" class="back-btn" style="display:block; text-align:center; margin-top:15px;">
+         Back to Login 
+    </a>
+
+</div>
+</body>
+</html>

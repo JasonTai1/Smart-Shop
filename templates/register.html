@@ -1,58 +1,95 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sign Up</title>
+    <title>Register - Smart Shop</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .role-row { display: flex; gap: 12px; margin: 12px 0; }
+        .role-btn { flex: 1; padding: 10px; border: 2px solid #ccc; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .role-btn.active { border-color: #800000; background: #fff0f0; color: #800000; font-weight: bold; }
+        .name-row { display: flex; gap: 10px; }
+        .name-row input { flex: 1; }
+        .location-row { display: flex; gap: 10px; }
+        .location-row input { flex: 1; }
+        .location-row select { flex: 1; }
+        .error-msg { color: red; background: #fff0f0; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #ffcccc; }
+    </style>
 </head>
-
 <body>
-
 <div class="container">
 
-    <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+    <img src="{{ url_for('static', filename='logo.PNG') }}" class="logo" alt="Smart Shop">
 
-    <h2>Register</h2>
+    <h2>Create Account </h2>
+
+    {% if error %}
+    <p class="error-msg">{{ error }}</p>
+    {% endif %}
 
     <form method="POST">
 
-        <input type="text" name="username" placeholder="Username" required>
+        <label style="font-weight:bold; color:#800000; display:block; text-align:left; margin-bottom:4px;">
+            I am a...
+        </label>
+        <div class="role-row">
+            <button type="button" class="role-btn active" id="btnBuyer" onclick="selectRole('buyer')">
+                 Buyer 
+            </button>
+            <button type="button" class="role-btn" id="btnSeller" onclick="selectRole('seller')">
+                 Seller 
+            </button>
+        </div>
+        <input type="hidden" name="role" id="role" value="buyer">
 
-        <input type="email" name="email" placeholder="Email" required>
-
-        <input type="password" name="password" placeholder="Password" required>
-
-        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-
-        <select name="role" id="role" onchange="toggleLocation()">
-         <option value="buyer">Buyer</option>
-         <option value="seller">Seller</option>
-        </select>
-
-        <div id="locationField" style="display: none;">
-          <input type="text" name="location" placeholder="Location">
+        <div class="name-row">
+            <input type="text" name="first_name" placeholder="First Name " required>
+            <input type="text" name="last_name" placeholder="Last Name " required>
         </div>
 
-        <button type="submit">Register</button>
+        <input type="text" name="username" placeholder="Username " required>
+
+        <input type="email" name="email" placeholder="Email (xxx@xxx.xx)" required>
+
+        <input type="password" name="password" placeholder="Password (min 6)">
+
+        <input type="password" name="confirm_password" placeholder="Confirm Password ">
+
+        <div class="location-row">
+            <input type="text" name="city" placeholder="City ">
+            <select name="state">
+                <option value="">State...</option>
+                <option>Johor</option>
+                <option>Kedah</option>
+                <option>Kelantan</option>
+                <option>Melaka</option>
+                <option>Negeri Sembilan</option>
+                <option>Pahang</option>
+                <option>Perak</option>
+                <option>Perlis</option>
+                <option>Pulau Pinang</option>
+                <option>Sabah</option>
+                <option>Sarawak</option>
+                <option>Selangor</option>
+                <option>Terengganu</option>
+                <option>W.P. Kuala Lumpur</option>
+            </select>
+        </div>
+
+        <button type="submit">Register </button>
 
     </form>
 
-     <a href="/login" class="back-btn">Back to Login</a>
+    <a href="/login" class="back-btn">Back to Login</a>
 
 </div>
- <script>
-function toggleLocation() {
-    var role = document.getElementById("role").value;
-    var locationField = document.getElementById("locationField");
 
-    if (role === "seller") {
-        locationField.style.display = "block";
-    } else {
-        locationField.style.display = "none";
-    }
+<script>
+function selectRole(role) {
+    document.getElementById('role').value = role;
+    document.getElementById('btnBuyer').classList.toggle('active', role === 'buyer');
+    document.getElementById('btnSeller').classList.toggle('active', role === 'seller');
 }
-window.onload = function() {
-    toggleLocation();
-};
 </script>
+
 </body>
 </html>

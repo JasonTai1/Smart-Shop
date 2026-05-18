@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartShop Malaysia | 3{% block title %}{% endblock %}</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<!-- JS -->
+<script src="{{ url_for('static', filename='js/java.js') }}" defer></script>
+
+<!-- 🔴 Top Marquee -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marqueeTrack">
+    <span class="marquee-item">Free shipping above RM200 <span class="marquee-dot"></span></span>
+    <span class="marquee-item">Free returns within 7 days <span class="marquee-dot"></span></span>
+    <span class="marquee-item">Premium members save extra 20% <span class="marquee-dot"></span></span>
+    <span class="marquee-item">Flash Sale up to 50% OFF <span class="marquee-dot"></span></span>
+  </div>
+</div>
+
+<!-- 🔴 NAVBAR -->
+<div class="nav-wrapper">
+  <nav id="navbar" onmouseleave="closeMenu()">
+
+    <div class="nav-top">
+      <!-- Logo -->
+      <a class="logo" href="/">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" style="height: 70px;">
+      </a>
+
+      <!-- Nav Links -->
+      <ul class="nav-links">
+        <li><a href="/" onmouseenter="closeMenu()">Home</a></li>
+
+        <li>
+          <a href="#" onmouseenter="openMenu(event, 'collections')">
+            Collections
+          </a>
+        </li>
+
+        <li>
+          <a href="#" onmouseenter="openMenu(event, 'brands')">
+            Brands
+          </a>
+        </li>
+
+        <li><a href="/about" onmouseenter="closeMenu()">About</a></li>
+      </ul>
+
+      <!-- Right Side -->
+      <div class="nav-right">
+        <button class="icon-btn" title="Search">🔍</button>
+        <button class="login-btn">Sign up</button>
+        <button class="primary-btn">
+          Cart <span class="cart-badge">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 🔥 MEGA MENU -->
+    <div class="mega-menu" id="megaMenu">
+      <div class="mega-menu-inner">
+
+        <!-- Collections -->
+        <div id="menu-collections" class="menu-content" style="display:none;">
+          <div class="menu-grid">
+            <div class="menu-col">
+              <h4>Apparel</h4>
+              <a href="#">T-Shirts & Tops</a>
+              <a href="#">Outerwear</a>
+              <a href="#">Denim</a>
+            </div>
+
+            <div class="menu-col">
+              <h4>Accessories</h4>
+              <a href="#">Bags & Backpacks</a>
+              <a href="#">Watches</a>
+              <a href="#">Sunglasses</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brands -->
+        <div id="menu-brands" class="menu-content" style="display:none;">
+          <div class="menu-grid">
+            <div class="menu-col">
+              <h4>Mobile & Accessories</h4>
+              <a href="#">Apple</a>
+              <a href="#">Samsung</a>
+              <a href="#">Honor</a>
+              <a href="#">Xiaomi</a>
+              <a href="#">Huawei</a>
+              <a href="#">Redmi</a>
+              <a href="#">Vivo</a>
+              <a href="#">Realme</a>
+            </div>
+
+            <div class="menu-col">
+              <h4>Travel</h4>
+              <a href="#">Carhartt WIP</a>
+              <a href="#">New Balance</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </nav>
+</div>
+
+<!-- 🔻 页面内容 -->
+{% block content %}{% endblock %}
+
+<!-- 🔴 FOOTER -->
+<footer class="footer">
+
+  <div class="footer-main">
+
+    <div class="footer-col">
+      <h4>Customer Service</h4>
+      <ul>
+        <li>Help Centre</li>
+        <li><a href="/returnpolicy">Return Policy</a></li>
+        <li>Warranty</li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>About Us</h4>
+      <ul>
+        <li><a href="/about">About SmartShop</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="/policy">Privacy Policy</a></li>
+    </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Follow Us</h4>
+      <div class="social">
+        <ul>
+            <li><a href="https://www.facebook.com/" target="_black">Facebook</a></li>
+            <li><a href="https://wwwcom/" target="_black">Instagram</a></li>
+            <li><a href="https://www..com/" target="_black">TikTok</a></li>
+        </ul>
+    </div>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <p>©️ 2026 SmartShop. All Rights Reserved.</p>
+  </div>
+
+</footer>
+
+</body>
+</html>

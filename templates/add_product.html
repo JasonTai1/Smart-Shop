@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Product - Smart Shop</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+        body { background:#f5f5f5; min-height:100vh; padding:30px; }
+
+        .form-card {
+            max-width: 580px;
+            margin: 0 auto;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        .logo {
+            width: 80px;
+            display: block;
+            margin: 0 auto 15px;
+        }
+        h2 {
+            color: #800000;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+        .error-msg {
+            color: red;
+            background: #fff0f0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #ffcccc;
+            font-size: 14px;
+        }
+        .success-msg {
+            color: green;
+            background: #f0fff0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #99dd99;
+            font-size: 14px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .required { color: red; }
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #800000;
+            outline: none;
+        }
+        textarea { height: 90px; resize: vertical; }
+
+        /* Image upload area 图片上传区域 */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .upload-area:hover {
+            border-color: #800000;
+            background: #fff5f5;
+        }
+        .upload-area.dragover {
+            border-color: #800000;
+            background: #fff0f0;
+        }
+        .upload-icon { font-size: 40px; margin-bottom: 8px; }
+        .upload-text { color: #555; font-size: 14px; }
+        .upload-subtext { color: #aaa; font-size: 12px; margin-top: 5px; }
+
+        /* Hidden actual file input 隐藏真实文件输入 */
+        #imageInput {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Image preview 图片预览 */
+        .preview-container {
+            display: none;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .preview-container img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .remove-img {
+            display: inline-block;
+            margin-top: 8px;
+            color: red;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: underline;
+        }
+
+        /* Buttons 按钮 */
+        .btn-row { display: flex; gap: 12px; margin-top: 10px; }
+        .btn-submit {
+            flex: 2;
+            padding: 13px;
+            background: #800000;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-submit:hover { background: #600000; }
+        .btn-back {
+            flex: 1;
+            text-align: center;
+            padding: 13px;
+            border: 2px solid #800000;
+            color: #800000;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .btn-back:hover { background: #fff0f0; }
+    </style>
+</head>
+<body>
+<div class="form-card">
+
+    <img src="{{ url_for('static', filename='logo.PNG') }}"
+         class="logo" alt="Smart Shop">
+
+    <h2>➕ Add New Product</h2>
+    <p class="subtitle">add new product to your shop/p>
+
+    {% if error %}
+    <div class="error-msg">❌ {{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+    <div class="success-msg">{{ success }}</div>
+    {% endif %}
+
+    <!-- enctype="multipart/form-data" = REQUIRED for file upload! -->
+    <!-- enctype="multipart/form-data" = 上传文件必须加这个！ -->
+    <!-- Without this, file upload will NOT work! -->
+    <!-- 没有这个，文件上传不会工作！ -->
+    <form method="POST" enctype="multipart/form-data">
+
+        <label>
+            Product Name 
+            <span class="required">*</span>
+        </label>
+        <input type="text" name="name"
+               placeholder="e.g. Nike Air Max Shoes" required>
+
+        <label>Category </label>
+        <select name="category">
+            <option value="">Select category...</option>
+            <option>Fashion </option>
+            <option>Electronics</option>
+            <option>Food & Drinks </option>
+            <option>Beauty </option>
+            <option>Sports </option>
+            <option>Home & Living </option>
+            <option>Books </option>
+            <option>Toys </option>
+            <option>Others </option>
+        </select>
+
+        <label>Description</label>
+        <textarea name="description"
+                  placeholder="Describe your product...">
+        </textarea>
+
+        <label>
+            Price  (RM)
+            <span class="required">*</span>
+        </label>
+        <input type="number" name="price"
+               placeholder="0.00" step="0.01" min="0.01" required>
+
+        <label>
+            Stock Quantity 
+            <span class="required">*</span>
+        </label>
+        <input type="number" name="stock"
+               placeholder="0" min="0" required>
+
+        <!-- Image Upload Area 图片上传区域 -->
+        <label>Product Image </label>
+
+        <!-- Preview (shown after image selected) -->
+        <!-- 预览（选择图片后显示）-->
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImg" src="" alt="Preview">
+            <br>
+            <span class="remove-img" onclick="removeImage()">
+                ✕ Remove image 
+            </span>
+        </div>
+
+        <!-- Upload box (hidden after image selected) -->
+        <!-- 上传框（选择图片后隐藏）-->
+        <div class="upload-area" id="uploadArea">
+            <input type="file"
+                   name="image"
+                   id="imageInput"
+                   accept="image/*"
+                   onchange="previewImage(event)">
+            <!-- accept="image/*" = only show image files in picker -->
+            <!-- accept="image/*" = 文件选择器只显示图片文件 -->
+
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-text">
+                Click to upload image 
+            </div>
+            <div class="upload-subtext">
+                PNG, JPG, GIF, WEBP — Max 16MB
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button type="submit" class="btn-submit">
+                ➕ Add Product 
+            </button>
+            <a href="/seller_dashboard" class="btn-back">
+                 Back 
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<script>
+// Show image preview when user selects a file
+// 用户选择文件时显示图片预览
+function previewImage(event) {
+    const file = event.target.files[0];
+    // event.target.files[0] = the first file user selected
+    // event.target.files[0] = 用户选择的第一个文件
+
+    if (file) {
+        const reader = new FileReader();
+        // FileReader = reads file content in browser
+        // FileReader = 在浏览器里读取文件内容
+
+        reader.onload = function(e) {
+            // onload = runs when file is loaded
+            // onload = 文件加载完成时运行
+
+            document.getElementById('previewImg').src = e.target.result;
+            // e.target.result = the image data as URL
+            // e.target.result = 图片数据作为URL
+
+            document.getElementById('previewContainer').style.display = 'block';
+            // Show preview 显示预览
+
+            document.getElementById('uploadArea').style.display = 'none';
+            // Hide upload box 隐藏上传框
+        };
+
+        reader.readAsDataURL(file);
+        // readAsDataURL = converts file to URL string
+        // readAsDataURL = 把文件转换成URL字符串
+    }
+}
+
+// Remove selected image 移除已选择的图片
+function removeImage() {
+    document.getElementById('imageInput').value = '';
+    // Clear the file input 清空文件输入
+
+    document.getElementById('previewImg').src = '';
+    // Clear preview image 清空预览图片
+
+    document.getElementById('previewContainer').style.display = 'none';
+    // Hide preview 隐藏预览
+
+    document.getElementById('uploadArea').style.display = 'block';
+    // Show upload box again 重新显示上传框
+}
+
+// Drag and drop support 拖拽支持
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    // preventDefault = stop default browser behavior
+    // preventDefault = 阻止浏览器默认行为
+    uploadArea.classList.add('dragover');
+    // Add dragover style 添加拖拽样式
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+    // Remove dragover style 移除拖拽样式
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+
+    const file = e.dataTransfer.files[0];
+    // e.dataTransfer.files = files dropped by user
+    // e.dataTransfer.files = 用户拖放的文件
+
+    if (file && file.type.startsWith('image/')) {
+        // file.type.startsWith('image/') = check if it's an image
+        // 检查是否是图片文件
+        const input = document.getElementById('imageInput');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        // Set the file to input 把文件设置到输入框
+
+        previewImage({ target: input });
+        // Show preview 显示预览
+    }
+});
+</script>
+</body>
+</html>

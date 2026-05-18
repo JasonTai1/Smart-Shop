@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify OTP - Smart Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .otp-input {
+            font-size: 28px;
+            letter-spacing: 10px;
+            text-align: center;
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #800000;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .error-msg {
+            color: red;
+            background: #fff0f0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #ffcccc;
+        }
+        .success-msg {
+            color: green;
+            background: #f0fff0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #99dd99;
+            font-weight: bold;
+        }
+        .email-display {
+            background: #fff0f0;
+            padding: 10px;
+            border-radius: 6px;
+            color: #800000;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .resend-link {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
+            color: #800000;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .timer {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <img src="{{ url_for('static', filename='logo.PNG') }}" class="logo" alt="Smart Shop">
+
+    <h2>Verify Email</h2>
+
+    <div class="email-display">
+        📧 OTP sent to : {{ email }}
+    </div>
+
+    <!-- Show SUCCESS message -->
+    {% if success %}
+    <div class="success-msg">
+         {{ success }}
+    </div>
+    {% endif %}
+
+    <!-- Show ERROR message  -->
+    {% if error %}
+    <div class="error-msg">
+        ❌ {{ error }}
+    </div>
+    {% endif %}
+
+    <p style="color:#555; font-size:14px; margin-bottom:15px;">
+        Enter the 6-digit code sent to your email.
+        <br>
+    </p>
+
+    <form method="POST">
+        <input
+            type="text"
+            name="otp"
+            class="otp-input"
+            placeholder="_ _ _ _ _ _"
+            maxlength="6"
+            required
+            autocomplete="off"
+        >
+        <button type="submit" style="margin-top: 15px;">
+            Verify OTP 
+        </button>
+    </form>
+
+    <div class="timer">
+        OTP expires in : <span id="countdown">5:00</span>
+    </div>
+
+    <a href="/resend_otp" class="resend-link">
+         Resend OTP 
+    </a>
+
+    <a href="/register" class="back-btn" style="display:block; text-align:center; margin-top:10px;">
+         Back 
+    </a>
+
+</div>
+
+<script>
+let timeLeft = 300;
+const countdown = document.getElementById('countdown');
+const timer = setInterval(() => {
+    timeLeft--;
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    countdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    if (timeLeft <= 0) {
+        clearInterval(timer);
+        countdown.textContent = "Expired 已过期";
+        countdown.style.color = "red";
+    }
+}, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seller Dashboard - Smart Shop</title>
+    <style>
+        /* Reset everything first */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Top navbar  */
+        .topbar {
+            background: #800000;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topbar-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .topbar-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 14px;
+        }
+        .topbar-links a {
+            color: white;
+            text-decoration: none;
+        }
+        .topbar-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Main content area  */
+        .main {
+            padding: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Page title */
+        .page-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px 25px;
+            flex: 1;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #800000;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #800000;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Add button */
+        .btn-add {
+            background: #800000;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 15px;
+        }
+        .btn-add:hover { background: #600000; }
+
+        /* Products table */
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .product-table th {
+            background: #800000;
+            color: white;
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .product-table td {
+            padding: 13px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        .product-table tr:last-child td {
+            border-bottom: none;
+        }
+        .product-table tr:hover td {
+            background: #fff5f5;
+        }
+
+        /* Product image in table */
+        .product-img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        /* Stock status colors  */
+        .stock-out  { color: red;    font-weight: bold; }
+        .stock-low  { color: orange; font-weight: bold; }
+        .stock-ok   { color: green;  font-weight: bold; }
+
+        /* Action buttons  */
+        .btn-edit {
+            background: #e8a000;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            margin-right: 6px;
+            display: inline-block;
+        }
+        .btn-edit:hover { background: #c88000; }
+
+        .btn-delete {
+            background: #cc0000;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-block;
+        }
+        .btn-delete:hover { background: #aa0000; }
+
+        /* Empty state */
+        .empty-box {
+            text-align: center;
+            padding: 60px 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .empty-box p { color: #888; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<!-- Top navbar -->
+<div class="topbar">
+    <div class="topbar-title"> Smart Shop — Seller Dashboard</div>
+    <div class="topbar-links">
+        <span> Welcome, {{ first_name }}!</span>
+        <a href="/profile"> Profile</a>
+        <a href="/logout"> Logout</a>
+    </div>
+</div>
+
+<!-- Main content  -->
+<div class="main">
+
+    <div class="page-title"> My Products </div>
+
+    <!-- Stats  -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number">{{ products|length }}</div>
+            <div class="stat-label">Total Products </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                RM {{ "%.2f"|format(products|sum(attribute='price')) if products else '0.00' }}
+            </div>
+            <div class="stat-label">Total Value </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ products|sum(attribute='stock') if products else 0 }}
+            </div>
+            <div class="stat-label">Total Stock </div>
+        </div>
+    </div>
+
+    <!-- Add product button  -->
+    <a href="/seller/add_product" class="btn-add">
+         Add New Product 
+    </a>
+
+    <!-- Products table or empty state  -->
+    {% if products %}
+    <table class="product-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Product </th>
+                <th>Category </th>
+                <th>Price </th>
+                <th>Stock </th>
+                <th>Date Added </th>
+                <th>Actions </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                   {% if product['image_url'] %}
+                   <img src="{{ url_for('static', filename=product['image_url']) }}"
+                        class="product-img"
+                        onerror="this.style.display='none'">
+                   {% endif %} 
+                    <b>{{ product['name'] }}</b>
+                    {% if product['description'] %}
+                    <br>
+                    <small style="color:#888;">
+                        {{ product['description'][:50] }}
+                        {% if product['description']|length > 50 %}...{% endif %}
+                    </small>
+                    {% endif %}
+                </td>
+                <td>{{ product['category'] or '—' }}</td>
+                <td><b>RM {{ "%.2f"|format(product['price']) }}</b></td>
+                <td>
+                    {% if product['stock'] == 0 %}
+                        <span class="stock-out"> Out of Stock</span>
+                    {% elif product['stock'] < 5 %}
+                        <span class="stock-low"> {{ product['stock'] }} (Low)</span>
+                    {% else %}
+                        <span class="stock-ok">{{ product['stock'] }}</span>
+                    {% endif %}
+                </td>
+                <td style="color:#888; font-size:13px;">
+                    {{ product['created_at'][:10] if product['created_at'] else '—' }}
+                </td>
+                <td>
+                    <a href="/seller/edit_product/{{ product['id'] }}"
+                       class="btn-edit"> Edit</a>
+                    <a href="/seller/delete_product/{{ product['id'] }}"
+                       class="btn-delete"
+                       onclick="return confirm('Delete this product?')">
+                        🗑️ Delete
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <!-- No products yet  -->
+    <div class="empty-box">
+        <p style="font-size:50px;">📦</p>
+        <p style="font-size:18px; font-weight:bold; color:#555;">
+            No products yet! 
+        </p>
+        <p>Click the button above to add your first product.</p>
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>
