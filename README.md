@@ -1,4 +1,4 @@
-Smart-Shop
+SmartShop Malaysia |3
 
 Smart-Shop is a Flask-based e-commerce platform designed for product browsing, price comparison, and community shopping discussions.
 
