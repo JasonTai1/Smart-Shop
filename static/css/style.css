@@ -233,7 +233,7 @@ nav.expanded .active-link .chevron {
 }
 
 :root {
-  --gold: #800000;
+  --primary-red: #800000;
   --ink: #FEFEFE;
 }
 
@@ -243,7 +243,7 @@ nav.expanded .active-link .chevron {
   top: 0%;
   width: 100%;
   z-index:300;
-  background: var(--gold);
+  background: var(--primary-red);
   height: 50px;
   padding: 14px  0;
   overflow: hidden;
@@ -455,4 +455,13 @@ nav.expanded .active-link .chevron {
 
 .footer-link:hover {
     color: red;
+}
+
+.footer a {
+  color: #ccc;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #fff;
 }
