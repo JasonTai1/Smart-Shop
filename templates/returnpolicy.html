@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Return Policy - SmartShop{% endblock %}
+
+{% block content %}
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/returnpolicy.css') }}">
+
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="breadcrumb">
+      <a href="/homepage">Home</a> › Return Policy
+    </div>
+    <h1>Return &amp; Refund Policy</h1>
+    <div class="hero-meta">
+      <span>Last updated: May 2026</span>
+      <span class="badge green">&#10003; Free Returns</span>
+      <span class="badge">7-Day Window</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="sidebar">
+    <div class="sidebar-title">On this page</div>
+    <ul>
+      <li><a href="#process" class="active">Return process</a></li>
+      <li><a href="#eligibility">Eligibility</a></li>
+      <li><a href="#non-returnable">Non-returnable items</a></li>
+      <li><a href="#refunds">Refunds</a></li>
+      <li><a href="#exchanges">Exchanges</a></li>
+      <li><a href="#warranty">Warranty claims</a></li>
+      <li><a href="#contact">Contact support</a></li>
+    </ul>
+  </div>
+
+  <div class="content">
+
+    <div class="policy-block" id="process">
+      <h2>&#128230; Return process</h2>
+      <div class="timeline">
+        <div class="tl-step">
+          <div class="tl-dot">1</div>
+          <div class="tl-label">Submit<br>request</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot">2</div>
+          <div class="tl-label">Pack<br>item</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot">3</div>
+          <div class="tl-label">Drop off /<br>pickup</div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot">4</div>
+          <div class="tl-label">Refund<br>issued</div>
+        </div>
+      </div>
+      <p>
+        To start a return, go to <strong>My Account → Orders → Request Return</strong>
+        and select the item you wish to return. Our team will review and approve your
+        request within <strong>1 business day</strong>.
+      </p>
+      <div class="info-box">
+        &#128204;&nbsp; All returns must be submitted within
+        <strong>7 calendar days</strong> of the delivery date shown in your order
+        confirmation email.
+      </div>
+    </div>
+
+    <div class="policy-block" id="eligibility">
+      <h2>&#9989; Return eligibility</h2>
+      <p>Items are eligible for a return if they meet <strong>all</strong> of the following conditions:</p>
+      <ul>
+        <li>Returned within <strong>7 calendar days</strong> of the delivery date</li>
+        <li>Item is unused, undamaged, and in original condition</li>
+        <li>Original packaging, accessories, and manuals are included</li>
+        <li>Proof of purchase (order number or receipt) is provided</li>
+        <li>Item has not been assembled, installed, or activated</li>
+      </ul>
+    </div>
+
+    <div class="policy-block" id="non-returnable">
+      <h2>&#10060; Non-returnable items</h2>
+      <p>The following categories are <strong>not eligible</strong> for returns or exchanges:</p>
+      <ul>
+        <li>Opened software, digital downloads, or software licences</li>
+        <li>Personalised or custom-made products</li>
+        <li>Hygiene-sensitive products (earphones, shavers) once unsealed</li>
+        <li>Items damaged due to misuse, accident, or water damage</li>
+        <li>Products purchased during a clearly marked final-sale promotion</li>
+        <li>Consumable items (batteries, ink cartridges) once opened</li>
+      </ul>
+    </div>
+
+    <div class="policy-block" id="refunds">
+      <h2>&#128176; Refunds</h2>
+      <p>Once we receive and inspect the returned item, your refund will be processed. Refund timelines vary by payment method:</p>
+      <table class="refund-table">
+        <thead>
+          <tr>
+            <th>Payment method</th>
+            <th>Refund timeline</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Online Banking (FPX)</td>
+            <td>3–5 business days</td>
+          </tr>
+          <tr>
+            <td>Touch 'n Go eWallet</td>
+            <td>1–3 business days</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top: 14px;">
+        You will receive an email notification once your refund has been processed.
+        If you have not received your refund after the stated period, please contact
+        your bank or payment provider first, then reach out to us.
+      </p>
+    </div>
+
+    <div class="policy-block" id="exchanges">
+      <h2>&#128260; Exchanges</h2>
+      <p>Need a different size, colour, or variant? We offer <strong>free exchanges</strong> for the same product.</p>
+      <p>
+        Simply select <strong>"Exchange"</strong> instead of "Refund" when submitting
+        your return request. Exchanged items will be shipped within
+        <strong>2 business days</strong> of us receiving your original item, subject
+        to stock availability.
+      </p>
+      <p>If the desired variant is out of stock, we will process a full refund instead.</p>
+    </div>
+
+    <div class="policy-block" id="warranty">
+      <h2>&#128737;&#65039; Warranty claims</h2>
+      <p>
+        If your product is faulty or defective, it may be covered under the
+        manufacturer's warranty in addition to our return policy. Warranty coverage
+        varies by brand and product category.
+      </p>
+      <p>To make a warranty claim, please contact us with:</p>
+      <ol>
+        <li>Your order number</li>
+        <li>A clear photo or video showing the defect</li>
+        <li>A brief description of the issue</li>
+      </ol>
+      <p style="margin-top: 12px;">
+        Our team will advise you on the next steps, which may include a repair,
+        replacement, or refund depending on the case.
+      </p>
+    </div>
+
+    <div class="policy-block" id="contact">
+      <h2>&#128222; Contact support</h2>
+      <p>If you have any questions about your return or refund, our support team is here to help.</p>
+      <div class="cta-row">
+        <button class="cta-btn">&#128172; Start Live Chat</button>
+        <button class="cta-btn outline">&#9993;&#65039; Email: smartshopmalaysia3@gmail.com</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
