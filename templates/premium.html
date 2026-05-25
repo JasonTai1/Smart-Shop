@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Join Our Premium - SmartShop{% endblock %}
+
+{% block content %}
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/premium.css') }}">
+<div class="premium-page">
+
+<!-- BENEFITS -->
+<section class="benefits">
+  <div class="section-label">Member Benefits</div>
+  <h2 class="section-title">Why Choose <em>Premium?</em></h2>
+  <div class="benefits-grid">
+    <div class="benefit-card">
+      <div class="benefit-icon-wrap">🏷️</div>
+      <div class="benefit-name">20% Off Selected Items</div>
+      <div class="benefit-desc">Enjoy an exclusive 20% discount across thousands of selected products — save more every time you shop.</div>
+      <div class="benefit-tag">Save 20% Instantly</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-wrap">🚚</div>
+      <div class="benefit-name">Free Shipping Above RM200</div>
+      <div class="benefit-desc">Spend over RM200 and shipping is on us. No more delivery fees — just shop and enjoy.</div>
+      <div class="benefit-tag">Unlimited Free Shipping</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-wrap">⚡</div>
+      <div class="benefit-name">Early Access to Flash Deals</div>
+      <div class="benefit-desc">Premium members get 24-hour early access to flash sales — lock in the hottest deals before they sell out.</div>
+      <div class="benefit-tag">24 Hours Early</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-wrap">🎁</div>
+      <div class="benefit-name">Exclusive Member Gifts</div>
+      <div class="benefit-desc">Receive a special birthday gift and surprise perks every month — our way of saying thank you.</div>
+      <div class="benefit-tag">Monthly Surprises</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-wrap">🔄</div>
+      <div class="benefit-name">Extended Returns</div>
+      <div class="benefit-desc">Enjoy 30-day free returns — 3x longer than standard. Shop with complete peace of mind.</div>
+      <div class="benefit-tag">30-Day Guarantee</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-wrap">📞</div>
+      <div class="benefit-name">Priority Customer Support</div>
+      <div class="benefit-desc">A dedicated support team available around the clock — your issues are always handled first.</div>
+      <div class="benefit-tag">Priority Service</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="select-plan">
+  <div class="pricing-inner">
+    <div class="section-label">Membership Plans</div>
+    <h2 class="section-title">Choose Your <em>Premium Plan</em></h2>
+    <div class="plans">
+      <div class="plan">
+        <div class="plan-name">Basic</div>
+        <div class="plan-price"><span class="currency">RM</span>9</div>
+        <div class="plan-period">per month</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>10% off selected items</li>
+          <li>Free shipping above RM300</li>
+          <li>Standard support</li>
+          <li class="muted">Early flash deal access</li>
+          <li class="muted">Birthday gift</li>
+        </ul>
+        <button class="plan-btn" onclick="openPaymentModal(event, 9)">Get Basic</button>
+      </div>
+
+      <div class="plan featured">
+        <div class="plan-badge">🔥 Most Popular</div>
+        <div class="plan-name">Premium</div>
+        <div class="plan-price"><span class="currency">RM</span>19</div>
+        <div class="plan-period">per month · Best value</div>
+        <hr class="plan-divider" style="border-color: rgba(255,184,0,0.2)">
+        <ul class="plan-features">
+          <li>20% off selected items</li>
+          <li>Free shipping above RM200</li>
+          <li>Priority dedicated support</li>
+          <li>24-hour early flash access</li>
+          <li>Birthday exclusive gift</li>
+        </ul>
+        <button class="plan-btn" onclick="openPaymentModal(event, 19)">Get Basic</button>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Annual Premium</div>
+        <div class="plan-price"><span class="currency">RM</span>149</div>
+        <div class="plan-period">per year · Save RM79</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>20% off selected items</li>
+          <li>Free shipping above RM200</li>
+          <li>Priority dedicated support</li>
+          <li>24-hour early flash access</li>
+          <li>Birthday gift × 2</li>
+        </ul>
+        <button class="plan-btn" onclick="openPaymentModal(event, 149)">Get Basic</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+
+<!-- 🔴 PAYMENT MODAL (隐藏的付款弹窗) -->
+<div class="payment-modal-overlay" id="paymentModal">
+  <div class="payment-modal">
+    <button class="close-modal" onclick="closePaymentModal()">✕</button>
+    
+    <div class="modal-header">
+      <span class="crown">👑</span>
+      <h3>Upgrade to Premium</h3>
+      <p>Total to pay: <strong id="modalPrice">RM19.00</strong></p>
+    </div>
+
+    <!-- TNG QR  -->
+    <div class="payment-method">
+      <div class="method-title">Method 1: TNG eWallet / DuitNow</div>
+      <img src="{{ url_for('static', filename='images/tngqr.jpeg') }}" alt="TNG QR Code" class="qr-code-img">
+    </div>
+
+    <!-- Bank Transfer  -->
+    <div class="payment-method">
+      <div class="method-title">Method 2: Bank Transfer</div>
+      <div class="bank-details">
+        <p><strong>Public Bank</strong></p>
+        <p>Account No: <span class="highlight">5098 9641 19</span></p>
+        <p>Name: TAI TECK HWA</p>
+      </div>
+    </div>
+
+    <hr style="border-top: 1px solid #eee; margin: 20px 0;">
+
+    <!-- WhatsApp  -->
+    <div class="modal-footer">
+      <p style="font-size: 12px; color: #666; margin-bottom: 12px;">Done paying? Send us the receipt to activate!</p>
+      <a href="https://wa.me/60173286455?text=Hi%20SmartShop!%20I%20have%20paid%20for%20the%20Premium%20Plan.%20Here%20is%20my%20receipt:" target="_blank" class="btn-whatsapp">
+        📲 Send Receipt (WhatsApp)
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- 🔴 JAVASCRIPT (控制弹窗开启和关闭) -->
+<script>
+  function openPaymentModal(event, price) {
+    event.preventDefault(); 
+    // 动态把顾客选的价格放进弹窗里
+    document.getElementById('modalPrice').innerText = 'RM' + price + '.00';
+    // 显示弹窗
+    document.getElementById('paymentModal').classList.add('active');
+  }
+
+  function closePaymentModal() {
+    // 隐藏弹窗
+    document.getElementById('paymentModal').classList.remove('active');
+  }
+</script>
+
+{% endblock %}
+
