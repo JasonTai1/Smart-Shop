@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartShop Malaysia | 3{% block title %}{% endblock %}</title>
+  <title>SmartShop Malaysia | {% block title %}{% endblock %}</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    /* Fix body padding based on login state */
+    body {
+      padding-top: {% if session.get('user_id') %}140px{% else %}100px{% endif %};
+    }
+  </style>
 </head>
 
 <body>
@@ -14,7 +21,8 @@
 <!-- JS -->
 <script src="{{ url_for('static', filename='js/java.js') }}" defer></script>
 
-<!-- 🔴 Top Marquee -->
+<!-- Marquee — only show when logged in -->
+{% if session.get('user_id') %}
 <div class="marquee-section">
   <div class="marquee-track" id="marqueeTrack">
     <span class="marquee-item">Free shipping above RM200 <span class="marquee-dot"></span></span>
@@ -23,12 +31,14 @@
     <span class="marquee-item">Flash Sale up to 50% OFF <span class="marquee-dot"></span></span>
   </div>
 </div>
+{% endif %}
 
-<!-- 🔴 NAVBAR -->
+<!-- NAVBAR -->
 <div class="nav-wrapper">
   <nav id="navbar" onmouseleave="closeMenu()">
 
     <div class="nav-top">
+
       <!-- Logo -->
       <a class="logo" href="/">
         <img src="{{ url_for('static', filename='images/logo.png') }}" style="height: 70px;">
@@ -37,33 +47,51 @@
       <!-- Nav Links -->
       <ul class="nav-links">
         <li><a href="/" onmouseenter="closeMenu()">Home</a></li>
-
         <li>
-          <a href="#" onmouseenter="openMenu(event, 'collections')">
-            Collections
-          </a>
+          <a href="#" onmouseenter="openMenu(event, 'collections')">Collections</a>
         </li>
-
         <li>
-          <a href="#" onmouseenter="openMenu(event, 'brands')">
-            Brands
-          </a>
+          <a href="#" onmouseenter="openMenu(event, 'brands')">Brands</a>
         </li>
-
         <li><a href="/about" onmouseenter="closeMenu()">About</a></li>
       </ul>
 
-      <!-- Right Side -->
+      <!-- Right Side — changes based on login status -->
       <div class="nav-right">
         <button class="icon-btn" title="Search">🔍</button>
-        <button class="login-btn">Sign up</button>
-        <button class="primary-btn">
-          Cart <span class="cart-badge">0</span>
-        </button>
+
+        {% if session.get('user_id') %}
+          <!-- Logged in 已登录 -->
+          <a href="/profile" class="login-btn" style="text-decoration:none;">
+            👤 {{ session.get('first_name', 'Profile') }}
+          </a>
+
+          {% if session.get('role') == 'buyer' %}
+          <a href="/cart" class="primary-btn" style="text-decoration:none;">
+            🛒 Cart
+          </a>
+          {% else %}
+          <a href="/seller_dashboard" class="primary-btn" style="text-decoration:none;">
+            🏪 My Shop
+          </a>
+          {% endif %}
+
+          <a href="/logout" class="login-btn"
+             style="text-decoration:none; color:#800000; border:1px solid #800000;
+                    border-radius:30px; padding:8px 14px;">
+            Logout
+          </a>
+
+        {% else %}
+          <!-- Not logged in 未登录 -->
+          <a href="/register" class="login-btn" style="text-decoration:none;">Sign up</a>
+          <a href="/login" class="primary-btn" style="text-decoration:none;">Login</a>
+        {% endif %}
+
       </div>
     </div>
 
-    <!-- 🔥 MEGA MENU -->
+    <!-- MEGA MENU -->
     <div class="mega-menu" id="megaMenu">
       <div class="mega-menu-inner">
 
@@ -76,7 +104,6 @@
               <a href="#">Outerwear</a>
               <a href="#">Denim</a>
             </div>
-
             <div class="menu-col">
               <h4>Accessories</h4>
               <a href="#">Bags & Backpacks</a>
@@ -93,17 +120,15 @@
               <h4>Mobile & Accessories</h4>
               <a href="#">Apple</a>
               <a href="#">Samsung</a>
-              <a href="#">Honor</a>
               <a href="#">Xiaomi</a>
               <a href="#">Huawei</a>
-              <a href="#">Redmi</a>
               <a href="#">Vivo</a>
               <a href="#">Realme</a>
             </div>
-
             <div class="menu-col">
-              <h4>Travel</h4>
-              <a href="#">Carhartt WIP</a>
+              <h4>Fashion</h4>
+              <a href="#">Nike</a>
+              <a href="#">Adidas</a>
               <a href="#">New Balance</a>
             </div>
           </div>
@@ -115,14 +140,12 @@
   </nav>
 </div>
 
-<!-- 🔻 页面内容 -->
+<!-- Page content goes here -->
 {% block content %}{% endblock %}
 
-<!-- 🔴 FOOTER -->
+<!-- FOOTER -->
 <footer class="footer">
-
   <div class="footer-main">
-
     <div class="footer-col">
       <h4>Customer Service</h4>
       <ul>
@@ -131,33 +154,28 @@
         <li>Warranty</li>
       </ul>
     </div>
-
     <div class="footer-col">
       <h4>About Us</h4>
       <ul>
         <li><a href="/about">About SmartShop</a></li>
         <li><a href="#">Careers</a></li>
         <li><a href="/policy">Privacy Policy</a></li>
-    </ul>
+      </ul>
     </div>
-
     <div class="footer-col">
       <h4>Follow Us</h4>
       <div class="social">
         <ul>
-            <li><a href="https://www.facebook.com/" target="_black">Facebook</a></li>
-            <li><a href="https://wwwcom/" target="_black">Instagram</a></li>
-            <li><a href="https://www..com/" target="_black">TikTok</a></li>
+          <li><a href="https://www.facebook.com/" target="_blank">Facebook</a></li>
+          <li><a href="https://www.instagram.com/" target="_blank">Instagram</a></li>
+          <li><a href="https://www.tiktok.com/" target="_blank">TikTok</a></li>
         </ul>
+      </div>
     </div>
-    </div>
-
   </div>
-
   <div class="footer-bottom">
     <p>©️ 2026 SmartShop. All Rights Reserved.</p>
   </div>
-
 </footer>
 
 </body>

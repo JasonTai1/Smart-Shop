@@ -1,317 +1,103 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Cart - Smart Shop</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
-        body { background:#f5f5f5; min-height:100vh; }
+{% extends "base.html" %}
+{% block title %}My Cart{% endblock %}
 
-        /* Navbar 导航栏 */
-        .navbar {
-            background: #800000;
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .navbar-brand { font-size: 22px; font-weight: bold; }
-        .navbar-links { display: flex; gap: 20px; font-size: 14px; }
-        .navbar-links a { color: white; text-decoration: none; }
-        .navbar-links a:hover { text-decoration: underline; }
+{% block content %}
+<div style="max-width:900px; margin:40px auto; padding:0 20px;">
 
-        /* Main 主内容 */
-        .main {
-            padding: 30px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .page-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        /* Cart item card 购物车商品卡片 */
-        .cart-item {
-            background: white;
-            border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .item-img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            flex-shrink: 0;
-            background: #f0f0f0;
-        }
-        .no-img {
-            width: 80px;
-            height: 80px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            flex-shrink: 0;
-        }
-        .item-details { flex: 1; }
-        .item-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 4px;
-        }
-        .item-price {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 8px;
-        }
-
-        /* Quantity controls 数量控制 */
-        .qty-form {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .qty-btn {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .qty-btn:hover { background: #f0f0f0; }
-        .qty-display {
-            width: 40px;
-            text-align: center;
-            font-size: 15px;
-            font-weight: bold;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 4px;
-        }
-
-        /* Subtotal 小计 */
-        .item-subtotal {
-            font-size: 18px;
-            font-weight: bold;
-            color: #800000;
-            min-width: 100px;
-            text-align: right;
-        }
-
-        /* Remove button 删除按钮 */
-        .btn-remove {
-            color: #cc0000;
-            text-decoration: none;
-            font-size: 13px;
-            margin-top: 6px;
-            display: inline-block;
-        }
-        .btn-remove:hover { text-decoration: underline; }
-
-        /* Summary box 总计框 */
-        .summary-box {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-top: 20px;
-        }
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            font-size: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .summary-total {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 0 0;
-            font-size: 20px;
-            font-weight: bold;
-            color: #800000;
-        }
-        .btn-checkout {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background: #800000;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            text-align: center;
-            text-decoration: none;
-        }
-        .btn-checkout:hover { background: #600000; }
-        .btn-continue {
-            display: block;
-            text-align: center;
-            margin-top: 12px;
-            color: #800000;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .btn-continue:hover { text-decoration: underline; }
-
-        /* Empty cart 空购物车 */
-        .empty-cart {
-            text-align: center;
-            padding: 60px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-    </style>
-</head>
-<body>
-
-<!-- Navbar 导航栏 -->
-<div class="navbar">
-    <div class="navbar-brand"> Smart Shop</div>
-    <div class="navbar-links">
-        <span>👋 {{ first_name }}</span>
-        <a href="/buyer_dashboard"> Home</a>
-        <a href="/profile"> Profile</a>
-        <a href="/logout"> Logout</a>
-    </div>
-</div>
-
-<div class="main">
-    <div class="page-title"> My Cart</div>
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:20px;">
+        🛒 My Cart
+    </h2>
 
     {% if items %}
-
-    <!-- Cart items 购物车商品 -->
     {% for item in items %}
-    <div class="cart-item">
+    <div style="background:white; border-radius:10px; padding:18px;
+                margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                display:flex; align-items:center; gap:16px;">
 
-        <!-- Product image 商品图片 -->
         {% if item['image_url'] %}
         <img src="{{ url_for('static', filename=item['image_url']) }}"
-             class="item-img"
              alt="{{ item['name'] }}"
+             style="width:80px; height:80px; object-fit:cover;
+                    border-radius:8px; flex-shrink:0;"
              onerror="this.style.display='none'">
         {% else %}
-        <div class="no-img">📦</div>
+        <div style="width:80px; height:80px; background:#f0f0f0; border-radius:8px;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:30px; flex-shrink:0;">📦</div>
         {% endif %}
 
-        <!-- Product details 商品详情 -->
-        <div class="item-details">
-            <div class="item-name">{{ item['name'] }}</div>
-            <div class="item-price">
-                RM {{ "%.2f"|format(item['price']) }} each 
+        <div style="flex:1;">
+            <div style="font-size:16px; font-weight:bold; color:#333; margin-bottom:4px;">
+                {{ item['name'] }}
             </div>
-
-            <!-- Quantity update form 数量更新表单 -->
-            <form method="POST"
-                  action="/cart/update/{{ item['cart_id'] }}"
-                  class="qty-form">
-                <button type="submit"
-                        name="quantity"
-                        value="{{ item['quantity'] - 1 }}"
-                        class="qty-btn">−</button>
-                <!-- value = quantity - 1 = decrease by 1 -->
-                <!-- value = 数量 - 1 = 减少1 -->
-
-                <input type="number"
-                       name="quantity"
-                       value="{{ item['quantity'] }}"
-                       min="1"
-                       max="{{ item['stock'] }}"
-                       class="qty-display"
+            <div style="font-size:14px; color:#888; margin-bottom:8px;">
+                RM {{ "%.2f"|format(item['price']) }} each
+            </div>
+            <form method="POST" action="/cart/update/{{ item['cart_id'] }}"
+                  style="display:flex; align-items:center; gap:8px;">
+                <button type="submit" name="quantity" value="{{ item['quantity'] - 1 }}"
+                        style="width:30px; height:30px; border:1px solid #ddd;
+                               background:white; border-radius:4px; cursor:pointer; font-size:16px;">−</button>
+                <input type="number" name="quantity" value="{{ item['quantity'] }}"
+                       min="1" max="{{ item['stock'] }}"
+                       style="width:50px; text-align:center; padding:4px;
+                              border:1px solid #ddd; border-radius:4px; font-size:15px;"
                        onchange="this.form.submit()">
-                <!-- onchange = submit form when value changes -->
-                <!-- onchange = 值改变时提交表单 -->
-
-                <button type="submit"
-                        name="quantity"
-                        value="{{ item['quantity'] + 1 }}"
-                        class="qty-btn">+</button>
-                <!-- value = quantity + 1 = increase by 1 -->
+                <button type="submit" name="quantity" value="{{ item['quantity'] + 1 }}"
+                        style="width:30px; height:30px; border:1px solid #ddd;
+                               background:white; border-radius:4px; cursor:pointer; font-size:16px;">+</button>
             </form>
-
-            <!-- Remove button 删除按钮 -->
             <a href="/cart/remove/{{ item['cart_id'] }}"
-               class="btn-remove"
-               onclick="return confirm('Remove this item? 删除这个商品？')">
-                 Remove 
-            </a>
+               style="color:red; font-size:13px; margin-top:6px; display:inline-block;"
+               onclick="return confirm('Remove this item?')">🗑️ Remove</a>
         </div>
 
-        <!-- Subtotal 小计 -->
-        <div class="item-subtotal">
+        <div style="font-size:18px; font-weight:bold; color:#800000;
+                    min-width:100px; text-align:right;">
             RM {{ "%.2f"|format(item['subtotal']) }}
         </div>
-
     </div>
     {% endfor %}
 
-    <!-- Order summary 订单总计 -->
-    <div class="summary-box">
-        <div class="summary-row">
-            <span>Items</span>
-            <span>{{ items|length }} item(s)</span>
+    <div style="background:white; border-radius:10px; padding:25px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; padding:10px 0;
+                    border-bottom:1px solid #f0f0f0; font-size:15px;">
+            <span>Items</span><span>{{ items|length }} item(s)</span>
         </div>
-        <div class="summary-row">
-            <span>Subtotal </span>
-            <span>RM {{ "%.2f"|format(total) }}</span>
+        <div style="display:flex; justify-content:space-between; padding:10px 0;
+                    border-bottom:1px solid #f0f0f0; font-size:15px;">
+            <span>Shipping</span><span style="color:green;">FREE</span>
         </div>
-        <div class="summary-row">
-            <span>Shipping </span>
-            <span style="color:green;">FREE </span>
+        <div style="display:flex; justify-content:space-between; padding:15px 0 0;
+                    font-size:20px; font-weight:bold; color:#800000;">
+            <span>Total</span><span>RM {{ "%.2f"|format(total) }}</span>
         </div>
-        <div class="summary-total">
-            <span>Total </span>
-            <span>RM {{ "%.2f"|format(total) }}</span>
-        </div>
-
-        <!-- Checkout button 结账按钮 -->
-        <a href="/checkout" class="btn-checkout">
-             Proceed to Checkout 
+        <a href="/checkout"
+           style="display:block; width:100%; padding:15px; background:#800000;
+                  color:white; border-radius:8px; font-size:16px; font-weight:bold;
+                  text-align:center; text-decoration:none; margin-top:15px;
+                  box-sizing:border-box;">
+            💳 Proceed to Checkout
         </a>
-        <a href="/buyer_dashboard" class="btn-continue">
-             Continue Shopping 
+        <a href="/buyer_dashboard"
+           style="display:block; text-align:center; margin-top:12px;
+                  color:#800000; font-size:14px;">
+            ← Continue Shopping
         </a>
     </div>
 
     {% else %}
-    <!-- Empty cart 空购物车 -->
-    <div class="empty-cart">
+    <div style="text-align:center; padding:60px; background:white; border-radius:10px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <p style="font-size:60px;">🛒</p>
-        <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">
-            Your cart is empty!
-        </p>
-        <p style="color:#888; margin-bottom:20px;">
-            Add some products to get started.
-        </p>
+        <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">Your cart is empty!</p>
         <a href="/buyer_dashboard"
            style="background:#800000; color:white; padding:12px 30px;
                   border-radius:6px; text-decoration:none; font-weight:bold;">
-             Start Shopping 
+            🛍️ Start Shopping
         </a>
     </div>
     {% endif %}
-
 </div>
-</body>
-</html>
+{% endblock %}

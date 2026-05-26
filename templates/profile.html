@@ -1,136 +1,90 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Profile - Smart Shop</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        body { align-items: flex-start; padding-top: 30px; }
-        .avatar {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #800000;
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 12px;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            margin-bottom: 16px;
-        }
-        .badge-buyer  { background: #e8f4ff; color: #1a6cb8; }
-        .badge-seller { background: #fff3e0; color: #b36a00; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        td { padding: 10px 5px; border-bottom: 1px solid #f0f0f0; font-size: 14px; text-align: left; }
-        td:first-child { color: #888; width: 140px; }
-        td:last-child  { font-weight: 600; color: #333; }
-        .btn-logout {
-            display: block;
-            margin-top: 20px;
-            background: white;
-            border: 2px solid #800000;
-            color: #800000;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .btn-logout:hover { background: #800000; color: white; }
-        .btn-dashboard {
-            display: block;
-            margin-top: 12px;
-            background: #800000;
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .btn-dashboard:hover { background: #600000; }
-    </style>
-</head>
-<body>
-<div class="container">
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
 
-    <img src="{{ url_for('static', filename='logo.PNG') }}" class="logo" alt="Smart Shop">
+{% block content %}
+<div style="max-width:700px; margin:40px auto; padding:0 20px;">
+<div style="background:white; border-radius:16px; padding:35px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 
-    <!-- Avatar circle showing first letter of name -->
-    <div class="avatar">{{ first_name[0] | upper }}</div>
-
-    <h2 style="text-align:center; margin-bottom:5px;">
-        {{ first_name }} {{ last_name }}
-    </h2>
-
-    <!-- Role badge  -->
-    <div style="text-align:center;">
+    <div style="text-align:center; margin-bottom:20px;">
+        <div style="width:80px; height:80px; border-radius:50%;
+                    background:#800000; color:white; font-size:32px;
+                    font-weight:bold; display:flex; align-items:center;
+                    justify-content:center; margin:0 auto 12px;">
+            {{ first_name[0] | upper }}
+        </div>
+        <h2 style="color:#333; margin-bottom:5px;">{{ first_name }} {{ last_name }}</h2>
         {% if role == "seller" %}
-            <span class="badge badge-seller">🏪 Seller </span>
+            <span style="background:#fff3e0; color:#b36a00; padding:4px 16px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                🏪 Seller
+            </span>
         {% else %}
-            <span class="badge badge-buyer">🛒 Buyer </span>
+            <span style="background:#e8f4ff; color:#1a6cb8; padding:4px 16px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                🛒 Buyer
+            </span>
         {% endif %}
     </div>
 
-    <!-- Profile details table  -->
-    <table>
+    <table style="width:100%; border-collapse:collapse; margin-top:15px;">
         <tr>
-            <td>Username</td>
-            <td>{{ username }}</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px; width:150px;">Username</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">{{ username }}</td>
         </tr>
         <tr>
-            <td>Email</td>
-            <td>{{ email }}</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px;">Email</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">{{ email }}</td>
         </tr>
         <tr>
-            <td>Phone</td>
-            <td>{{ phone if phone else 'Not set ' }}</td>
-        </tr>
-        <tr>
-            <td>Location</td>
-            <td>
-                {% if city and state %}
-                    {{ city }}, {{ state }}
-                {% elif city %}
-                    {{ city }}
-                {% elif state %}
-                    {{ state }}
-                {% else %}
-                    Not set
-                {% endif %}
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px;">Location</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">
+                {% if city and state %}{{ city }}, {{ state }}
+                {% elif city %}{{ city }}
+                {% elif state %}{{ state }}
+                {% else %}Not set{% endif %}
             </td>
         </tr>
         <tr>
-            <td>Role</td>
-            <td>{{ role | capitalize }}</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px;">Role</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">{{ role | capitalize }}</td>
         </tr>
         <tr>
-            <td>Member Since</td>
-            <td>{{ created_at[:10] if created_at else '—' }}</td>
+            <td style="padding:12px 5px; color:#888; font-size:14px;">Member Since</td>
+            <td style="padding:12px 5px; font-size:14px; font-weight:600; color:#333;">
+                {{ created_at[:10] if created_at else '—' }}
+            </td>
         </tr>
     </table>
 
-    <!-- Go back to dashboard -->
-    {% if role == "seller" %}
-        <a href="/seller_dashboard" class="btn-dashboard">
-            Seller Dashboard
+    <div style="display:flex; gap:12px; margin-top:25px;">
+        {% if role == "seller" %}
+        <a href="/seller_dashboard"
+           style="flex:1; text-align:center; padding:12px; background:#800000;
+                  color:white; border-radius:8px; text-decoration:none; font-weight:bold;">
+             Seller Dashboard
         </a>
-    {% else %}
-        <a href="/buyer_dashboard" class="btn-dashboard">
-            Buyer Dashboard
+        {% else %}
+        <a href="/buyer_dashboard"
+           style="flex:1; text-align:center; padding:12px; background:#800000;
+                  color:white; border-radius:8px; text-decoration:none; font-weight:bold;">
+             Continue Shopping
         </a>
-    {% endif %}
-
-    <a href="/logout" class="btn-logout"> Logout </a>
-
+        {% endif %}
+        <a href="/logout"
+           style="flex:1; text-align:center; padding:12px; border:2px solid #800000;
+                  color:#800000; border-radius:8px; text-decoration:none; font-weight:bold;">
+             Logout
+        </a>
+    </div>
 </div>
-</body>
-</html>
+</div>
+{% endblock %}
