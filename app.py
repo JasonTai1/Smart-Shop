@@ -37,5 +37,14 @@ def search():
 @app.route('/category/<category>')
 def category(category):
 
+    products = Product.query.filter_by(
+        category=category
+    ).all()
+
+    return render_template(
+        'search.html',
+        products=products,
+        query=category
+    )
 if __name__ == '__main__':
     app.run(debug=True)
