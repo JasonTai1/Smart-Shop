@@ -6,7 +6,11 @@
   <title>SmartShop Malaysia | 3{% block title %}{% endblock %}</title>
 
   <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_css %}{% endblock %}
+
 </head>
 
 <body>
@@ -158,6 +162,8 @@
   </div>
 
 </footer>
+
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>
