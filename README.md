@@ -48,11 +48,11 @@ This project was built for learning full-stack web development and improving fro
 
 ## Homepage
 
-![Homepage](static/images/home.jpg)
+![Homepage]()
 
 ## Premium Page
 
-![Premium](static/images/banner1.png)
+![Premium]()
 
 ---
 
@@ -67,24 +67,6 @@ This project was built for learning full-stack web development and improving fro
 | JavaScript | Interactivity |
 
 ---
-
-# 📂 Project Structure
-
-```bash
-Smart-Shop/
-│
-├── routes/
-│   └── main.py
-│
-├── static/
-│   ├── css/
-│   ├── images/
-│   └── js/
-│
-├── templates/
-│
-└── app.py
-```
 
 # 🎯 Future Improvements
 
