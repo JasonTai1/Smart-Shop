@@ -46,5 +46,9 @@ def category(category):
         products=products,
         query=category
     )
+
+@app.route('/forum')
+def forum():
+    
 if __name__ == '__main__':
     app.run(debug=True)
