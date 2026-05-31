@@ -50,5 +50,12 @@ def category(category):
 @app.route('/forum')
 def forum():
     
+    posts = ForumPost.query.all()
+
+    return render_template(
+        'forum.html',
+        posts=posts
+    )
+
 if __name__ == '__main__':
     app.run(debug=True)
