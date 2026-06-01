@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Community Forum</h2>
+
+<a href="/forum/add" class="btn">
+    Create Post
+</a>
+
+{% for post in posts %}
+
+<div class="card">
+
+    <h3>{{ post.title }}</h3>
+
+    <p>{{ post.content }}</p>
+
+    <form action="/comment/{{ post.id }}" method="POST">
+
+        <input name="content" placeholder="Write comment">
+
+        <button type="submit">
+            Reply
+        </button>
+
+    </form>
+
+</div>
+
+{% endfor %}
+
+{% endblock %}
