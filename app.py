@@ -1,5 +1,5 @@
 from flask import Flask,render_template,request
-from models import db,Product
+from models import db,Product,ForumPost
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
@@ -56,6 +56,16 @@ def forum():
         'forum.html',
         posts=posts
     )
+
+@app.route('/forum/add', methods=['GET', 'POST'])
+def add_post():
+
+    if request.method == 'POST':
+
+        post = ForumPost(
+            title=request.form['title'],
+            content=request.form['content']
+        )
 
 if __name__ == '__main__':
     app.run(debug=True)
