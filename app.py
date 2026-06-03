@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request,redirect
 from models import db,Product,ForumPost
 
 app = Flask(__name__)
@@ -66,6 +66,12 @@ def add_post():
             title=request.form['title'],
             content=request.form['content']
         )
+        db.session.add(post)
+        db.session.commit()
+
+        return redirect('/forum')
+
+    return render_template('add_post.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
