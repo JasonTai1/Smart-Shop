@@ -1,5 +1,5 @@
 from flask import Flask,render_template,request,redirect
-from models import db,Product,ForumPost
+from models import db,Product,ForumPost,Comment
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
@@ -72,6 +72,14 @@ def add_post():
         return redirect('/forum')
 
     return render_template('add_post.html')
+
+@app.route('/comment/<int:post_id>', methods=['POST'])
+def add_comment(post_id):
+
+    comment = Comment(
+        post_id=post_id,
+        content=request.form['content']
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
