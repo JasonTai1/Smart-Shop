@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Payment Success{% endblock %}
+
+{% block content %}
+<div style="max-width:500px; margin:60px auto; padding:0 20px; text-align:center;">
+<div style="background:white; border-radius:16px; padding:50px 35px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+    <!-- Success animation 成功动画 -->
+    <div style="width:80px; height:80px; background:#f0fff0; border-radius:50%;
+                display:flex; align-items:center; justify-content:center;
+                margin:0 auto 20px; font-size:40px;
+                animation: pop 0.5s ease;">
+        ✅
+    </div>
+
+    <h2 style="color:#800000; margin-bottom:8px;">
+        Payment Submitted! 
+    </h2>
+    <p style="color:#555; font-size:15px; margin-bottom:25px;">
+        Thank you, <b>{{ first_name }}</b>! 
+        <br>Your order is being processed.
+    </p>
+
+    <!-- Order status info 订单状态信息 -->
+    <div style="background:#fff5f5; border-radius:10px; padding:20px;
+                margin-bottom:25px; text-align:left;">
+        <div style="font-size:13px; font-weight:bold; color:#800000;
+                    margin-bottom:12px;">
+            📦 What happens next? 
+        </div>
+        <div style="font-size:13px; color:#555; line-height:2;">
+            1️⃣ We verify your payment <br>
+            2️⃣ Seller prepares your order <br>
+            3️⃣ Order shipped to you <br>
+            4️⃣ Estimated 3-5 days 
+        </div>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-direction:column;">
+        <a href="/buyer_dashboard"
+           style="display:block; padding:13px; background:#800000;
+                  color:white; border-radius:8px; text-decoration:none;
+                  font-weight:bold; font-size:15px;">
+             Continue Shopping 
+        </a>
+        <a href="/profile"
+           style="display:block; padding:13px; border:2px solid #800000;
+                  color:#800000; border-radius:8px; text-decoration:none;
+                  font-weight:bold; font-size:15px;">
+             View Profile 
+        </a>
+    </div>
+
+</div>
+</div>
+
+<style>
+@keyframes pop {
+    0%   { transform: scale(0); opacity: 0; }
+    80%  { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+</style>
+{% endblock %}

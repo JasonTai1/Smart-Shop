@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<div style="max-width:550px; margin:40px auto; padding:0 20px;">
+<div style="background:white; border-radius:16px; padding:35px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.08); text-align:center;">
+
+    <h2 style="color:#800000; margin-bottom:5px;"> Payment </h2>
+    <p style="color:#888; font-size:14px; margin-bottom:25px;">
+        Scan the QR code to pay 
+    </p>
+
+    <!-- Order info 订单信息 -->
+    <div style="background:#fff5f5; border-radius:10px; padding:16px;
+                margin-bottom:25px; border:1px solid #ffd0d0;">
+        <div style="font-size:13px; color:#888; margin-bottom:4px;">
+            Order ID 
+        </div>
+        <div style="font-size:18px; font-weight:bold; color:#333;">
+            #{{ "%05d"|format(order_id) }}
+        </div>
+        <div style="font-size:13px; color:#888; margin-top:10px; margin-bottom:4px;">
+            Amount to Pay 
+        </div>
+        <div style="font-size:32px; font-weight:bold; color:#800000;">
+            RM {{ "%.2f"|format(order_total) }}
+        </div>
+    </div>
+
+    <!-- TNG QR Code 电子钱包QR码 -->
+    <div style="background:#f9f9f9; border:2px dashed #ddd; border-radius:12px;
+                padding:25px; margin-bottom:20px;">
+
+        <div style="font-size:14px; font-weight:bold; color:#333; margin-bottom:15px;">
+            📱 Touch 'n Go eWallet
+        </div>
+
+        <!-- QR Code image 二维码图片 -->
+        <!-- Replace with your actual TNG QR image! -->
+        <!-- 替换成你真实的TNG QR图片！ -->
+        <div style="width:200px; height:200px; background:#fff;
+                    border:1px solid #ddd; border-radius:8px;
+                    margin:0 auto 15px;
+                    display:flex; align-items:center; justify-content:center;">
+
+            {% if tng_qr_exists %}
+            <img src="{{ url_for('static', filename='images/tng_qr.png') }}"
+                 style="width:190px; height:190px; object-fit:contain;">
+            {% else %}
+            <!-- Fake QR placeholder 假QR占位符 -->
+            <div style="text-align:center;">
+                <div style="font-size:60px;">📱</div>
+                <div style="font-size:11px; color:#888; margin-top:8px;">
+                    TNG QR Code<br>
+                    <span style="color:#800000; font-weight:bold;">
+                        Smart Shop
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="font-size:13px; color:#555; margin-bottom:5px;">
+            Smart Shop Official Account
+        </div>
+        <div style="font-size:12px; color:#888;">
+            Open TNG app → Scan → Pay RM {{ "%.2f"|format(order_total) }}
+        </div>
+    </div>
+
+    <!-- Steps 步骤 -->
+    <div style="text-align:left; background:#f5f5f5; border-radius:10px;
+                padding:16px; margin-bottom:25px; font-size:13px; color:#555;">
+        <div style="font-weight:bold; margin-bottom:10px; color:#333;">
+            How to pay ：
+        </div>
+        <div style="margin-bottom:8px;">1️⃣ Open Touch 'n Go app </div>
+        <div style="margin-bottom:8px;">2️⃣ Tap "Pay" → "Scan QR"</div>
+        <div style="margin-bottom:8px;">3️⃣ Scan the QR above </div>
+        <div style="margin-bottom:8px;">4️⃣ Pay RM {{ "%.2f"|format(order_total) }}</div>
+        <div>5️⃣ Click "I Have Paid" below </div>
+    </div>
+
+    <!-- Paid button 已付款按钮 -->
+    <form method="POST">
+        <button type="submit"
+                style="width:100%; padding:15px; background:#800000;
+                       color:white; border:none; border-radius:8px;
+                       font-size:16px; font-weight:bold; cursor:pointer;">
+            ✅ I Have Paid 
+        </button>
+    </form>
+
+    <div style="margin-top:12px; font-size:12px; color:#aaa;">
+        Your order will be confirmed after payment verification.
+    </div>
+
+</div>
+</div>
+{% endblock %}

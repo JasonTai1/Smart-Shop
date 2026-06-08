@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Admin Payouts{% endblock %}
+
+{% block content %}
+<div style="max-width:1000px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:5px;">
+        💰 Seller Payouts 
+    </h2>
+    <p style="color:#888; font-size:14px; margin-bottom:25px;">
+        Admin Dashboard — Transfer money to sellers weekly
+    </p>
+
+    {% if sellers %}
+    {% for seller in sellers %}
+    <div style="background:white; border-radius:12px; padding:24px;
+                margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+        <div style="display:flex; justify-content:space-between;
+                    align-items:flex-start; margin-bottom:16px;">
+            <div>
+                <div style="font-size:17px; font-weight:bold; color:#333;">
+                    {{ seller['first_name'] }} {{ seller['last_name'] }}
+                </div>
+                <div style="font-size:13px; color:#888; margin-top:3px;">
+                    {{ seller['email'] }}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:13px; color:#888;">Total Earned 总收入</div>
+                <div style="font-size:20px; font-weight:bold; color:#800000;">
+                    RM {{ "%.2f"|format(seller['total_earned']) }}
+                </div>
+                <div style="font-size:12px; color:orange; margin-top:3px;">
+                    Pending: RM {{ "%.2f"|format(seller['pending_amount']) }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Payout info 收款信息 -->
+        <div style="background:#f9f9f9; border-radius:8px; padding:14px;
+                    font-size:14px;">
+            {% if seller['tng_phone'] %}
+            <div style="margin-bottom:8px;">
+                📱 <b>TNG:</b> {{ seller['tng_phone'] }}
+            </div>
+            {% endif %}
+            {% if seller['bank_account'] %}
+            <div>
+                🏦 <b>Bank:</b> {{ seller['bank_name'] }}
+                — {{ seller['bank_account'] }}
+                ({{ seller['bank_holder'] }})
+            </div>
+            {% endif %}
+            {% if not seller['tng_phone'] and not seller['bank_account'] %}
+            <div style="color:#aaa; font-style:italic;">
+                ⚠️ Seller has not set up payout info yet.
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div style="text-align:center; padding:60px; background:white; border-radius:10px;">
+        <p style="font-size:50px;">💰</p>
+        <p style="font-size:18px; color:#555;">No sellers yet!</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

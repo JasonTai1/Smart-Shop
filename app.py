@@ -1,5 +1,5 @@
 # ════════════════════════════════════════════
-# app.py — Smart Shop with OTP Email
+# app.py — Smart Shop
 # ════════════════════════════════════════════
 
 from flask import Flask, render_template, request, redirect, session
@@ -146,6 +146,69 @@ def init_db():
     # FOREIGN KEY = links to other tables
     # FOREIGN KEY = 连接到其他表
 
+    # Orders table 订单表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            buyer_id     INTEGER NOT NULL,
+            total_amount REAL NOT NULL,
+            full_name    TEXT NOT NULL,
+            phone        TEXT NOT NULL,
+            address      TEXT NOT NULL,
+            city         TEXT NOT NULL,
+            state        TEXT NOT NULL,
+            postcode     TEXT NOT NULL,
+            status       TEXT DEFAULT 'pending',
+            created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (buyer_id) REFERENCES users(id)
+        )
+    """)
+    # id           = unique order number 唯一订单编号
+    # buyer_id     = who placed the order 谁下单
+    # total_amount = total price 总价格
+    # full_name    = delivery name 收货姓名
+    # phone        = contact number 联系电话
+    # address      = street address 街道地址
+    # city         = delivery city 收货城市
+    # state        = delivery state 收货州属
+    # postcode     = postcode 邮政编码
+    # status       = pending/paid/shipped 待付款/已付款/已发货
+    # created_at   = when order was placed 下单时间
+
+    # Order Items table 订单商品表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS order_items (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id   INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            quantity   INTEGER NOT NULL,
+            price      REAL NOT NULL,
+            FOREIGN KEY (order_id)   REFERENCES orders(id),
+            FOREIGN KEY (product_id) REFERENCES products(id)
+        )
+    """)
+    # order_id   = which order this item belongs to 属于哪个订单
+    # product_id = which product 哪个商品
+    # quantity   = how many 数量
+    # price      = price at time of order 下单时的价格
+
+# Seller payout info table 卖家收款信息表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS seller_payout (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            seller_id      INTEGER NOT NULL UNIQUE,
+            tng_phone      TEXT,
+            bank_name      TEXT,
+            bank_account   TEXT,
+            bank_holder    TEXT,
+            created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (seller_id) REFERENCES users(id)
+        )
+    """)
+    # tng_phone    = TNG registered phone number TNG注册手机号
+    # bank_name    = bank name 银行名称
+    # bank_account = account number 账号
+    # bank_holder  = account holder name 账户持有人姓名
     conn.commit()
     conn.close()
 
@@ -1078,6 +1141,344 @@ def remove_from_cart(cart_id):
     conn.close()
 
     return redirect("/cart")
+
+# ════════════════════════════════════════════
+# CHECKOUT SYSTEM 结账系统
+# ════════════════════════════════════════════
+
+# ── CHECKOUT PAGE 结账页面 ────────────────────
+@app.route("/checkout", methods=["GET", "POST"])
+def checkout():
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Get cart items 获取购物车商品
+    cursor.execute("""
+        SELECT
+            cart.id        as cart_id,
+            cart.quantity,
+            products.id    as product_id,
+            products.name,
+            products.price,
+            products.image_url,
+            products.stock,
+            products.price * cart.quantity as subtotal
+        FROM cart
+        JOIN products ON cart.product_id = products.id
+        WHERE cart.buyer_id = ?
+        ORDER BY cart.created_at DESC
+    """, (session["user_id"],))
+    items = cursor.fetchall()
+
+    # If cart is empty redirect back
+    # 如果购物车是空的，跳转回去
+    if not items:
+        conn.close()
+        return redirect("/cart")
+
+    # Calculate total 计算总价
+    total = sum(item["subtotal"] for item in items)
+
+    if request.method == "POST":
+        # Get delivery details from form
+        # 从表单获取配送详情
+        full_name = request.form["full_name"].strip()
+        phone     = request.form["phone"].strip()
+        address   = request.form["address"].strip()
+        city      = request.form["city"].strip()
+        state     = request.form["state"].strip()
+        postcode  = request.form["postcode"].strip()
+
+        # Validation 验证
+        if not full_name or not phone or not address or not city or not state or not postcode:
+            conn.close()
+            return render_template("checkout.html",
+                items=items, total=total,
+                error="Please fill all delivery details. 请填写所有配送信息。",
+                session=session
+            )
+
+        # Create order in database 在数据库创建订单
+        cursor.execute("""
+            INSERT INTO orders
+                (buyer_id, total_amount, full_name, phone,
+                 address, city, state, postcode)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (session["user_id"], total, full_name, phone,
+              address, city, state, postcode))
+
+        order_id = cursor.lastrowid
+        # lastrowid = the ID of the row just inserted
+        # lastrowid = 刚刚插入的行的ID
+
+        # Save each cart item as order item
+        # 把每个购物车商品保存为订单商品
+        for item in items:
+            cursor.execute("""
+                INSERT INTO order_items
+                    (order_id, product_id, quantity, price)
+                VALUES (?, ?, ?, ?)
+            """, (order_id, item["product_id"],
+                  item["quantity"], item["price"]))
+
+            # Reduce product stock 减少商品库存
+            cursor.execute("""
+                UPDATE products
+                SET stock = stock - ?
+                WHERE id = ?
+            """, (item["quantity"], item["product_id"]))
+            # stock = stock - quantity
+            # 库存 = 库存 - 购买数量
+
+        # Clear the cart after order placed
+        # 下单后清空购物车
+        cursor.execute("""
+            DELETE FROM cart WHERE buyer_id = ?
+        """, (session["user_id"],))
+
+        conn.commit()
+        conn.close()
+
+        # Save order_id in session for payment page
+        # 把order_id保存到session给支付页面用
+        session["last_order_id"] = order_id
+        session["last_order_total"] = total
+
+        return redirect("/payment")
+
+    conn.close()
+    return render_template("checkout.html",
+        items    = items,
+        total    = total,
+        error    = None,
+        # Pre-fill with user's saved info
+        # 预填用户已保存的信息
+        full_name = session.get("first_name","") + " " + session.get("last_name",""),
+        phone     = session.get("phone", ""),
+        city      = session.get("city", ""),
+        state     = session.get("state", "")
+    )
+
+# ════════════════════════════════════════════
+# PAYMENT SYSTEM 支付系统
+# ════════════════════════════════════════════
+
+# ── PAYMENT PAGE 支付页面 ─────────────────────
+@app.route("/payment", methods=["GET", "POST"])
+def payment():
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    # Get order info from session
+    # 从session获取订单信息
+    order_id    = session.get("last_order_id")
+    order_total = session.get("last_order_total")
+
+    if not order_id:
+        return redirect("/buyer_dashboard")
+
+    if request.method == "POST":
+        # Buyer clicked "I Have Paid"
+        # 买家点击了"我已付款"
+
+        # Update order status to payment_pending
+        # 更新订单状态为待确认付款
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE orders SET status = 'payment_pending'
+            WHERE id = ? AND buyer_id = ?
+        """, (order_id, session["user_id"]))
+        # payment_pending = waiting for admin to confirm
+        # payment_pending = 等待管理员确认
+
+        conn.commit()
+        conn.close()
+
+        # Clear order from session
+        # 从session清除订单信息
+        session.pop("last_order_id", None)
+        session.pop("last_order_total", None)
+
+        return redirect("/payment_success")
+
+    return render_template("payment.html",
+        order_id    = order_id,
+        order_total = order_total
+    )
+
+# ── PAYMENT SUCCESS PAGE 支付成功页面 ────────────
+@app.route("/payment_success")
+def payment_success():
+    if "user_id" not in session:
+        return redirect("/login")
+    return render_template("payment_success.html",
+        first_name = session["first_name"]
+    )
+
+# ════════════════════════════════════════════
+# SELLER PAYOUT SETUP 卖家收款设置
+# ════════════════════════════════════════════
+
+# ── SELLER PAYOUT SETTINGS 卖家收款设置 ─────────
+@app.route("/seller/payout", methods=["GET", "POST"])
+def seller_payout():
+    if "user_id" not in session or session["role"] != "seller":
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Get existing payout info
+    # 获取已有的收款信息
+    cursor.execute("""
+        SELECT * FROM seller_payout WHERE seller_id = ?
+    """, (session["user_id"],))
+    payout_info = cursor.fetchone()
+
+    error   = None
+    success = None
+
+    if request.method == "POST":
+        tng_phone    = request.form.get("tng_phone", "").strip()
+        bank_name    = request.form.get("bank_name", "").strip()
+        bank_account = request.form.get("bank_account", "").strip()
+        bank_holder  = request.form.get("bank_holder", "").strip()
+
+        # Must have at least one payment method
+        # 至少需要一种收款方式
+        if not tng_phone and not bank_account:
+            error = "Please fill in at least one payment method. 请至少填写一种收款方式。"
+        else:
+            if payout_info:
+                # Update existing 更新已有的
+                cursor.execute("""
+                    UPDATE seller_payout
+                    SET tng_phone=?, bank_name=?,
+                        bank_account=?, bank_holder=?
+                    WHERE seller_id=?
+                """, (tng_phone, bank_name,
+                      bank_account, bank_holder,
+                      session["user_id"]))
+            else:
+                # Insert new 插入新的
+                cursor.execute("""
+                    INSERT INTO seller_payout
+                        (seller_id, tng_phone, bank_name,
+                         bank_account, bank_holder)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (session["user_id"], tng_phone, bank_name,
+                      bank_account, bank_holder))
+
+            conn.commit()
+            success = "✅ Payout info saved! 收款信息已保存！"
+
+            # Refresh payout info 刷新收款信息
+            cursor.execute("""
+                SELECT * FROM seller_payout WHERE seller_id = ?
+            """, (session["user_id"],))
+            payout_info = cursor.fetchone()
+
+    conn.close()
+    return render_template("seller_payout.html",
+        payout_info = payout_info,
+        error       = error,
+        success     = success
+    )
+
+# ── SELLER ORDERS 卖家订单 ──────────────────────
+@app.route("/seller/orders")
+def seller_orders():
+    if "user_id" not in session or session["role"] != "seller":
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Get all orders that contain this seller's products
+    # 获取包含这个卖家商品的所有订单
+    cursor.execute("""
+        SELECT DISTINCT
+            orders.id,
+            orders.created_at,
+            orders.status,
+            orders.total_amount,
+            orders.full_name,
+            orders.phone,
+            orders.address,
+            orders.city,
+            orders.state,
+            users.email as buyer_email
+        FROM orders
+        JOIN order_items ON orders.id = order_items.order_id
+        JOIN products    ON order_items.product_id = products.id
+        JOIN users       ON orders.buyer_id = users.id
+        WHERE products.seller_id = ?
+        ORDER BY orders.created_at DESC
+    """, (session["user_id"],))
+    orders = cursor.fetchall()
+    conn.close()
+
+    return render_template("seller_orders.html",
+        orders     = orders,
+        first_name = session["first_name"]
+    )
+
+# ════════════════════════════════════════════
+# ADMIN PAYOUT DASHBOARD 管理员转账仪表板
+# ════════════════════════════════════════════
+
+@app.route("/admin/payouts")
+def admin_payouts():
+    # Simple admin check — only user_id 1 is admin
+    # 简单管理员检查 — 只有user_id为1的是管理员
+    if "user_id" not in session or session["user_id"] != 1:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Get all sellers and their payout info + earnings
+    # 获取所有卖家和他们的收款信息+收入
+    cursor.execute("""
+        SELECT
+            users.id,
+            users.first_name,
+            users.last_name,
+            users.email,
+            seller_payout.tng_phone,
+            seller_payout.bank_name,
+            seller_payout.bank_account,
+            seller_payout.bank_holder,
+            COALESCE(SUM(
+                CASE WHEN orders.status = 'payment_pending'
+                THEN order_items.price * order_items.quantity
+                ELSE 0 END
+            ), 0) as pending_amount,
+            COALESCE(SUM(
+                order_items.price * order_items.quantity
+            ), 0) as total_earned
+        FROM users
+        LEFT JOIN seller_payout ON users.id = seller_payout.seller_id
+        LEFT JOIN products      ON users.id = products.seller_id
+        LEFT JOIN order_items   ON products.id = order_items.product_id
+        LEFT JOIN orders        ON order_items.order_id = orders.id
+        WHERE users.role = 'seller'
+        GROUP BY users.id
+    """)
+    sellers = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_payouts.html",
+        sellers = sellers
+    )
 
 # ── RUN 运行 ─────────────────────────────────
 if __name__ == "__main__":
