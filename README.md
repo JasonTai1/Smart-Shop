@@ -48,7 +48,7 @@ This project was built for learning full-stack web development and improving fro
 
 ## Homepage
 
-![Homepage]()
+- **`/homepage`** -
 
 ## Premium Page
 
