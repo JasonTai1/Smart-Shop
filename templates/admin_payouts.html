@@ -1,0 +1,193 @@
+x{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div style="max-width:1100px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:5px;">
+         Admin Dashboard 
+    </h2>
+    <p style="color:#888; font-size:14px; margin-bottom:25px;">
+        Manage payments and seller payouts
+    
+    </p>
+
+    <!-- Tab buttons 标签按钮 -->
+    <div style="display:flex; gap:10px; margin-bottom:25px;">
+        <button onclick="showTab('orders')" id="tab-orders"
+                style="padding:10px 24px; background:#800000; color:white;
+                       border:none; border-radius:8px; cursor:pointer;
+                       font-weight:bold; font-size:14px;">
+             Pending Orders 
+        </button>
+        <button onclick="showTab('sellers')" id="tab-sellers"
+                style="padding:10px 24px; background:white; color:#800000;
+                       border:2px solid #800000; border-radius:8px;
+                       cursor:pointer; font-weight:bold; font-size:14px;">
+             Seller Payouts
+        </button>
+    </div>
+
+    <!-- ORDERS TAB 订单标签 -->
+    <div id="tab-orders-content">
+        {% if pending_orders %}
+        {% for order in pending_orders %}
+        <div style="background:white; border-radius:12px; padding:24px;
+                    margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+            <div style="display:flex; justify-content:space-between;
+                        align-items:center; margin-bottom:15px;">
+                <div>
+                    <span style="font-size:17px; font-weight:bold; color:#333;">
+                        Order #{{ "%05d"|format(order['id']) }}
+                    </span>
+                    <span style="font-size:12px; color:#888; margin-left:10px;">
+                        {{ order['created_at'][:16] }}
+                    </span>
+                </div>
+                <span style="background:#fff3cd; color:#856404; padding:4px 12px;
+                             border-radius:20px; font-size:12px; font-weight:bold;">
+                    ⏳ Payment Pending
+                </span>
+            </div>
+
+            <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:15px;">
+                <div style="font-size:14px; color:#555;">
+                    <b>Buyer:</b> {{ order['buyer_email'] }}
+                </div>
+                <div style="font-size:14px; color:#555;">
+                    <b>Amount:</b>
+                    <span style="color:#800000; font-weight:bold;">
+                        RM {{ "%.2f"|format(order['total_amount']) }}
+                    </span>
+                </div>
+                <div style="font-size:14px; color:#555;">
+                    <b>Delivery:</b> {{ order['full_name'] }},
+                    {{ order['city'] }}, {{ order['state'] }}
+                </div>
+            </div>
+
+            <!-- Payment proof 付款证明 -->
+            {% if order['payment_proof'] %}
+            <div style="margin-bottom:15px;">
+                <div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:8px;">
+                    📸 Payment Proof :
+                </div>
+                <img src="{{ url_for('static', filename=order['payment_proof']) }}"
+                     style="max-width:300px; max-height:200px; object-fit:contain;
+                            border-radius:8px; border:1px solid #ddd; cursor:pointer;"
+                     onclick="window.open(this.src)"
+                     title="Click to view full size 点击查看大图">
+            </div>
+            {% else %}
+            <div style="background:#fff3cd; border-radius:6px; padding:10px;
+                        font-size:13px; color:#856404; margin-bottom:15px;">
+                ⚠️ No payment proof uploaded.
+            </div>
+            {% endif %}
+
+            <!-- Action buttons 操作按钮 -->
+            <div style="display:flex; gap:10px;">
+                <a href="/admin/confirm_payment/{{ order['id'] }}"
+                   style="padding:10px 20px; background:#1a7a3a; color:white;
+                          border-radius:6px; text-decoration:none; font-weight:bold;
+                          font-size:14px;"
+                   onclick="return confirm('Confirm this payment? 确认这个付款？')">
+                    ✅ Confirm Payment 
+                </a>
+                <a href="/admin/reject_payment/{{ order['id'] }}"
+                   style="padding:10px 20px; background:#cc0000; color:white;
+                          border-radius:6px; text-decoration:none; font-weight:bold;
+                          font-size:14px;"
+                   onclick="return confirm('Reject this payment? 拒绝这个付款？')">
+                    ❌ Reject 
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% else %}
+        <div style="text-align:center; padding:60px; background:white;
+                    border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <p style="font-size:50px;">✅</p>
+            <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">
+                No pending payments!
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- SELLERS TAB 卖家标签 -->
+    <div id="tab-sellers-content" style="display:none;">
+        {% if sellers %}
+        {% for seller in sellers %}
+        <div style="background:white; border-radius:12px; padding:24px;
+                    margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+            <div style="display:flex; justify-content:space-between;
+                        align-items:flex-start; margin-bottom:15px;">
+                <div>
+                    <div style="font-size:17px; font-weight:bold; color:#333;">
+                        {{ seller['first_name'] }} {{ seller['last_name'] }}
+                    </div>
+                    <div style="font-size:13px; color:#888; margin-top:3px;">
+                        {{ seller['email'] }}
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:13px; color:#888;">Total Earned</div>
+                    <div style="font-size:20px; font-weight:bold; color:#800000;">
+                        RM {{ "%.2f"|format(seller['total_earned']) }}
+                    </div>
+                    <div style="font-size:12px; color:orange;">
+                        Pending: RM {{ "%.2f"|format(seller['pending_amount']) }}
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:#f9f9f9; border-radius:8px;
+                        padding:14px; font-size:14px; color:#555;">
+                {% if seller['tng_phone'] %}
+                <div style="margin-bottom:6px;">
+                    📱 <b>TNG:</b> {{ seller['tng_phone'] }}
+                </div>
+                {% endif %}
+                {% if seller['bank_account'] %}
+                <div>
+                    🏦 <b>{{ seller['bank_name'] }}:</b>
+                    {{ seller['bank_account'] }}
+                    ({{ seller['bank_holder'] }})
+                </div>
+                {% endif %}
+                {% if not seller['tng_phone'] and not seller['bank_account'] %}
+                <div style="color:#aaa; font-style:italic;">
+                    ⚠️ No payout info set up yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+function showTab(tab) {
+    // Hide all tabs 隐藏所有标签
+    document.getElementById('tab-orders-content').style.display = 'none';
+    document.getElementById('tab-sellers-content').style.display = 'none';
+
+    // Reset button styles 重置按钮样式
+    document.getElementById('tab-orders').style.background = 'white';
+    document.getElementById('tab-orders').style.color = '#800000';
+    document.getElementById('tab-sellers').style.background = 'white';
+    document.getElementById('tab-sellers').style.color = '#800000';
+
+    // Show selected tab 显示选择的标签
+    document.getElementById('tab-' + tab + '-content').style.display = 'block';
+    document.getElementById('tab-' + tab).style.background = '#800000';
+    document.getElementById('tab-' + tab).style.color = 'white';
+}
+</script>
+{% endblock %}

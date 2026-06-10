@@ -149,20 +149,23 @@ def init_db():
     # Orders table 订单表
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
-            id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            buyer_id     INTEGER NOT NULL,
-            total_amount REAL NOT NULL,
-            full_name    TEXT NOT NULL,
-            phone        TEXT NOT NULL,
-            address      TEXT NOT NULL,
-            city         TEXT NOT NULL,
-            state        TEXT NOT NULL,
-            postcode     TEXT NOT NULL,
-            status       TEXT DEFAULT 'pending',
-            created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            buyer_id      INTEGER NOT NULL,
+            total_amount  REAL NOT NULL,
+            full_name     TEXT NOT NULL,
+            phone         TEXT NOT NULL,
+            address       TEXT NOT NULL,
+            city          TEXT NOT NULL,
+            state         TEXT NOT NULL,
+            postcode      TEXT NOT NULL,
+            status        TEXT DEFAULT 'pending',
+            payment_proof TEXT,
+            created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (buyer_id) REFERENCES users(id)
         )
     """)
+    # payment_proof = filename of uploaded screenshot
+    # payment_proof = 上传截图的文件名
     # id           = unique order number 唯一订单编号
     # buyer_id     = who placed the order 谁下单
     # total_amount = total price 总价格
@@ -760,21 +763,21 @@ def add_product():
                     # Because Flask's url_for('static') already adds it
                     # 因为Flask的url_for('static')已经会加上它
                 else:
-                    error = "Only images allowed (PNG, JPG, GIF, WEBP). 只允许图片文件。"
+                    error = "Only images allowed (PNG, JPG, GIF, WEBP). "
                     return render_template("add_product.html", error=error, success=success)
 
         # Validation 验证
         if not name or not price or not stock:
-            error = "Please fill all required fields. 请填写所有必填项。"
+            error = "Please fill all required fields."
         else:
             try:
                 price = float(price)
                 stock = int(stock)
 
                 if price <= 0:
-                    error = "Price must be more than 0. 价格必须大于0。"
+                    error = "Price must be more than 0."
                 elif stock < 0:
-                    error = "Stock cannot be negative. 库存不能为负数。"
+                    error = "Stock cannot be negative."
                 else:
                     conn = get_db()
                     cursor = conn.cursor()
@@ -793,10 +796,10 @@ def add_product():
                     ))
                     conn.commit()
                     conn.close()
-                    success = f"✅ Product '{name}' added successfully! 商品添加成功！"
+                    success = f"✅ Product '{name}' added successfully!"
 
             except ValueError:
-                error = "Price and stock must be numbers. 价格和库存必须是数字。"
+                error = "Price and stock must be numbers. "
 
     return render_template("add_product.html",
         error=error, success=success)
@@ -1276,42 +1279,73 @@ def payment():
     if session["role"] != "buyer":
         return redirect("/seller_dashboard")
 
-    # Get order info from session
-    # 从session获取订单信息
     order_id    = session.get("last_order_id")
     order_total = session.get("last_order_total")
 
     if not order_id:
         return redirect("/buyer_dashboard")
 
-    if request.method == "POST":
-        # Buyer clicked "I Have Paid"
-        # 买家点击了"我已付款"
+    error = None
 
-        # Update order status to payment_pending
-        # 更新订单状态为待确认付款
+    if request.method == "POST":
+        # Check if proof image uploaded
+        # 检查是否上传了证明图片
+        proof_path = None
+
+        if 'payment_proof' in request.files:
+            file = request.files['payment_proof']
+
+            if file and file.filename != '':
+                if allowed_file(file.filename):
+                    import time
+                    filename = "proof_" + str(int(time.time())) + "_" + secure_filename(file.filename)
+                    # proof_ prefix = easy to identify payment proofs
+                    # proof_ 前缀 = 容易识别付款证明
+
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    proof_path = 'uploads/' + filename
+                else:
+                    error = "Only image files allowed. 只允许图片文件。"
+                    return render_template("payment.html",
+                        order_id=order_id, order_total=order_total, error=error)
+
+        # Update order status and save proof
+        # 更新订单状态并保存证明
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE orders SET status = 'payment_pending'
-            WHERE id = ? AND buyer_id = ?
-        """, (order_id, session["user_id"]))
-        # payment_pending = waiting for admin to confirm
-        # payment_pending = 等待管理员确认
+
+        if proof_path:
+            # With proof 有证明
+            cursor.execute("""
+                UPDATE orders
+                SET status = 'payment_pending',
+                    payment_proof = ?
+                WHERE id = ? AND buyer_id = ?
+            """, (proof_path, order_id, session["user_id"]))
+        else:
+            # Without proof (still allowed) 没有证明（仍然允许）
+            cursor.execute("""
+                UPDATE orders
+                SET status = 'payment_pending'
+                WHERE id = ? AND buyer_id = ?
+            """, (order_id, session["user_id"]))
 
         conn.commit()
         conn.close()
 
-        # Clear order from session
-        # 从session清除订单信息
         session.pop("last_order_id", None)
         session.pop("last_order_total", None)
 
         return redirect("/payment_success")
 
+    # Check if TNG QR exists 检查TNG QR是否存在
+    tng_qr_exists = os.path.exists('static/images/tng_qr.png')
+
     return render_template("payment.html",
-        order_id    = order_id,
-        order_total = order_total
+        order_id      = order_id,
+        order_total   = order_total,
+        error         = error,
+        tng_qr_exists = tng_qr_exists
     )
 
 # ── PAYMENT SUCCESS PAGE 支付成功页面 ────────────
@@ -1437,16 +1471,27 @@ def seller_orders():
 
 @app.route("/admin/payouts")
 def admin_payouts():
-    # Simple admin check — only user_id 1 is admin
-    # 简单管理员检查 — 只有user_id为1的是管理员
     if "user_id" not in session or session["user_id"] != 1:
         return redirect("/login")
 
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get all sellers and their payout info + earnings
-    # 获取所有卖家和他们的收款信息+收入
+    # Get pending orders with proof
+    # 获取待处理的订单和证明
+    cursor.execute("""
+        SELECT
+            orders.*,
+            users.email as buyer_email
+        FROM orders
+        JOIN users ON orders.buyer_id = users.id
+        WHERE orders.status = 'payment_pending'
+        ORDER BY orders.created_at DESC
+    """)
+    pending_orders = cursor.fetchall()
+
+    # Get sellers payout info
+    # 获取卖家收款信息
     cursor.execute("""
         SELECT
             users.id,
@@ -1458,13 +1503,15 @@ def admin_payouts():
             seller_payout.bank_account,
             seller_payout.bank_holder,
             COALESCE(SUM(
+                CASE WHEN orders.status IN ('payment_pending','paid')
+                THEN order_items.price * order_items.quantity
+                ELSE 0 END
+            ), 0) as total_earned,
+            COALESCE(SUM(
                 CASE WHEN orders.status = 'payment_pending'
                 THEN order_items.price * order_items.quantity
                 ELSE 0 END
-            ), 0) as pending_amount,
-            COALESCE(SUM(
-                order_items.price * order_items.quantity
-            ), 0) as total_earned
+            ), 0) as pending_amount
         FROM users
         LEFT JOIN seller_payout ON users.id = seller_payout.seller_id
         LEFT JOIN products      ON users.id = products.seller_id
@@ -1477,9 +1524,133 @@ def admin_payouts():
     conn.close()
 
     return render_template("admin_payouts.html",
-        sellers = sellers
+        pending_orders = pending_orders,
+        sellers        = sellers
     )
 
+# ── ADMIN CONFIRM PAYMENT 管理员确认付款 ──────────
+@app.route("/admin/confirm_payment/<int:order_id>")
+def confirm_payment(order_id):
+    if "user_id" not in session or session["user_id"] != 1:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE orders SET status = 'paid'
+        WHERE id = ?
+    """, (order_id,))
+    # status = 'paid' = payment confirmed!
+    # 付款已确认！
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin/payouts")
+
+# ── ADMIN REJECT PAYMENT 管理员拒绝付款 ──────────
+@app.route("/admin/reject_payment/<int:order_id>")
+def reject_payment(order_id):
+    if "user_id" not in session or session["user_id"] != 1:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE orders SET status = 'rejected'
+        WHERE id = ?
+    """, (order_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin/payouts")
+
+# ── BUYER ORDER HISTORY 买家订单历史 ─────────────
+@app.route("/buyer/orders")
+def buyer_orders():
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Get all orders by this buyer
+    # 获取这个买家的所有订单
+    cursor.execute("""
+        SELECT * FROM orders
+        WHERE buyer_id = ?
+        ORDER BY created_at DESC
+    """, (session["user_id"],))
+    orders = cursor.fetchall()
+
+    # For each order, get the items
+    # 对于每个订单，获取商品
+    orders_with_items = []
+    for order in orders:
+        cursor.execute("""
+            SELECT
+                order_items.*,
+                products.name,
+                products.image_url
+            FROM order_items
+            JOIN products ON order_items.product_id = products.id
+            WHERE order_items.order_id = ?
+        """, (order["id"],))
+        items = cursor.fetchall()
+        orders_with_items.append({
+            "order": order,
+            "items": items
+        })
+
+    conn.close()
+
+    return render_template("buyer_orders.html",
+        orders_with_items = orders_with_items,
+        first_name        = session["first_name"]
+    )
+# ── CANCEL ORDER 取消订单 ─────────────────────
+@app.route("/buyer/cancel_order/<int:order_id>")
+def cancel_order(order_id):
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Only cancel if status is pending or payment_pending
+    # 只有在待处理或待确认付款状态才能取消
+    cursor.execute("""
+        UPDATE orders SET status = 'cancelled'
+        WHERE id = ?
+        AND buyer_id = ?
+        AND status IN ('pending', 'payment_pending')
+    """, (order_id, session["user_id"]))
+    # AND status IN (...) = security check!
+    # Cannot cancel if already paid or shipped!
+    # 已付款或已发货不能取消！
+
+    # Restore product stock 恢复商品库存
+    cursor.execute("""
+        SELECT product_id, quantity FROM order_items
+        WHERE order_id = ?
+    """, (order_id,))
+    items = cursor.fetchall()
+
+    for item in items:
+        cursor.execute("""
+            UPDATE products SET stock = stock + ?
+            WHERE id = ?
+        """, (item["quantity"], item["product_id"]))
+    # stock + quantity = add back the cancelled items
+    # 库存 + 数量 = 把取消的商品加回库存
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/buyer/orders")
 # ── RUN 运行 ─────────────────────────────────
 if __name__ == "__main__":
     init_db()
