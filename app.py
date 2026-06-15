@@ -7,57 +7,47 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
 # random = built-in Python library to generate random numbers
-# random = Python内置库，用来生成随机数字
 import smtplib
 # smtplib = built-in Python library to send emails
-# smtplib = Python内置库，用来发送邮件
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 # MIMEText, MIMEMultipart = helps us build email content
-# 帮我们构建邮件内容
 
 import os
 from werkzeug.utils import secure_filename
 # secure_filename = makes filename safe to save
-# secure_filename = 让文件名安全可以保存
 # Example: "my photo!.jpg" → "my_photo_.jpg"
-# 例如：把特殊字符转换成安全字符
 
 
 app = Flask(__name__)
 app.secret_key = "smartshop_secret_key_2024"
 
-# ── Email Settings 邮件设置 ──────────────────
+# ── Email Settings ──────────────────
 SMTP_EMAIL    = "smartshop.noreply1234@gmail.com"
 # The Gmail that SENDS the OTP
-# 发送OTP的Gmail
 
 SMTP_PASSWORD = "hnusxqjfcvupcdeq"
 # The App Password we just created (no spaces!)
-# 我们刚创建的应用密码（没有空格！）
 
 SMTP_HOST     = "smtp.gmail.com"
 # Gmail's SMTP server address
-# Gmail的SMTP服务器地址
 
 SMTP_PORT     = 587
 # Port 587 = standard port for sending email securely
-# 587端口 = 安全发送邮件的标准端口
 
-# Allowed image types 允许的图片类型
+# Allowed image types 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-# Only these file types allowed 只允许这些文件类型
+# Only these file types allowed 
 
 UPLOAD_FOLDER = 'static/uploads'
-# Where uploaded images are saved 上传图片保存的位置
+# Where uploaded images are saved 
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 # MAX_CONTENT_LENGTH = maximum file size = 16MB
-# 最大文件大小 = 16MB
 
 # ════════════════════════════════════════════
-# DATABASE 数据库
+# DATABASE 
 # ════════════════════════════════════════════
 
 def get_db():
@@ -74,7 +64,7 @@ def init_db():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Users table 用户表
+    # Users table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,7 +81,6 @@ def init_db():
         )
     """)
     # OTP table — stores OTP codes temporarily
-    # OTP表 — 临时存储OTP代码
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS otp_codes (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,11 +90,9 @@ def init_db():
         )
     """)
     # Why separate table? Because OTP is temporary
-    # 为什么单独一个表？因为OTP是临时的
     # After user verifies, we delete it
-    # 用户验证后我们就删除它
 
-        # ── Products Table 商品表 ──────────────────
+        # ── Products Tablem ──────────────────
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,18 +107,17 @@ def init_db():
             FOREIGN KEY (seller_id) REFERENCES users(id)
         )
     """)
-    # id          = unique number for each product 每个商品的唯一编号
-    # seller_id   = which seller owns this product 哪个卖家拥有这个商品
-    # name        = product name 商品名称
-    # description = product description 商品描述
-    # price       = REAL means decimal number like 9.99 小数数字
-    # stock       = how many items available 有多少件库存
-    # category    = product category 商品类别
-    # image_url   = link to product image 商品图片链接
+    # id          = unique number for each product 
+    # seller_id   = which seller owns this product 
+    # name        = product name 
+    # description = product description 
+    # price       = REAL means decimal number like 9.99 
+    # stock       = how many items available 
+    # category    = product category
+    # image_url   = link to product image 
     # FOREIGN KEY = links seller_id to users table id
-    #               把seller_id连接到users表的id
 
-    # Cart table 购物车表
+    # Cart table 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cart (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,14 +130,11 @@ def init_db():
         )
     """)
     # buyer_id   = which buyer added this item
-    # buyer_id   = 哪个买家添加了这个商品
     # product_id = which product was added
-    # product_id = 哪个商品被添加了
-    # quantity   = how many pieces 几件
+    # quantity   = how many pieces 
     # FOREIGN KEY = links to other tables
-    # FOREIGN KEY = 连接到其他表
 
-    # Orders table 订单表
+    # Orders table 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
             id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -170,20 +153,19 @@ def init_db():
         )
     """)
     # payment_proof = filename of uploaded screenshot
-    # payment_proof = 上传截图的文件名
-    # id           = unique order number 唯一订单编号
-    # buyer_id     = who placed the order 谁下单
-    # total_amount = total price 总价格
-    # full_name    = delivery name 收货姓名
-    # phone        = contact number 联系电话
-    # address      = street address 街道地址
-    # city         = delivery city 收货城市
-    # state        = delivery state 收货州属
-    # postcode     = postcode 邮政编码
-    # status       = pending/paid/shipped 待付款/已付款/已发货
-    # created_at   = when order was placed 下单时间
+    # id           = unique order number 
+    # buyer_id     = who placed the order
+    # total_amount = total price 
+    # full_name    = delivery name 
+    # phone        = contact number 
+    # address      = street address 
+    # city         = delivery city 
+    # state        = delivery state 
+    # postcode     = postcode 
+    # status       = pending/paid/shipped 
+    # created_at   = when order was placed 
 
-    # Order Items table 订单商品表
+    # Order Items table 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS order_items (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -195,12 +177,12 @@ def init_db():
             FOREIGN KEY (product_id) REFERENCES products(id)
         )
     """)
-    # order_id   = which order this item belongs to 属于哪个订单
-    # product_id = which product 哪个商品
-    # quantity   = how many 数量
-    # price      = price at time of order 下单时的价格
+    # order_id   = which order this item belongs to 
+    # product_id = which product
+    # quantity   = how many
+    # price      = price at time of order
 
-# Seller payout info table 卖家收款信息表
+# Seller payout info table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS seller_payout (
             id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -213,48 +195,42 @@ def init_db():
             FOREIGN KEY (seller_id) REFERENCES users(id)
         )
     """)
-    # tng_phone    = TNG registered phone number TNG注册手机号
-    # bank_name    = bank name 银行名称
-    # bank_account = account number 账号
-    # bank_holder  = account holder name 账户持有人姓名
+    # tng_phone    = TNG registered phone number 
+    # bank_name    = bank name 
+    # bank_account = account number 
+    # bank_holder  = account holder name 
     conn.commit()
     conn.close()
 
 # ════════════════════════════════════════════
-# OTP FUNCTIONS OTP功能
+# OTP FUNCTIONS 
 # ════════════════════════════════════════════
 
 def generate_otp():
     # Generate a random 6-digit number
-    # 生成一个随机6位数字
     otp = random.randint(100000, 999999)
     # random.randint(min, max) = random number between min and max
-    # random.randint(最小值, 最大值) = 在最小值和最大值之间的随机数
     # Example: random.randint(100000, 999999) → 483921
-    # 例如：random.randint(100000, 999999) → 483921
     return str(otp)
     # str() = convert number to string "483921"
-    # str() = 把数字转换成字符串 "483921"
 
 def send_otp_email(to_email, otp):
     # This function sends OTP email to the user
-    # 这个函数发送OTP邮件给用户
     try:
-        # Build the email 构建邮件
+        # Build the email 
         msg = MIMEMultipart()
         # MIMEMultipart = email that can have multiple parts
-        # MIMEMultipart = 可以有多个部分的邮件
 
         msg["From"]    = SMTP_EMAIL
-        # Who is sending 谁发送
+        # Who is sending 
 
         msg["To"]      = to_email
-        # Who receives 谁接收
+        # Who receives 
 
         msg["Subject"] = "Smart Shop - Your OTP Code"
-        # Email subject line 邮件主题
+        # Email subject line 
 
-        # Email body content 邮件正文内容
+        # Email body content 
         body = f"""
         <html>
         <body style="font-family: Arial; padding: 20px;">
@@ -282,46 +258,35 @@ def send_otp_email(to_email, otp):
         </html>
         """
         # f"..." = f-string, {otp} inserts the OTP value
-        # f"..." = f字符串，{otp} 插入OTP的值
 
         msg.attach(MIMEText(body, "html"))
         # attach = add the body to the email
-        # attach = 把正文加到邮件里
         # "html" = tell email client to render as HTML
-        # "html" = 告诉邮件客户端以HTML格式显示
 
-        # Connect to Gmail and send 连接Gmail并发送
+        # Connect to Gmail and send
         server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
         # Create connection to Gmail's SMTP server
-        # 创建到Gmail SMTP服务器的连接
 
         server.starttls()
         # starttls() = upgrade to secure encrypted connection
-        # starttls() = 升级到安全加密连接
 
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
         # Login to Gmail with our email and app password
-        # 用我们的邮箱和应用密码登录Gmail
 
         server.send_message(msg)
         # Actually send the email!
-        # 真正发送邮件！
 
         server.quit()
         # Close the connection
-        # 关闭连接
 
         return True
         # True = email sent successfully
-        # True = 邮件发送成功
 
     except Exception as e:
         # If anything goes wrong, print error and return False
-        # 如果出现任何错误，打印错误并返回False
         print(f"Email error: {e}")
         return False
         # False = email failed to send
-        # False = 邮件发送失败
 
 def save_otp(email, otp):
     conn = None
@@ -359,7 +324,6 @@ def verify_otp(email, entered_otp):
 
         if result and result["otp"] == entered_otp:
             # OTP matches! Delete it
-            # OTP匹配！删除它
             cursor.execute(
                 "DELETE FROM otp_codes WHERE email=?",
                 (email,)
@@ -378,24 +342,22 @@ def verify_otp(email, entered_otp):
    # upload photo
 def allowed_file(filename):
     # Check if file extension is allowed
-    # 检查文件扩展名是否允许
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
     # rsplit('.', 1) = split by dot, keep last part
-    # rsplit('.', 1) = 用点分割，保留最后一部分
     # Example: "photo.JPG" → ["photo", "JPG"]
     # [1].lower() → "jpg"
-    # "jpg" in ALLOWED_EXTENSIONS → True ✅
+    # "jpg" in ALLOWED_EXTENSIONS → True 
 
 # ════════════════════════════════════════════
-# ROUTES 路由
+# ROUTES 
 # ════════════════════════════════════════════
 
 @app.route("/")
 def home():
     return redirect("/login")
 
-# ── REGISTER STEP 1: Fill form 填写表单 ──────
+# ── REGISTER STEP 1: Fill form  ──────
 @app.route("/register", methods=["GET", "POST"])
 def register():
     error = None
@@ -411,17 +373,17 @@ def register():
         city             = request.form.get("city", "").strip()
         state            = request.form.get("state", "").strip()
 
-        # Validation 验证
+        # Validation 
         if not first_name or not last_name or not username or not email or not password:
             error = "Please fill all required fields."
             return render_template("register.html", error=error)
 
-        # Check if email has valid format 检查邮箱格式是否有效
-        # Must have @ and a dot after @ 必须有@和@后面的点
+        # Check if email has valid format 
+        # Must have @ and a dot after @ 
         if "@" not in email or "." not in email.split("@")[-1]:
-            error = "Please enter a valid email address. 请输入有效的邮箱地址。"
+            error = "Please enter a valid email address. "
             return render_template("register.html", error=error)
-        # This allows ALL emails! 这样允许所有邮箱！
+        # This allows ALL emails! 
         # gmail.com ✅
         # icloud.com ✅
         # yahoo.com ✅
@@ -438,7 +400,6 @@ def register():
             return render_template("register.html", error=error)
 
       # Check if same email + same role already exists
-        # 检查同一个email + 同一个角色是否已存在
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
@@ -446,11 +407,8 @@ def register():
             (email, role)
         )
         # Now we check BOTH email AND role
-        # 现在我们同时检查email和角色
         # Same email + different role = ALLOWED!
-        # 同一email + 不同角色 = 允许！
         # Same email + same role = NOT allowed!
-        # 同一email + 同一角色 = 不允许！
 
         if cursor.fetchone():
             error = f"This email is already registered as a {role}."
@@ -459,9 +417,7 @@ def register():
         conn.close()
 
         # Save form data in session temporarily
-        # 临时把表单数据保存到session
         # We don't create account yet — wait for OTP first!
-        # 我们还不创建账户 — 先等OTP验证！
         session["pending_user"] = {
             "first_name": first_name,
             "last_name":  last_name,
@@ -473,10 +429,8 @@ def register():
             "state":      state
         }
         # "pending_user" = user waiting to be verified
-        # "pending_user" = 等待验证的用户
 
         # Generate and send OTP
-        # 生成并发送OTP
         otp = generate_otp()
         save_otp(email, otp)
 
@@ -485,14 +439,13 @@ def register():
         if success:
             return redirect("/verify_otp")
             # Go to OTP verification page
-            # 跳转到OTP验证页面
         else:
             error = "Failed to send OTP. Please try again."
             return render_template("register.html", error=error)
 
     return render_template("register.html", error=error)
 
-# ── REGISTER STEP 2: Verify OTP 验证OTP ──────
+# ── REGISTER STEP 2: Verify OTP  ──────
 @app.route("/verify_otp", methods=["GET", "POST"])
 def verify_otp_page():
 
@@ -502,7 +455,6 @@ def verify_otp_page():
     error   = None
     success = None
     # success = message to show when something good happens
-    # success = 好事发生时显示的消息
     email   = session["pending_user"]["email"]
 
     if request.method == "POST":
@@ -510,7 +462,6 @@ def verify_otp_page():
 
         if verify_otp(email, entered_otp):
             # ✅ OTP CORRECT! Create account now
-            # ✅ OTP正确！现在创建账户
             user = session["pending_user"]
 
             conn = get_db()
@@ -531,14 +482,12 @@ def verify_otp_page():
             session.pop("pending_user", None)
 
             # Save a success message in session
-            # 把成功消息保存到session
             session["flash"] = "🎉 Account created successfully! Please login."
 
             return redirect("/login")
 
         else:
             # ❌ OTP WRONG or expired
-            # ❌ OTP错误或已过期
             error = "Wrong or expired OTP. Please try again. "
 
     return render_template("verify_otp.html",
@@ -547,7 +496,7 @@ def verify_otp_page():
         success=success
     )
 
-# ── RESEND OTP 重新发送OTP ───────────────────
+# ── RESEND OTP  ───────────────────
 @app.route("/resend_otp")
 def resend_otp():
     if "pending_user" not in session:
@@ -573,36 +522,29 @@ def login():
         cursor = conn.cursor()
 
         # Get ALL accounts with this email
-        # 获取这个email的所有账户
         cursor.execute("SELECT * FROM users WHERE email=?", (email,))
         users_found = cursor.fetchall()
         # fetchall() = get ALL matching rows (not just one)
-        # fetchall() = 获取所有匹配的行（不只是一个）
         conn.close()
 
         if not users_found:
-            # No account found 没有找到账户
+            # No account found 
             error = "Email not registered.。"
 
         else:
             # Check password using first account found
-            # 用找到的第一个账户检查密码
             if not check_password_hash(users_found[0]["password"], password):
                 error = "Wrong password."
 
             elif len(users_found) == 2:
                 # This email has BOTH buyer and seller accounts!
-                # 这个email同时有买家和卖家账户！
                 # Ask user which role to login as
-                # 问用户以哪个角色登录
                 session["pending_login_email"] = email
                 return redirect("/choose_role")
                 # We go to a new page to choose role
-                # 我们去一个新页面选择角色
 
             else:
                 # Only one account, login directly
-                # 只有一个账户，直接登录
                 user = users_found[0]
                 session["user_id"]    = user["id"]
                 session["first_name"] = user["first_name"]
@@ -621,9 +563,8 @@ def login():
 
     return render_template("login.html", error=error)
 
-# ── CHOOSE ROLE PAGE 选择角色页面 ─────────────
+# ── CHOOSE ROLE PAGE  ─────────────
 # This page shows when user has BOTH buyer and seller accounts
-# 当用户同时有买家和卖家账户时显示这个页面
 @app.route("/choose_role", methods=["GET", "POST"])
 def choose_role():
 
@@ -633,7 +574,6 @@ def choose_role():
     if request.method == "POST":
         chosen_role = request.form["role"]
         # Get the role the user clicked
-        # 获取用户点击的角色
 
         email = session["pending_login_email"]
 
@@ -648,7 +588,6 @@ def choose_role():
 
         if user:
             # Save chosen role's account in session
-            # 把选择的角色账户保存到session
             session.pop("pending_login_email", None)
             session["user_id"]    = user["id"]
             session["first_name"] = user["first_name"]
@@ -667,7 +606,7 @@ def choose_role():
 
     return render_template("choose_role.html")
 
-# ── PROFILE 个人资料 ──────────────────────────
+# ── PROFILE ──────────────────────────
 @app.route("/profile")
 def profile():
     if "user_id" not in session:
@@ -684,10 +623,10 @@ def profile():
     )
 
 # ════════════════════════════════════════════
-# SELLER SYSTEM 卖家系统
+# SELLER SYSTEM 
 # ════════════════════════════════════════════
 
-# ── SELLER DASHBOARD 卖家仪表板 ──────────────
+# ── SELLER DASHBOARD  ──────────────
 @app.route("/seller_dashboard")
 def seller_dashboard():
     if "user_id" not in session:
@@ -696,7 +635,6 @@ def seller_dashboard():
         return redirect("/buyer_dashboard")
 
     # Get all products belonging to this seller
-    # 获取属于这个卖家的所有商品
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -705,8 +643,7 @@ def seller_dashboard():
         ORDER BY created_at DESC
     """, (session["user_id"],))
     # WHERE seller_id = ? = only get THIS seller's products
-    # 只获取这个卖家的商品
-    # ORDER BY created_at DESC = newest first 最新的排在前面
+    # ORDER BY created_at DESC = newest first 
     products = cursor.fetchall()
     conn.close()
 
@@ -715,7 +652,7 @@ def seller_dashboard():
         products   = products
     )
 
-# ── ADD PRODUCT 添加商品 ──────────────────────
+# ── ADD PRODUCT  ──────────────────────
 @app.route("/seller/add_product", methods=["GET", "POST"])
 def add_product():
     if "user_id" not in session or session["role"] != "seller":
@@ -731,50 +668,40 @@ def add_product():
         stock       = request.form["stock"]
         category    = request.form["category"].strip()
 
-        # Handle image upload 处理图片上传
+        # Handle image upload 
         image_path = None
         # image_path = where we save the image path
-        # image_path = 我们保存图片路径的地方
 
         if 'image' in request.files:
             # request.files = contains uploaded files
-            # request.files = 包含上传的文件
             file = request.files['image']
 
             if file and file.filename != '':
                 # file.filename != '' = user actually selected a file
-                # file.filename != '' = 用户确实选择了文件
 
                 if allowed_file(file.filename):
-                    # Make filename safe 让文件名安全
+                    # Make filename safe 
                     filename = secure_filename(file.filename)
 
                     # Add unique number to avoid same filename conflicts
-                    # 加上唯一数字避免同名文件冲突
                     import time
                     filename = str(int(time.time())) + "_" + filename
                     # time.time() = current timestamp e.g. 1714900000
-                    # 当前时间戳，例如 1714900000
                     # Result: "1714900000_nike_shoes.jpg"
-                    # 结果："1714900000_nike_shoes.jpg"
 
                     # Save file to uploads folder
-                    # 保存文件到uploads文件夹
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     # os.path.join = combines folder + filename
-                    # os.path.join = 合并文件夹和文件名
                     # Result: "static/uploads/1714900000_nike_shoes.jpg"
 
                     image_path = 'uploads/' + filename
                     # We save relative path (without 'static/')
-                    # 我们保存相对路径（没有'static/'）
                     # Because Flask's url_for('static') already adds it
-                    # 因为Flask的url_for('static')已经会加上它
                 else:
                     error = "Only images allowed (PNG, JPG, GIF, WEBP). "
                     return render_template("add_product.html", error=error, success=success)
 
-        # Validation 验证
+        # Validation 
         if not name or not price or not stock:
             error = "Please fill all required fields."
         else:
@@ -800,7 +727,6 @@ def add_product():
                         price, stock,
                         category, image_path
                         # Save image_path to database
-                        # 把图片路径保存到数据库
                     ))
                     conn.commit()
                     conn.close()
@@ -812,19 +738,17 @@ def add_product():
     return render_template("add_product.html",
         error=error, success=success)
 
-# ── LOGOUT 登出 ──────────────────────────────
+# ── LOGOUT  ──────────────────────────────
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
 
-# ── EDIT PRODUCT 编辑商品 ─────────────────────
+# ── EDIT PRODUCT  ─────────────────────
 @app.route("/seller/edit_product/<int:product_id>", methods=["GET", "POST"])
 def edit_product(product_id):
     # <int:product_id> = gets ID number from URL
-    # <int:product_id> = 从URL获取ID数字
     # Example: /seller/edit_product/3 → product_id = 3
-    # 例如：/seller/edit_product/3 → product_id = 3
 
     if "user_id" not in session or session["role"] != "seller":
         return redirect("/login")
@@ -833,20 +757,17 @@ def edit_product(product_id):
     cursor = conn.cursor()
 
     # Get this product — only if it belongs to THIS seller
-    # 获取这个商品 — 只有属于这个卖家的才能编辑
     cursor.execute("""
         SELECT * FROM products
         WHERE id = ? AND seller_id = ?
     """, (product_id, session["user_id"]))
     # AND seller_id = ? = security check!
     # Sellers can ONLY edit their OWN products!
-    # 卖家只能编辑自己的商品！安全检查！
     product = cursor.fetchone()
     conn.close()
 
     if not product:
         # Product not found or doesn't belong to this seller
-        # 商品不存在或不属于这个卖家
         return redirect("/seller_dashboard")
 
     error   = None
@@ -859,10 +780,9 @@ def edit_product(product_id):
         stock       = request.form["stock"]
         category    = request.form["category"].strip()
 
-        # Handle new image upload 处理新图片上传
+        # Handle new image upload 
         image_path = product["image_url"]
         # Keep old image by default
-        # 默认保留旧图片
 
         if 'image' in request.files:
             file = request.files['image']
@@ -873,23 +793,22 @@ def edit_product(product_id):
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     image_path = 'uploads/' + filename
                     # New image uploaded! Replace old path
-                    # 新图片上传了！替换旧路径
                 else:
-                    error = "Only images allowed. 只允许图片文件。"
+                    error = "Only images allowed."
                     return render_template("edit_product.html",
                         product=product, error=error, success=success)
 
         if not name or not price or not stock:
-            error = "Please fill all required fields. 请填写所有必填项。"
+            error = "Please fill all required fields."
         else:
             try:
                 price = float(price)
                 stock = int(stock)
 
                 if price <= 0:
-                    error = "Price must be more than 0. 价格必须大于0。"
+                    error = "Price must be more than 0."
                 elif stock < 0:
-                    error = "Stock cannot be negative. 库存不能为负数。"
+                    error = "Stock cannot be negative."
                 else:
                     conn = get_db()
                     cursor = conn.cursor()
@@ -904,15 +823,13 @@ def edit_product(product_id):
                         product_id, session["user_id"]
                     ))
                     # UPDATE = change existing data in database
-                    # UPDATE = 修改数据库里已有的数据
-                    # SET = which columns to change 要修改哪些列
-                    # WHERE = which row to change 修改哪一行
+                    # SET = which columns to change 
+                    # WHERE = which row to change 
                     conn.commit()
                     conn.close()
-                    success = "✅ Product updated successfully! 商品更新成功！"
+                    success = "✅ Product updated successfully!"
 
                     # Refresh product data to show updated values
-                    # 刷新商品数据显示更新后的值
                     conn = get_db()
                     cursor = conn.cursor()
                     cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
@@ -920,7 +837,7 @@ def edit_product(product_id):
                     conn.close()
 
             except ValueError:
-                error = "Price and stock must be numbers. 价格和库存必须是数字。"
+                error = "Price and stock must be numbers."
 
     return render_template("edit_product.html",
         product = product,
@@ -929,7 +846,7 @@ def edit_product(product_id):
     )
 
 
-# ── DELETE PRODUCT 删除商品 ───────────────────
+# ── DELETE PRODUCT ───────────────────
 @app.route("/seller/delete_product/<int:product_id>")
 def delete_product(product_id):
     if "user_id" not in session or session["role"] != "seller":
@@ -941,20 +858,19 @@ def delete_product(product_id):
         DELETE FROM products
         WHERE id = ? AND seller_id = ?
     """, (product_id, session["user_id"]))
-    # DELETE = remove a row from database 从数据库删除一行
+    # DELETE = remove a row from database
     # WHERE id=? AND seller_id=? = security check!
     # Only delete if product belongs to THIS seller
-    # 只删除属于这个卖家的商品
     conn.commit()
     conn.close()
 
     return redirect("/seller_dashboard")
 
 # ════════════════════════════════════════════
-# SHOPPING CART 购物车系统
+# SHOPPING CART 
 # ════════════════════════════════════════════
 
-# ── BUYER HOME — Show all products 买家主页显示所有商品 ──
+# ── BUYER HOME — Show all products ──
 @app.route("/buyer_dashboard")
 def buyer_dashboard():
     if "user_id" not in session:
@@ -963,7 +879,6 @@ def buyer_dashboard():
         return redirect("/seller_dashboard")
 
     # Get ALL products from ALL sellers
-    # 获取所有卖家的所有商品
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -974,24 +889,18 @@ def buyer_dashboard():
         ORDER BY products.created_at DESC
     """)
     # JOIN = combine products table with users table
-    # JOIN = 合并products表和users表
     # users.username as seller_name = get seller's name
-    # users.username as seller_name = 获取卖家的名字
     # WHERE stock > 0 = only show products with stock
-    # WHERE stock > 0 = 只显示有库存的商品
     products = cursor.fetchall()
 
     # Get cart count for this buyer
-    # 获取这个买家的购物车数量
     cursor.execute("""
         SELECT SUM(quantity) FROM cart WHERE buyer_id = ?
     """, (session["user_id"],))
     # SUM(quantity) = add up all quantities
-    # SUM(quantity) = 把所有数量加起来
     result = cursor.fetchone()
     cart_count = result[0] if result[0] else 0
     # if result[0] is None (empty cart), use 0
-    # 如果result[0]是None（空购物车），用0
     conn.close()
 
     return render_template("buyer_dashboard.html",
@@ -1000,11 +909,10 @@ def buyer_dashboard():
         cart_count = cart_count
     )
 
-# ── ADD TO CART 加入购物车 ────────────────────
+# ── ADD TO CART  ────────────────────
 @app.route("/cart/add/<int:product_id>", methods=["POST"])
 def add_to_cart(product_id):
     # Only buyers can add to cart
-    # 只有买家可以加入购物车
     if "user_id" not in session:
         return redirect("/login")
     if session["role"] != "buyer":
@@ -1012,13 +920,11 @@ def add_to_cart(product_id):
 
     quantity = int(request.form.get("quantity", 1))
     # request.form.get("quantity", 1) = get quantity, default 1
-    # 获取数量，默认是1
 
     conn = get_db()
     cursor = conn.cursor()
 
     # Check if product exists and has enough stock
-    # 检查商品是否存在且有足够库存
     cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
     product = cursor.fetchone()
 
@@ -1027,12 +933,11 @@ def add_to_cart(product_id):
         return redirect("/buyer_dashboard")
 
     if product["stock"] < quantity:
-        # Not enough stock! 库存不足！
+        # Not enough stock!
         conn.close()
         return redirect("/buyer_dashboard")
 
     # Check if this product already in buyer's cart
-    # 检查这个商品是否已经在买家的购物车里
     cursor.execute("""
         SELECT * FROM cart
         WHERE buyer_id=? AND product_id=?
@@ -1041,17 +946,14 @@ def add_to_cart(product_id):
 
     if existing:
         # Already in cart! Just increase quantity
-        # 已经在购物车里！只需增加数量
         cursor.execute("""
             UPDATE cart
             SET quantity = quantity + ?
             WHERE buyer_id=? AND product_id=?
         """, (quantity, session["user_id"], product_id))
         # quantity + ? = add to existing quantity
-        # quantity + ? = 加到已有的数量上
     else:
         # Not in cart yet, add new item
-        # 还没在购物车里，添加新商品
         cursor.execute("""
             INSERT INTO cart (buyer_id, product_id, quantity)
             VALUES (?, ?, ?)
@@ -1062,9 +964,8 @@ def add_to_cart(product_id):
 
     return redirect("/cart")
     # After adding, go to cart page
-    # 添加后跳转到购物车页面
 
-# ── VIEW CART 查看购物车 ──────────────────────
+# ── VIEW CART  ──────────────────────
 @app.route("/cart")
 def view_cart():
     if "user_id" not in session:
@@ -1076,7 +977,6 @@ def view_cart():
     cursor = conn.cursor()
 
     # Get all cart items with product details
-    # 获取所有购物车商品及其详情
     cursor.execute("""
         SELECT
             cart.id        as cart_id,
@@ -1094,13 +994,11 @@ def view_cart():
     """, (session["user_id"],))
     # products.price * cart.quantity as subtotal
     # = price × quantity = subtotal for each item
-    # = 价格 × 数量 = 每件商品小计
     items = cursor.fetchall()
 
-    # Calculate total price 计算总价
+    # Calculate total price 
     total = sum(item["subtotal"] for item in items)
     # sum() = adds up all subtotals
-    # sum() = 把所有小计加起来
 
     conn.close()
 
@@ -1110,7 +1008,7 @@ def view_cart():
         first_name = session["first_name"]
     )
 
-# ── UPDATE CART QUANTITY 更新购物车数量 ─────────
+# ── UPDATE CART QUANTITY ─────────
 @app.route("/cart/update/<int:cart_id>", methods=["POST"])
 def update_cart(cart_id):
     if "user_id" not in session:
@@ -1120,7 +1018,6 @@ def update_cart(cart_id):
 
     if quantity < 1:
         # If quantity less than 1, remove item
-        # 如果数量小于1，删除商品
         return redirect(f"/cart/remove/{cart_id}")
 
     conn = get_db()
@@ -1134,7 +1031,7 @@ def update_cart(cart_id):
 
     return redirect("/cart")
 
-# ── REMOVE FROM CART 从购物车删除 ─────────────
+# ── REMOVE FROM CART ─────────────
 @app.route("/cart/remove/<int:cart_id>")
 def remove_from_cart(cart_id):
     if "user_id" not in session:
@@ -1147,17 +1044,16 @@ def remove_from_cart(cart_id):
         WHERE id=? AND buyer_id=?
     """, (cart_id, session["user_id"]))
     # DELETE only if belongs to THIS buyer (security!)
-    # 只删除属于这个买家的（安全！）
     conn.commit()
     conn.close()
 
     return redirect("/cart")
 
 # ════════════════════════════════════════════
-# CHECKOUT SYSTEM 结账系统
+# CHECKOUT SYSTEM 
 # ════════════════════════════════════════════
 
-# ── CHECKOUT PAGE 结账页面 ────────────────────
+# ── CHECKOUT PAGE  ────────────────────
 @app.route("/checkout", methods=["GET", "POST"])
 def checkout():
     if "user_id" not in session:
@@ -1168,7 +1064,7 @@ def checkout():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get cart items 获取购物车商品
+    # Get cart items
     cursor.execute("""
         SELECT
             cart.id        as cart_id,
@@ -1187,17 +1083,15 @@ def checkout():
     items = cursor.fetchall()
 
     # If cart is empty redirect back
-    # 如果购物车是空的，跳转回去
     if not items:
         conn.close()
         return redirect("/cart")
 
-    # Calculate total 计算总价
+    # Calculate total 
     total = sum(item["subtotal"] for item in items)
 
     if request.method == "POST":
         # Get delivery details from form
-        # 从表单获取配送详情
         full_name = request.form["full_name"].strip()
         phone     = request.form["phone"].strip()
         address   = request.form["address"].strip()
@@ -1205,7 +1099,7 @@ def checkout():
         state     = request.form["state"].strip()
         postcode  = request.form["postcode"].strip()
 
-        # Validation 验证
+        # Validation 
         if not full_name or not phone or not address or not city or not state or not postcode:
             conn.close()
             return render_template("checkout.html",
@@ -1214,7 +1108,7 @@ def checkout():
                 session=session
             )
 
-        # Create order in database 在数据库创建订单
+        # Create order in database 
         cursor.execute("""
             INSERT INTO orders
                 (buyer_id, total_amount, full_name, phone,
@@ -1225,10 +1119,8 @@ def checkout():
 
         order_id = cursor.lastrowid
         # lastrowid = the ID of the row just inserted
-        # lastrowid = 刚刚插入的行的ID
 
         # Save each cart item as order item
-        # 把每个购物车商品保存为订单商品
         for item in items:
             cursor.execute("""
                 INSERT INTO order_items
@@ -1237,17 +1129,15 @@ def checkout():
             """, (order_id, item["product_id"],
                   item["quantity"], item["price"]))
 
-            # Reduce product stock 减少商品库存
+            # Reduce product stock 
             cursor.execute("""
                 UPDATE products
                 SET stock = stock - ?
                 WHERE id = ?
             """, (item["quantity"], item["product_id"]))
             # stock = stock - quantity
-            # 库存 = 库存 - 购买数量
 
         # Clear the cart after order placed
-        # 下单后清空购物车
         cursor.execute("""
             DELETE FROM cart WHERE buyer_id = ?
         """, (session["user_id"],))
@@ -1256,7 +1146,6 @@ def checkout():
         conn.close()
 
         # Save order_id in session for payment page
-        # 把order_id保存到session给支付页面用
         session["last_order_id"] = order_id
         session["last_order_total"] = total
 
@@ -1268,7 +1157,6 @@ def checkout():
         total    = total,
         error    = None,
         # Pre-fill with user's saved info
-        # 预填用户已保存的信息
         full_name = session.get("first_name","") + " " + session.get("last_name",""),
         phone     = session.get("phone", ""),
         city      = session.get("city", ""),
@@ -1276,10 +1164,10 @@ def checkout():
     )
 
 # ════════════════════════════════════════════
-# PAYMENT SYSTEM 支付系统
+# PAYMENT SYSTEM
 # ════════════════════════════════════════════
 
-# ── PAYMENT PAGE 支付页面 ─────────────────────
+# ── PAYMENT PAGE ─────────────────────
 @app.route("/payment", methods=["GET", "POST"])
 def payment():
     if "user_id" not in session:
@@ -1297,7 +1185,6 @@ def payment():
 
     if request.method == "POST":
         # Check if proof image uploaded
-        # 检查是否上传了证明图片
         proof_path = None
 
         if 'payment_proof' in request.files:
@@ -1308,7 +1195,6 @@ def payment():
                     import time
                     filename = "proof_" + str(int(time.time())) + "_" + secure_filename(file.filename)
                     # proof_ prefix = easy to identify payment proofs
-                    # proof_ 前缀 = 容易识别付款证明
 
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     proof_path = 'uploads/' + filename
@@ -1318,12 +1204,11 @@ def payment():
                         order_id=order_id, order_total=order_total, error=error)
 
         # Update order status and save proof
-        # 更新订单状态并保存证明
         conn = get_db()
         cursor = conn.cursor()
 
         if proof_path:
-            # With proof 有证明
+            # With proof
             cursor.execute("""
                 UPDATE orders
                 SET status = 'payment_pending',
@@ -1331,7 +1216,7 @@ def payment():
                 WHERE id = ? AND buyer_id = ?
             """, (proof_path, order_id, session["user_id"]))
         else:
-            # Without proof (still allowed) 没有证明（仍然允许）
+            # Without proof (still allowed)
             cursor.execute("""
                 UPDATE orders
                 SET status = 'payment_pending'
@@ -1346,7 +1231,7 @@ def payment():
 
         return redirect("/payment_success")
 
-    # Check if TNG QR exists 检查TNG QR是否存在
+    # Check if TNG QR exists 
     tng_qr_exists = os.path.exists('static/images/tng_qr.png')
 
     return render_template("payment.html",
@@ -1356,7 +1241,7 @@ def payment():
         tng_qr_exists = tng_qr_exists
     )
 
-# ── PAYMENT SUCCESS PAGE 支付成功页面 ────────────
+# ── PAYMENT SUCCESS PAGE  ────────────
 @app.route("/payment_success")
 def payment_success():
     if "user_id" not in session:
@@ -1366,10 +1251,10 @@ def payment_success():
     )
 
 # ════════════════════════════════════════════
-# SELLER PAYOUT SETUP 卖家收款设置
+# SELLER PAYOUT SETUP 
 # ════════════════════════════════════════════
 
-# ── SELLER PAYOUT SETTINGS 卖家收款设置 ─────────
+# ── SELLER PAYOUT SETTINGS  ─────────
 @app.route("/seller/payout", methods=["GET", "POST"])
 def seller_payout():
     if "user_id" not in session or session["role"] != "seller":
@@ -1379,7 +1264,6 @@ def seller_payout():
     cursor = conn.cursor()
 
     # Get existing payout info
-    # 获取已有的收款信息
     cursor.execute("""
         SELECT * FROM seller_payout WHERE seller_id = ?
     """, (session["user_id"],))
@@ -1395,12 +1279,11 @@ def seller_payout():
         bank_holder  = request.form.get("bank_holder", "").strip()
 
         # Must have at least one payment method
-        # 至少需要一种收款方式
         if not tng_phone and not bank_account:
             error = "Please fill in at least one payment method."
         else:
             if payout_info:
-                # Update existing 更新已有的
+                # Update existing 
                 cursor.execute("""
                     UPDATE seller_payout
                     SET tng_phone=?, bank_name=?,
@@ -1410,7 +1293,7 @@ def seller_payout():
                       bank_account, bank_holder,
                       session["user_id"]))
             else:
-                # Insert new 插入新的
+                # Insert new 
                 cursor.execute("""
                     INSERT INTO seller_payout
                         (seller_id, tng_phone, bank_name,
@@ -1422,7 +1305,7 @@ def seller_payout():
             conn.commit()
             success = " Payout info saved!"
 
-            # Refresh payout info 刷新收款信息
+            # Refresh payout info
             cursor.execute("""
                 SELECT * FROM seller_payout WHERE seller_id = ?
             """, (session["user_id"],))
@@ -1435,7 +1318,7 @@ def seller_payout():
         success     = success
     )
 
-# ── SELLER ORDERS 卖家订单 ──────────────────────
+# ── SELLER ORDERS  ──────────────────────
 @app.route("/seller/orders")
 def seller_orders():
     if "user_id" not in session or session["role"] != "seller":
@@ -1445,7 +1328,6 @@ def seller_orders():
     cursor = conn.cursor()
 
     # Get all orders that contain this seller's products
-    # 获取包含这个卖家商品的所有订单
     cursor.execute("""
         SELECT DISTINCT
             orders.id,
@@ -1474,7 +1356,7 @@ def seller_orders():
     )
 
 
-# ── BUYER ORDER HISTORY 买家订单历史 ─────────────
+# ── BUYER ORDER HISTORY  ─────────────
 @app.route("/buyer/orders")
 def buyer_orders():
     if "user_id" not in session:
@@ -1486,7 +1368,6 @@ def buyer_orders():
     cursor = conn.cursor()
 
     # Get all orders by this buyer
-    # 获取这个买家的所有订单
     cursor.execute("""
         SELECT * FROM orders
         WHERE buyer_id = ?
@@ -1495,7 +1376,6 @@ def buyer_orders():
     orders = cursor.fetchall()
 
     # For each order, get the items
-    # 对于每个订单，获取商品
     orders_with_items = []
     for order in orders:
         cursor.execute("""
@@ -1519,7 +1399,7 @@ def buyer_orders():
         orders_with_items = orders_with_items,
         first_name        = session["first_name"]
     )
-# ── CANCEL ORDER 取消订单 ─────────────────────
+# ── CANCEL ORDER ─────────────────────
 @app.route("/buyer/cancel_order/<int:order_id>")
 def cancel_order(order_id):
     if "user_id" not in session:
@@ -1531,7 +1411,6 @@ def cancel_order(order_id):
     cursor = conn.cursor()
 
     # Only cancel if status is pending or payment_pending
-    # 只有在待处理或待确认付款状态才能取消
     cursor.execute("""
         UPDATE orders SET status = 'cancelled'
         WHERE id = ?
@@ -1540,9 +1419,8 @@ def cancel_order(order_id):
     """, (order_id, session["user_id"]))
     # AND status IN (...) = security check!
     # Cannot cancel if already paid or shipped!
-    # 已付款或已发货不能取消！
 
-    # Restore product stock 恢复商品库存
+    # Restore product stock 
     cursor.execute("""
         SELECT product_id, quantity FROM order_items
         WHERE order_id = ?
@@ -1555,7 +1433,6 @@ def cancel_order(order_id):
             WHERE id = ?
         """, (item["quantity"], item["product_id"]))
     # stock + quantity = add back the cancelled items
-    # 库存 + 数量 = 把取消的商品加回库存
 
     conn.commit()
     conn.close()
@@ -1566,7 +1443,7 @@ def cancel_order(order_id):
 # FORGOT PASSWORD 
 # ════════════════════════════════════════════
 
-# ── STEP 1: Enter email 输入邮箱 ──────────────
+# ── STEP 1: Enter email ──────────────
 @app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
     error   = None
@@ -1589,14 +1466,12 @@ def forgot_password():
                 error = "Email not registered. "
             else:
                 # Generate and send OTP
-                # 生成并发送OTP
                 otp = generate_otp()
                 save_otp(email, otp)
                 sent = send_otp_email(email, otp)
 
                 if sent:
                     # Save email in session for next step
-                    # 把邮箱保存到session给下一步用
                     session["reset_email"] = email
                     return redirect("/reset_verify_otp")
                 else:
@@ -1606,12 +1481,11 @@ def forgot_password():
         error=error, success=success)
 
 
-# ── STEP 2: Verify OTP 验证OTP ────────────────
+# ── STEP 2: Verify OTP  ────────────────
 @app.route("/reset_verify_otp", methods=["GET", "POST"])
 def reset_verify_otp():
 
     # Check if email is in session
-    # 检查session里是否有邮箱
     if "reset_email" not in session:
         return redirect("/forgot_password")
 
@@ -1623,10 +1497,8 @@ def reset_verify_otp():
 
         if verify_otp(email, entered_otp):
             # OTP correct! Allow password reset
-            # OTP正确！允许重置密码
             session["reset_verified"] = True
             # reset_verified = True means OTP passed
-            # reset_verified = True 表示OTP已通过
             return redirect("/reset_password")
         else:
             error = "Wrong or expired OTP. "
@@ -1635,12 +1507,11 @@ def reset_verify_otp():
         email=email, error=error)
 
 
-# ── STEP 3: Reset Password 重置密码 ──────────
+# ── STEP 3: Reset Password ──────────
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
 
     # Must have verified OTP first
-    # 必须先验证OTP
     if "reset_email" not in session or not session.get("reset_verified"):
         return redirect("/forgot_password")
 
@@ -1652,7 +1523,7 @@ def reset_password():
         new_password     = request.form["new_password"]
         confirm_password = request.form["confirm_password"]
 
-        # Validation 验证
+        # Validation 
         if not new_password or not confirm_password:
             error = "Please fill all fields. "
 
@@ -1663,7 +1534,7 @@ def reset_password():
             error = "Passwords do not match. "
 
         else:
-            # Hash new password 加密新密码
+            # Hash new password
             hashed = generate_password_hash(new_password)
 
             conn = None
@@ -1680,12 +1551,10 @@ def reset_password():
                     conn.close()
 
             # Clear reset session data
-            # 清除重置session数据
             session.pop("reset_email", None)
             session.pop("reset_verified", None)
 
             # Save flash message for login page
-            # 保存flash消息给登录页面
             session["flash"] = " Password reset successful! Please login. "
 
             return redirect("/login")
@@ -1694,7 +1563,7 @@ def reset_password():
         email=email, error=error, success=success)
 
 
-# ── RESEND OTP for reset 重新发送重置OTP ──────
+# ── RESEND OTP for reset──────
 @app.route("/reset_resend_otp")
 def reset_resend_otp():
     if "reset_email" not in session:
@@ -1706,7 +1575,7 @@ def reset_resend_otp():
     send_otp_email(email, otp)
 
     return redirect("/reset_verify_otp")
-# ── RUN 运行 ─────────────────────────────────
+# ── RUN  ─────────────────────────────────
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)

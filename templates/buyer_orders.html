@@ -17,7 +17,7 @@
     <div style="background:white; border-radius:12px; padding:24px;
                 margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 
-        <!-- Order header 订单标题 -->
+        <!-- Order header  -->
         <div style="display:flex; justify-content:space-between;
                     align-items:center; margin-bottom:15px;
                     padding-bottom:15px; border-bottom:1px solid #f0f0f0;">
@@ -30,7 +30,7 @@
                 </div>
             </div>
 
-            <!-- Status badge 状态徽章 -->
+            <!-- Status badge  -->
             {% if order['status'] == 'pending' %}
             <span style="background:#f0f0f0; color:#555; padding:6px 14px;
                          border-radius:20px; font-size:13px; font-weight:bold;">
@@ -69,7 +69,7 @@
             {% endif %}
         </div>
 
-        <!-- Order items 订单商品 -->
+        <!-- Order items  -->
         {% for item in items %}
         <div style="display:flex; align-items:center; gap:12px;
                     padding:10px 0; border-bottom:1px solid #f9f9f9;">
@@ -104,12 +104,12 @@
         </div>
         {% endfor %}
 
-        <!-- Order footer 订单底部 -->
+        <!-- Order footer  -->
         <div style="display:flex; justify-content:space-between;
                     align-items:center; margin-top:15px; padding-top:15px;
                     border-top:1px solid #f0f0f0;">
 
-            <!-- Delivery info 配送信息 -->
+            <!-- Delivery info  -->
             <div style="font-size:13px; color:#888;">
                 📍 {{ order['full_name'] }},
                 {{ order['city'] }}, {{ order['state'] }}
@@ -119,7 +119,6 @@
             <div style="display:flex; align-items:center; gap:12px;">
 
                 <!-- Cancel button — only for pending orders -->
-                <!-- 取消按钮 — 只对待处理订单显示 -->
                 {% if order['status'] in ['pending', 'payment_pending'] %}
                 <a href="/buyer/cancel_order/{{ order['id'] }}"
                    style="padding:7px 16px; border:1px solid #cc0000;
@@ -143,7 +142,7 @@
     {% endfor %}
 
     {% else %}
-    <!-- No orders yet 还没有订单 -->
+    <!-- No orders yet  -->
     <div style="text-align:center; padding:60px; background:white;
                 border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <p style="font-size:50px;">📋</p>
