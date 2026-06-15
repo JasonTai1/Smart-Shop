@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="breadcrumb">
+      <a href="/homepage">Home</a> › Warranty
+    </div>
+    <h1>Warranty Policy</h1>
+    <div class="hero-meta">
+      <span>Last updated: May 2026</span>
+      <span class="badge green">&#10003; Warranty Covered</span>
+      <span class="badge">12 month warranty</span>
+      </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- MAIN INFO CARD -->
+  <div class="card">
+    <h2>How Warranty Works</h2>
+    <p>
+      If your item has a defect, you can submit a warranty claim through your account.
+      Our team will review and decide whether to repair, replace, or reject the claim.
+    </p>
+
+    <div class="notice">
+      Claims are subject to verification. Not all requests will be approved.
+    </div>
+  </div>
+
+  <!-- ELIGIBILITY -->
+  <div class="card">
+    <h2>Eligibility</h2>
+    <ul>
+      <li>Item has manufacturing defect</li>
+      <li>Within warranty period</li>
+      <li>Proof of purchase is provided</li>
+      <li>Item is not damaged by misuse</li>
+    </ul>
+  </div>
+
+  <!-- WHAT NOT COVERED -->
+  <div class="card">
+    <h2>Not Covered</h2>
+    <ul>
+      <li>Physical damage caused by user</li>
+      <li>Normal wear and tear</li>
+      <li>Unauthorized modification or repair</li>
+    </ul>
+  </div>
+
+  <!-- CLAIM ACTION -->
+  <div class="card action">
+    <h2>Submit a Warranty Claim</h2>
+    <p>Go to your orders and select the product to request warranty.</p>
+    <a href="/orders" class="btn">Go to My Orders</a>
+  </div>
+
+</div>
+
+<style>
+.hero {
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 44px 40px;
+}
+
+.hero-inner {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.breadcrumb {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 16px;
+}
+
+.breadcrumb a {
+    color: #c0392b;
+    text-decoration: none;
+}
+
+.hero h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+}
+
+.hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #888;
+    flex-wrap: wrap;
+}
+
+.badge.green {
+    background: #eaf3de;
+    color: #3b6d11;
+}
+
+.badge {
+    display: inline-block;
+    background: #fce8e7;
+    color: #c0392b;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 120px auto;
+}
+
+
+
+.card {
+  background: #fff;
+  padding: 28px;
+  border-radius: 12px;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+  margin-bottom: 10px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+.notice {
+  background: #fff0f0;
+  padding: 15px;
+  border-left: 4px solid #e60023;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+.action {
+  text-align: center;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 12px 25px;
+  background: #e60023;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #c4001d;
+}
+
+</style>
+
+{% endblock %}

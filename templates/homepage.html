@@ -4,14 +4,32 @@
 
 {% block content %}
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div style="background-color: #ffcc00; color: #333; padding: 15px; text-align: center; font-weight: bold; margin-bottom: 20px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
 <!-- 🔴 Banner -->
 <div class="content">
+
   <div class="main-banner">
+
     <a href="/premium">
-    <img src="{{ url_for('static', filename='images/banner1.png') }}">
+
+      <img src="{{ url_for('static', filename='images/banner1.png') }}">
+
     </a>
+
   </div>
+
 </div>
+
 
 <!-- 🔴 Categories -->
 <div class="category-row">
@@ -61,33 +79,51 @@
     <p>Watches</p>
   </div>
 
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/.png') }}">
+    <p></p>
+  </div>
+
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/.png') }}">
+    <p></p>
+  </div>
+
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/.png') }}">
+    <p></p>
+  </div>
+
+  <div class="category-item">
+    <img src="{{ url_for('static', filename='images/.png') }}">
+    <p></p>
+  </div>
+
 </div>
+
 
 <!-- 🔴 Popular Products -->
 <section class="popular">
+
   <h2>Popular Products</h2>
 
   <div class="product-grid">
 
+    {% for product_id, product in products %}
     <div class="product-card">
-      <img src="{{ url_for('static', filename='images/.png') }}">
-      <div class="info">
-        <p class="brand">Apple</p>
-        <p class="name">13-inch MacBook Neo</p>
-        <p class="price">From RM2,499.00</p>
-      </div>
-    </div>
+      <a href="{{ url_for('product_detail', id=product_id) }}" style="text-decoration: none; color: inherit; display: block;">
 
-    <div class="product-card">
-      <img src="{{ url_for('static', filename='images/.png') }}">
-      <div class="info">
-        <p class="brand">Apple</p>
-        <p class="name">iPhone 17e</p>
-        <p class="price">From RM2,949.00</p>
-      </div>
+      <img src="{{ url_for('static', filename='images/' ~ product.image) }}" alt="{{ product.name }}">
+
+      <p>{{ product.name }}</p>
+      <p>{{ product.price }}</p>
+
+    </a>  
     </div>
+    {% endfor %}
 
   </div>
+
 </section>
 
 {% endblock %}
