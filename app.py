@@ -61,7 +61,12 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 # ════════════════════════════════════════════
 
 def get_db():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("database.db",
+        check_same_thread=False,
+        timeout=10
+    )
+    # check_same_thread=False = allow multiple threads to use database
+    # timeout=10 = wait up to 10 seconds if database is locked
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -319,53 +324,56 @@ def send_otp_email(to_email, otp):
         # False = 邮件发送失败
 
 def save_otp(email, otp):
-    # Save OTP to database
-    # 把OTP保存到数据库
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # Delete any old OTP for this email first
-    # 先删除这个邮箱的旧OTP
-    cursor.execute("DELETE FROM otp_codes WHERE email=?", (email,))
-
-    # Save new OTP
-    # 保存新OTP
-    cursor.execute(
-        "INSERT INTO otp_codes (email, otp) VALUES (?, ?)",
-        (email, otp)
-    )
-    conn.commit()
-    conn.close()
-
-def verify_otp(email, entered_otp):
-    # Check if OTP is correct and not expired
-    # 检查OTP是否正确且未过期
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT otp FROM otp_codes 
-        WHERE email=? 
-        AND created_at >= datetime('now', '-5 minutes')
-    """, (email,))
-    # datetime('now', '-5 minutes') = 5 minutes ago
-    # 5分钟前
-    # This makes OTP expire after 5 minutes!
-    # 这让OTP在5分钟后过期！
-
-    result = cursor.fetchone()
-    conn.close()
-
-    if result and result["otp"] == entered_otp:
-        # OTP matches! Delete it so it can't be used again
-        # OTP匹配！删除它，这样不能再次使用
+    conn = None
+    try:
         conn = get_db()
         cursor = conn.cursor()
+        # Delete old OTP first 
         cursor.execute("DELETE FROM otp_codes WHERE email=?", (email,))
+        # Save new OTP 
+        cursor.execute(
+            "INSERT INTO otp_codes (email, otp) VALUES (?, ?)",
+            (email, otp)
+        )
         conn.commit()
-        conn.close()
-        return True
-    return False
+        # try/except = if anything goes wrong, catch the error
+    except Exception as e:
+        print(f"save_otp error: {e}")
+    finally:
+        if conn:
+            conn.close()
+        # finally = ALWAYS runs, even if error happens
+        # Makes sure connection is always closed!
+
+def verify_otp(email, entered_otp):
+    conn = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT otp FROM otp_codes
+            WHERE email=?
+            AND created_at >= datetime('now', '-5 minutes')
+        """, (email,))
+        result = cursor.fetchone()
+
+        if result and result["otp"] == entered_otp:
+            # OTP matches! Delete it
+            # OTP匹配！删除它
+            cursor.execute(
+                "DELETE FROM otp_codes WHERE email=?",
+                (email,)
+            )
+            conn.commit()
+            return True
+        return False
+
+    except Exception as e:
+        print(f"verify_otp error: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
    
    # upload photo
 def allowed_file(filename):
@@ -1202,7 +1210,7 @@ def checkout():
             conn.close()
             return render_template("checkout.html",
                 items=items, total=total,
-                error="Please fill all delivery details. 请填写所有配送信息。",
+                error="Please fill all delivery details. ",
                 session=session
             )
 
@@ -1305,7 +1313,7 @@ def payment():
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     proof_path = 'uploads/' + filename
                 else:
-                    error = "Only image files allowed. 只允许图片文件。"
+                    error = "Only image files allowed. "
                     return render_template("payment.html",
                         order_id=order_id, order_total=order_total, error=error)
 
@@ -1389,7 +1397,7 @@ def seller_payout():
         # Must have at least one payment method
         # 至少需要一种收款方式
         if not tng_phone and not bank_account:
-            error = "Please fill in at least one payment method. 请至少填写一种收款方式。"
+            error = "Please fill in at least one payment method."
         else:
             if payout_info:
                 # Update existing 更新已有的
@@ -1412,7 +1420,7 @@ def seller_payout():
                       bank_account, bank_holder))
 
             conn.commit()
-            success = "✅ Payout info saved! 收款信息已保存！"
+            success = " Payout info saved!"
 
             # Refresh payout info 刷新收款信息
             cursor.execute("""
@@ -1465,104 +1473,6 @@ def seller_orders():
         first_name = session["first_name"]
     )
 
-# ════════════════════════════════════════════
-# ADMIN PAYOUT DASHBOARD 管理员转账仪表板
-# ════════════════════════════════════════════
-
-@app.route("/admin/payouts")
-def admin_payouts():
-    if "user_id" not in session or session["user_id"] != 1:
-        return redirect("/login")
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # Get pending orders with proof
-    # 获取待处理的订单和证明
-    cursor.execute("""
-        SELECT
-            orders.*,
-            users.email as buyer_email
-        FROM orders
-        JOIN users ON orders.buyer_id = users.id
-        WHERE orders.status = 'payment_pending'
-        ORDER BY orders.created_at DESC
-    """)
-    pending_orders = cursor.fetchall()
-
-    # Get sellers payout info
-    # 获取卖家收款信息
-    cursor.execute("""
-        SELECT
-            users.id,
-            users.first_name,
-            users.last_name,
-            users.email,
-            seller_payout.tng_phone,
-            seller_payout.bank_name,
-            seller_payout.bank_account,
-            seller_payout.bank_holder,
-            COALESCE(SUM(
-                CASE WHEN orders.status IN ('payment_pending','paid')
-                THEN order_items.price * order_items.quantity
-                ELSE 0 END
-            ), 0) as total_earned,
-            COALESCE(SUM(
-                CASE WHEN orders.status = 'payment_pending'
-                THEN order_items.price * order_items.quantity
-                ELSE 0 END
-            ), 0) as pending_amount
-        FROM users
-        LEFT JOIN seller_payout ON users.id = seller_payout.seller_id
-        LEFT JOIN products      ON users.id = products.seller_id
-        LEFT JOIN order_items   ON products.id = order_items.product_id
-        LEFT JOIN orders        ON order_items.order_id = orders.id
-        WHERE users.role = 'seller'
-        GROUP BY users.id
-    """)
-    sellers = cursor.fetchall()
-    conn.close()
-
-    return render_template("admin_payouts.html",
-        pending_orders = pending_orders,
-        sellers        = sellers
-    )
-
-# ── ADMIN CONFIRM PAYMENT 管理员确认付款 ──────────
-@app.route("/admin/confirm_payment/<int:order_id>")
-def confirm_payment(order_id):
-    if "user_id" not in session or session["user_id"] != 1:
-        return redirect("/login")
-
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE orders SET status = 'paid'
-        WHERE id = ?
-    """, (order_id,))
-    # status = 'paid' = payment confirmed!
-    # 付款已确认！
-    conn.commit()
-    conn.close()
-
-    return redirect("/admin/payouts")
-
-# ── ADMIN REJECT PAYMENT 管理员拒绝付款 ──────────
-@app.route("/admin/reject_payment/<int:order_id>")
-def reject_payment(order_id):
-    if "user_id" not in session or session["user_id"] != 1:
-        return redirect("/login")
-
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE orders SET status = 'rejected'
-        WHERE id = ?
-    """, (order_id,))
-    conn.commit()
-    conn.close()
-
-    return redirect("/admin/payouts")
 
 # ── BUYER ORDER HISTORY 买家订单历史 ─────────────
 @app.route("/buyer/orders")
@@ -1651,6 +1561,151 @@ def cancel_order(order_id):
     conn.close()
 
     return redirect("/buyer/orders")
+
+# ════════════════════════════════════════════
+# FORGOT PASSWORD 
+# ════════════════════════════════════════════
+
+# ── STEP 1: Enter email 输入邮箱 ──────────────
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    error   = None
+    success = None
+
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+
+        if not email:
+            error = "Please enter your email. "
+        else:
+            # Check if email exists in database 
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+            user = cursor.fetchone()
+            conn.close()
+
+            if not user:
+                error = "Email not registered. "
+            else:
+                # Generate and send OTP
+                # 生成并发送OTP
+                otp = generate_otp()
+                save_otp(email, otp)
+                sent = send_otp_email(email, otp)
+
+                if sent:
+                    # Save email in session for next step
+                    # 把邮箱保存到session给下一步用
+                    session["reset_email"] = email
+                    return redirect("/reset_verify_otp")
+                else:
+                    error = "Failed to send OTP. Please try again. "
+
+    return render_template("forgot_password.html",
+        error=error, success=success)
+
+
+# ── STEP 2: Verify OTP 验证OTP ────────────────
+@app.route("/reset_verify_otp", methods=["GET", "POST"])
+def reset_verify_otp():
+
+    # Check if email is in session
+    # 检查session里是否有邮箱
+    if "reset_email" not in session:
+        return redirect("/forgot_password")
+
+    email   = session["reset_email"]
+    error   = None
+
+    if request.method == "POST":
+        entered_otp = request.form["otp"].strip()
+
+        if verify_otp(email, entered_otp):
+            # OTP correct! Allow password reset
+            # OTP正确！允许重置密码
+            session["reset_verified"] = True
+            # reset_verified = True means OTP passed
+            # reset_verified = True 表示OTP已通过
+            return redirect("/reset_password")
+        else:
+            error = "Wrong or expired OTP. "
+
+    return render_template("reset_verify_otp.html",
+        email=email, error=error)
+
+
+# ── STEP 3: Reset Password 重置密码 ──────────
+@app.route("/reset_password", methods=["GET", "POST"])
+def reset_password():
+
+    # Must have verified OTP first
+    # 必须先验证OTP
+    if "reset_email" not in session or not session.get("reset_verified"):
+        return redirect("/forgot_password")
+
+    email   = session["reset_email"]
+    error   = None
+    success = None
+
+    if request.method == "POST":
+        new_password     = request.form["new_password"]
+        confirm_password = request.form["confirm_password"]
+
+        # Validation 验证
+        if not new_password or not confirm_password:
+            error = "Please fill all fields. "
+
+        elif len(new_password) < 6:
+            error = "Password must be at least 6 characters. "
+
+        elif new_password != confirm_password:
+            error = "Passwords do not match. "
+
+        else:
+            # Hash new password 加密新密码
+            hashed = generate_password_hash(new_password)
+
+            conn = None
+            try:
+                conn = get_db()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT id FROM users WHERE email = ?",
+                    (email,)
+                )
+                user = cursor.fetchone()
+            finally:
+                if conn:
+                    conn.close()
+
+            # Clear reset session data
+            # 清除重置session数据
+            session.pop("reset_email", None)
+            session.pop("reset_verified", None)
+
+            # Save flash message for login page
+            # 保存flash消息给登录页面
+            session["flash"] = " Password reset successful! Please login. "
+
+            return redirect("/login")
+
+    return render_template("reset_password.html",
+        email=email, error=error, success=success)
+
+
+# ── RESEND OTP for reset 重新发送重置OTP ──────
+@app.route("/reset_resend_otp")
+def reset_resend_otp():
+    if "reset_email" not in session:
+        return redirect("/forgot_password")
+
+    email = session["reset_email"]
+    otp   = generate_otp()
+    save_otp(email, otp)
+    send_otp_email(email, otp)
+
+    return redirect("/reset_verify_otp")
 # ── RUN 运行 ─────────────────────────────────
 if __name__ == "__main__":
     init_db()
