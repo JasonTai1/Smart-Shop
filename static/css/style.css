@@ -465,3 +465,35 @@ nav.expanded .active-link .chevron {
 .footer a:hover {
   color: #fff;
 }
+
+/* New Adder css*/
+.elegant-profile-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background-color: #ffffff;
+    color: #800000;
+    border: 2px solid #800000;
+    border-radius: 20px; 
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+
+  .elegant-profile-btn .user-icon {
+    font-size: 14px;
+    transition: transform 0.25s ease;
+  }
+
+  .elegant-profile-btn:hover {
+    background-color: #800000;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(128, 0, 0, 0.2);
+  }
+
+  .elegant-profile-btn:hover .user-icon {
+    transform: rotate(-10deg) scale(1.1);
+  }
