@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartShop | {% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+
+    /* Reset  */
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: #f2f2f2;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+    }
+
+    .auth-topbar {
+      background: white;
+      border-bottom: 1px solid #eee;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 0 40px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    /* Logo + Shop Name  */
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .auth-logo img {
+      height: 45px;
+      object-fit: contain;
+    }
+
+    .auth-logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .auth-logo-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: #800000;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    .auth-logo-tagline {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    /* Nav links */
+    .auth-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .auth-nav-link {
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      color: #555;
+    }
+
+    .auth-nav-link:hover {
+      background: #f5f5f5;
+      color: #800000;
+    }
+
+    .auth-nav-link.active {
+      background: #800000;
+      color: white;
+      font-weight: 600;
+    }
+
+    .auth-nav-link.active:hover {
+      background: #600000;
+      color: white;
+    }
+
+    /* Divider */
+    .auth-nav-divider {
+      width: 1px;
+      height: 20px;
+      background: #ddd;
+      margin: 0 4px;
+    }
+
+    /* Back to home link */
+    .auth-home-link {
+      font-size: 13px;
+      color: #888;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+
+    .auth-home-link:hover {
+      background: #f5f5f5;
+      color: #800000;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .auth-body {
+      min-height: calc(100vh - 70px - 50px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    /* ── FOOTER ── */
+    .auth-footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      color: #aaa;
+      border-top: 1px solid #eee;
+      background: white;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR  -->
+<div class="auth-topbar">
+
+  <!-- Left: Logo + Name -->
+  <a href="/" class="auth-logo">
+    <img src="{{ url_for('static', filename='images/logo.png') }}"
+         alt="Smart Shop Logo"
+         onerror="this.style.display='none'">
+    <div class="auth-logo-text">
+      <span class="auth-logo-name">Smart Shop</span>
+      <span class="auth-logo-tagline">Malaysia's Smart Online Store </span>
+    </div>
+  </a>
+
+  <!-- Right: Nav Links 右边：导航链接 -->
+  <div class="auth-nav">
+
+    <div class="auth-nav-divider"></div>
+
+    <!-- Login button  -->
+    <a href="/login"
+       class="auth-nav-link {% if active_page == 'login' %}active{% endif %}">
+      Login 
+    </a>
+
+    <!-- Register button -->
+    <a href="/register"
+       class="auth-nav-link {% if active_page == 'register' %}active{% endif %}">
+      Register 
+    </a>
+
+  </div>
+</div>
+
+<!-- PAGE CONTENT  -->
+<div class="auth-body">
+  {% block content %}{% endblock %}
+</div>
+
+<!-- FOOTER -->
+<div class="auth-footer">
+  © 2026 Smart Shop Malaysia. All Rights Reserved.
+  <span style="margin:0 8px;">|</span>
+  <a href="/policy" style="color:#aaa; text-decoration:none;">Privacy Policy</a>
+  <span style="margin:0 8px;">|</span>
+  <a href="/returnpolicy" style="color:#aaa; text-decoration:none;">Return Policy</a>
+</div>
+
+</body>
+</html>
