@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Product List</h2>
+
+<form action="/search" class="search-bar">
+    <input name="q" placeholder="Search Product">
+    <button type="submit">Search</button>
+</form>
+
+<div class="category-bar">
+
+    <a href="/" class="btn-category">
+        All
+    </a>
+
+    <a href="/category/Phone" class="btn-category">
+        Phones
+    </a>
+
+    <a href="/category/Audio" class="btn-category">
+        Audio
+    </a>
+
+    <a href="/category/Accessory" class="btn-category">
+        Accessories
+    </a>
+
+</div>
+
+<div class="product-container">
+
+{% for product in products %}
+
+<div class="card">
+
+    <!-- PRODUCT IMAGE -->
+    <img src="{{ product.image_url }}" width="180">
+
+    <!-- PRODUCT NAME -->
+    <h3>{{ product.name }}</h3>
+
+    <!-- CATEGORY -->
+    <p class="category">
+        {{ product.category }}
+    </p>
+
+    <!-- SELLER -->
+    <p>
+        Seller: {{ product.seller }}
+    </p>
+
+    <!-- PRICE -->
+    <h3 class="price">
+        RM {{ product.price }}
+    </h3>
+
+    <!-- PRODUCT DETAIL -->
+    <a href="/product/{{ product.id }}" class="btn">
+        View Product
+    </a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

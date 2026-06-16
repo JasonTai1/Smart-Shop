@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="post-page">
+
+    <div class="post-card">
+
+        <h1>{{ post.title }}</h1>
+
+        <p class="author">
+            👤 {{ post.author }}
+        </p>
+
+        <div class="stats">
+
+            <span>❤️ {{ post.likes }}</span>
+
+            <span>👁 {{ post.views }}</span>
+
+        </div>
+
+        <hr>
+
+        <p class="post-content">
+
+            {{ post.content }}
+
+        </p>
+
+        <a href="/like_post/{{ post.id }}"
+           class="like-btn">
+            ❤️ Like
+        </a>
+
+    </div>
+
+    <div class="comment-section">
+
+        <h2>
+            💬 Comments
+        </h2>
+
+        {% for comment in comments %}
+
+        <div class="comment-card">
+
+            <strong>
+                {{ comment.author }}
+            </strong>
+
+            <p>
+                {{ comment.content }}
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+        <form action="/add_comment/{{ post.id }}"
+              method="POST">
+
+            <textarea
+                name="content"
+                placeholder="Write a comment..."
+                required></textarea>
+
+            <button type="submit">
+                Post Comment
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
