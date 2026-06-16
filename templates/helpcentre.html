@@ -1,0 +1,198 @@
+{% extends "base.html" %} {% block title %}Help Centre - SmartShop{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/helpcentre.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<body>
+
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="breadcrumb">
+      <a href="/homepage">Home</a> › Help Centre
+    </div>
+    <h1>Help Centre</h1>
+    <div class="hero-meta">
+      <span>Last updated: June 2026</span>
+      <span class="badge green">&#10003; 24/7 Support</span>
+      <span class="badge">Avg response: 2 hour</span>
+    </div>
+  </div>
+</div>
+
+  <!-- Search bar -->
+  <div class="help-search-wrap">
+    <input type="text" id="helpSearch" placeholder="Search for help, e.g. 'refund', 'shipping', 'password'">
+  </div>
+
+  <div class="help-layout">
+
+    <!-- Sidebar -->
+    <div class="help-sidebar">
+      <p class="sidebar-label">ON THIS PAGE</p>
+      <a href="#orders" class="help-nav-link active">Orders & Shipping</a>
+      <a href="#payments" class="help-nav-link">Payments</a>
+      <a href="#returns" class="help-nav-link">Returns & Refunds</a>
+      <a href="#account" class="help-nav-link">Account & Security</a>
+      <a href="#promotions" class="help-nav-link">Promotions & Membership</a>
+      <a href="#contact" class="help-nav-link">Contact support</a>
+    </div>
+
+    <!-- Main content -->
+    <div class="help-main">
+
+      <!-- Orders & Shipping -->
+      <section id="orders" class="help-section">
+        <h2>📦 Orders & Shipping</h2>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            How can I track my order?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Go to <b>My Account → Orders</b> and select the order you want to track. You'll see real-time courier updates and an estimated delivery date.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            How long does delivery take?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Standard shipping takes <b>3-5 business days</b>. Express shipping takes <b>1-2 business days</b>. Delivery times may vary depending on your location.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            Can I change my delivery address after placing an order?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            You can edit your delivery address within <b>1 hour</b> of placing the order, as long as it hasn't been shipped. Go to <b>My Account → Orders → Edit Address</b>.
+          </div>
+        </div>
+      </section>
+
+      <!-- Payments -->
+      <section id="payments" class="help-section">
+        <h2>💳 Payments</h2>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            What payment methods are accepted?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            We accept Visa, Mastercard, online banking (FPX), e-wallets (Touch 'n Go, GrabPay), and cash on delivery for selected areas.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            Why was my payment declined?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            This may be due to incorrect card details, insufficient funds, or your bank blocking the transaction. Try another payment method or contact your bank.
+          </div>
+        </div>
+      </section>
+
+      <!-- Returns & Refunds -->
+      <section id="returns" class="help-section">
+        <h2>↩️ Returns & Refunds</h2>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            What is your return policy?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Items can be returned within <b>7 calendar days</b> of delivery if unused, undamaged, and in original packaging. See our full
+            <a href="/returnpolicy" class="help-link">Return & Refund Policy</a> for details.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            When will I get my refund?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Refunds are processed within <b>3-5 business days</b> after we receive and inspect the returned item. It may take an extra 2-7 days to appear on your statement.
+          </div>
+        </div>
+      </section>
+
+      <!-- Account & Security -->
+      <section id="account" class="help-section">
+        <h2>👤 Account & Security</h2>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            How do I reset my password?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Click <b>Forgot Password</b> on the login page, enter your registered email, and follow the reset link sent to your inbox.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            How do I update my account details?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Go to <b>My Account → Profile Settings</b> to update your name, email, phone number, or address.
+          </div>
+        </div>
+      </section>
+
+      <!-- Promotions & Membership -->
+      <section id="promotions" class="help-section">
+        <h2>🎁 Promotions & Membership</h2>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            How do I become a Premium Member?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Sign up for SmartShop Premium from your account dashboard to enjoy an extra <b>20% off</b> on selected items and free shipping.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            How do I apply a promo code?
+            <span class="faq-arrow">+</span>
+          </div>
+          <div class="faq-a">
+            Enter your promo code at checkout in the <b>"Promo Code"</b> box and click Apply. The discount will be reflected in your order total.
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact support -->
+      <section id="contact" class="help-section help-contact">
+        <h2>Still need help?</h2>
+        <p>Our support team is available 24/7 to assist you.</p>
+        <a href="mailto:SmartShop Support <smartshopmalaysia3@gmail.com>" class="btn-contact btn-contact-primary">Email Support</a>
+        <a href="#" onclick="openLiveChat()" class="btn-contact btn-contact-secondary">Live Chat</a>
+      </section>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/helpcentre.js') }}"></script>
+{% endblock %}

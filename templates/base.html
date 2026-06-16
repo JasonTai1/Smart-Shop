@@ -8,6 +8,9 @@
   <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_css %}{% endblock %}
+
 </head>
 
 <body>
@@ -127,7 +130,7 @@
     <div class="footer-col">
       <h4>Customer Service</h4>
       <ul>
-        <li>Help Centre</li>
+        <li><a href="/helpcentre">Help Centre</a></li>
         <li><a href="/returnpolicy">Return Policy</a></li>
         <li><a href="/warranty">Warranty</a></li>
       </ul>
@@ -155,10 +158,16 @@
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 SmartShop. All Rights Reserved.</p>
+    <p>
+    <a href="/admin">
+        © 2026 SmartShop. All Rights Reserved.
+    </a>
+    </p>
   </div>
 
 </footer>
+
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>
