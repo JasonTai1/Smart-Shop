@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div style="max-width:700px; margin:40px auto; padding:0 20px;">
+<div style="background:white; border-radius:16px; padding:35px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+    <div style="text-align:center; margin-bottom:20px;">
+        <div style="width:80px; height:80px; border-radius:50%;
+                    background:#800000; color:white; font-size:32px;
+                    font-weight:bold; display:flex; align-items:center;
+                    justify-content:center; margin:0 auto 12px;">
+            {{ first_name[0] | upper }}
+        </div>
+        <h2 style="color:#333; margin-bottom:5px;">{{ first_name }} {{ last_name }}</h2>
+        {% if role == "seller" %}
+            <span style="background:#fff3e0; color:#b36a00; padding:4px 16px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                🏪 Seller
+            </span>
+        {% else %}
+            <span style="background:#e8f4ff; color:#1a6cb8; padding:4px 16px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                🛒 Buyer
+            </span>
+        {% endif %}
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; margin-top:15px;">
+        <tr>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px; width:150px;">Username</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">{{ username }}</td>
+        </tr>
+        <tr>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px;">Email</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">{{ email }}</td>
+        </tr>
+        <tr>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px;">Location</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">
+                {% if city and state %}{{ city }}, {{ state }}
+                {% elif city %}{{ city }}
+                {% elif state %}{{ state }}
+                {% else %}Not set{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       color:#888; font-size:14px;">Role</td>
+            <td style="padding:12px 5px; border-bottom:1px solid #f0f0f0;
+                       font-size:14px; font-weight:600; color:#333;">{{ role | capitalize }}</td>
+        </tr>
+        <tr>
+            <td style="padding:12px 5px; color:#888; font-size:14px;">Member Since</td>
+            <td style="padding:12px 5px; font-size:14px; font-weight:600; color:#333;">
+                {{ created_at[:10] if created_at else '—' }}
+            </td>
+        </tr>
+    </table>
+
+    <div style="display:flex; gap:12px; margin-top:25px;">
+        {% if role == "seller" %}
+        <a href="/seller_dashboard"
+           style="flex:1; text-align:center; padding:12px; background:#800000;
+                  color:white; border-radius:8px; text-decoration:none; font-weight:bold;">
+             Seller Dashboard
+        </a>
+        {% else %}
+        <a href="/buyer_dashboard"
+           style="flex:1; text-align:center; padding:12px; background:#800000;
+                  color:white; border-radius:8px; text-decoration:none; font-weight:bold;">
+             Continue Shopping
+        </a>
+        {% endif %}
+        <a href="/logout"
+           style="flex:1; text-align:center; padding:12px; border:2px solid #800000;
+                  color:#800000; border-radius:8px; text-decoration:none; font-weight:bold;">
+             Logout
+        </a>
+    </div>
+</div>
+</div>
+{% endblock %}

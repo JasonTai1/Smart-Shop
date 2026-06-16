@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Add Product{% endblock %}
+
+{% block content %}
+<div style="max-width:580px; margin:40px auto; padding:0 20px;">
+<div style="background:white; padding:35px; border-radius:16px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+    <h2 style="color:#800000; text-align:center; margin-bottom:5px;">➕ Add New Product</h2>
+    <p style="text-align:center; color:#888; font-size:13px; margin-bottom:25px;">
+        Add new product to your shop
+    </p>
+
+    {% if error %}
+    <div style="color:red; background:#fff0f0; padding:12px; border-radius:6px;
+                margin-bottom:15px; border:1px solid #ffcccc; font-size:14px;">❌ {{ error }}</div>
+    {% endif %}
+    {% if success %}
+    <div style="color:green; background:#f0fff0; padding:12px; border-radius:6px;
+                margin-bottom:15px; border:1px solid #99dd99; font-size:14px;">{{ success }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <label style="display:block; font-size:13px; color:#555; font-weight:600; margin-bottom:5px;">
+            Product Name <span style="color:red;">*</span>
+        </label>
+        <input type="text" name="name" placeholder="e.g. Nike Air Max" required
+               style="width:100%; padding:11px 14px; border:1px solid #ddd; border-radius:8px;
+                      font-size:14px; margin-bottom:16px; box-sizing:border-box; outline:none;">
+
+        <label style="display:block; font-size:13px; color:#555; font-weight:600; margin-bottom:5px;">
+            Category
+        </label>
+        <select name="category"
+                style="width:100%; padding:11px 14px; border:1px solid #ddd; border-radius:8px;
+                       font-size:14px; margin-bottom:16px; box-sizing:border-box;">
+            <option value="">Select category...</option>
+        <optgroup label="Electronics">
+            <option>Smartphones</option>
+            <option>Laptops</option>
+            <option>Tablets</option>
+            <option>Desktop Computers</option>
+            <option>Monitors</option>
+            <option>Computer Accessories</option>
+            <option>Keyboards</option>
+            <option>Mice</option>
+            <option>Printers</option>
+            <option>Networking Devices</option>\
+        </optgroup>
+        <optgroup label="Fashion">
+            <option>Men Clothing</option>
+            <option>Women Clothing</option>
+            <option>Kids Clothing</option>
+            <option>Shoes</option>
+            <option>Sneakers</option>
+            <option>Sandals</option>
+            <option>Bags</option>
+            <option>Wallets</option>
+            <option>Watches</option>
+            <option>Jewellery</option>
+        </optgroup>
+        <optgroup label="Beauty">
+            <option>Skincare</option>
+            <option>Makeup</option>
+            <option>Hair Care</option>
+            <option>Perfume</option>
+            <option>Body Care</option>
+            <option>Men Grooming</option>
+            <option>Beauty Tools</option>
+            <option>Nail Care</option>
+            <option>Face Masks</option>
+            <option>Cosmetics Sets</option>
+        </optgroup>
+        <optgroup label="Home">
+            <option>Furniture</option>
+            <option>Home Decor</option>
+            <option>Kitchen Appliances</option>
+            <option>Cookware</option>
+            <option>Bedding</option>
+            <option>Cleaning Supplies</option>
+            <option>Bathroom Accessories</option>
+            <option>Storage Organizers</option>
+            <option>Lighting</option>
+            <option>Home Improvement</option>
+        </optgroup>
+        <optgroup label="Food">
+            <option>Snacks</option>
+            <option>Beverages</option>
+            <option>Instant Food</option>
+            <option>Frozen Food</option>
+            <option>Healthy Food</option>
+            <option>Coffee</option>
+            <option>Tea</option>
+            <option>Chocolate</option>
+            <option>Bakery</option>
+            <option>Dairy Products</option>
+        </optgroup>    
+        <optgroup label="Sports">
+            <option>Fitness Equipment</option>
+            <option>Gym Wear</option>
+            <option>Sports Shoes</option>
+            <option>Outdoor Gear</option>
+            <option>Cycling</option>
+            <option>Camping</option>
+            <option>Swimming</option>
+            <option>Football Equipment</option>
+            <option>Basketball Equipment</option>
+            <option>Yoga Accessories</option>
+        </optgroup>
+        <optgroup label="Baby">
+           <option>Baby Clothing</option>
+           <option>Baby Toys</option>
+           <option>Baby Feeding</option>
+           <option>Diapers</option>
+           <option>Baby Strollers</option>
+           <option>Baby Safety</option>
+           <option>Baby Bath Products</option>
+           <option>Baby Health Care</option>
+        </optgroup>  
+        <optgroup label="Books">
+            <option>Academic Books</option>
+            <option>Novels</option>
+            <option>Comics</option>
+            <option>Magazines</option>
+            <option>Children Books</option>
+            <option>Religious Books</option>
+            <option>Reference Books</option>
+            <option>E-books</option>
+        </optgroup>
+        <optgroup label="Toys">
+            <option>Educational Toys</option>
+            <option>Action Figures</option>
+            <option>Board Games</option>
+            <option>Puzzles</option>
+            <option>RC Toys</option>
+            <option>Dolls</option>
+            <option>Building Blocks</option>
+        </optgroup>
+        <optgroup label="Pets">
+           <option>Pet Food</option>
+           <option>Pet Accessories</option>
+           <option>Pet Toys</option>
+           <option>Pet Grooming</option>
+           <option>Pet Health Care</option> 
+        </optgroup>
+        <optgroup label="Office">
+            <option>Office Supplies</option>
+            <option>Stationery</option>
+            <option>Office Furniture</option>
+            <option>Printers & Ink</option>
+            <option>Paper Products</option>
+        </optgroup>
+        <optgroup label="Digital">
+            <option>Software</option>
+            <option>Digital Subscriptions</option>
+            <option>Online Courses</option>
+            <option>Gaming Credits</option>
+            <option>Gift Cards</option>
+        </optgroup>
+    </select>
+
+
+
+        <label style="display:block; font-size:13px; color:#555; font-weight:600; margin-bottom:5px;">
+            Description
+        </label>
+        <textarea name="description" placeholder="Describe your product..."
+                  style="width:100%; padding:11px 14px; border:1px solid #ddd; border-radius:8px;
+                         font-size:14px; margin-bottom:16px; box-sizing:border-box;
+                         height:90px; resize:vertical; outline:none;"></textarea>
+
+        <div style="display:flex; gap:12px;">
+            <div style="flex:1;">
+                <label style="display:block; font-size:13px; color:#555; font-weight:600; margin-bottom:5px;">
+                    Price (RM) <span style="color:red;">*</span>
+                </label>
+                <input type="number" name="price" placeholder="0.00" step="0.01" min="0.01" required
+                       style="width:100%; padding:11px 14px; border:1px solid #ddd; border-radius:8px;
+                              font-size:14px; margin-bottom:16px; box-sizing:border-box; outline:none;">
+            </div>
+            <div style="flex:1;">
+                <label style="display:block; font-size:13px; color:#555; font-weight:600; margin-bottom:5px;">
+                    Stock <span style="color:red;">*</span>
+                </label>
+                <input type="number" name="stock" placeholder="0" min="0" required
+                       style="width:100%; padding:11px 14px; border:1px solid #ddd; border-radius:8px;
+                              font-size:14px; margin-bottom:16px; box-sizing:border-box; outline:none;">
+            </div>
+        </div>
+
+        <label style="display:block; font-size:13px; color:#555; font-weight:600; margin-bottom:5px;">
+            Product Image
+        </label>
+
+        <div id="previewContainer" style="display:none; text-align:center; margin-bottom:16px;">
+            <img id="previewImg" src="" alt="Preview"
+                 style="max-width:100%; max-height:200px; object-fit:contain;
+                        border-radius:8px; border:1px solid #ddd;">
+            <br>
+            <span onclick="removeImage()"
+                  style="display:inline-block; margin-top:8px; color:red;
+                         cursor:pointer; font-size:13px; text-decoration:underline;">
+                ✕ Remove image
+            </span>
+        </div>
+
+        <div id="uploadArea"
+             style="border:2px dashed #ccc; border-radius:10px; padding:25px;
+                    text-align:center; cursor:pointer; margin-bottom:16px; position:relative;"
+             onmouseover="this.style.borderColor='#800000'"
+             onmouseout="this.style.borderColor='#ccc'">
+            <input type="file" name="image" id="imageInput" accept="image/*"
+                   onchange="previewImage(event)"
+                   style="position:absolute; top:0; left:0; width:100%; height:100%;
+                          opacity:0; cursor:pointer;">
+            <div style="font-size:40px; margin-bottom:8px;">🖼️</div>
+            <div style="color:#555; font-size:14px;">Click to upload image</div>
+            <div style="color:#aaa; font-size:12px; margin-top:5px;">PNG, JPG, GIF, WEBP — Max 16MB</div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:10px;">
+            <button type="submit"
+                    style="flex:2; padding:13px; background:#800000; color:white;
+                           border:none; border-radius:8px; font-size:15px;
+                           font-weight:bold; cursor:pointer;">
+                ➕ Add Product
+            </button>
+            <a href="/seller_dashboard"
+               style="flex:1; text-align:center; padding:13px; border:2px solid #800000;
+                      color:#800000; border-radius:8px; text-decoration:none; font-weight:bold;">
+                ← Back
+            </a>
+        </div>
+    </form>
+</div>
+</div>
+
+<script>
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('uploadArea').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+function removeImage() {
+    document.getElementById('imageInput').value = '';
+    document.getElementById('previewImg').src = '';
+    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+}
+</script>
+{% endblock %}

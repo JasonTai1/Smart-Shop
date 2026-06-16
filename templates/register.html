@@ -1,0 +1,155 @@
+<div style="min-height:80vh; display:flex; align-items:center;
+            justify-content:center; padding:40px 20px;">
+<div style="width:100%; max-width:500px; background:white;
+            padding:40px; border-radius:16px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+    <h2 style="color:#800000; margin-bottom:5px;">Create Account</h2>
+    <p style="color:#888; font-size:13px; margin-bottom:25px;">
+        Join Smart Shop today!
+    </p>
+
+    {% if error %}
+    <div style="color:red; background:#fff0f0; padding:12px;
+                border-radius:6px; margin-bottom:15px;
+                border:1px solid #ffcccc; font-size:14px;">
+        ❌ {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+
+        <label style="display:block; font-size:13px; color:#555;
+                      font-weight:600; margin-bottom:8px;">I am a...</label>
+        <div style="display:flex; gap:12px; margin-bottom:16px;">
+            <button type="button" id="btnBuyer" onclick="selectRole('buyer')"
+                    style="flex:1; padding:10px; border:2px solid #800000;
+                           background:#fff5f5; color:#800000; border-radius:8px;
+                           cursor:pointer; font-size:14px; font-weight:600;">
+                🛒 Buyer
+            </button>
+            <button type="button" id="btnSeller" onclick="selectRole('seller')"
+                    style="flex:1; padding:10px; border:2px solid #ddd;
+                           background:white; color:#555; border-radius:8px;
+                           cursor:pointer; font-size:14px;">
+                🏪 Seller
+            </button>
+        </div>
+        <input type="hidden" name="role" id="role" value="buyer">
+
+        <div style="display:flex; gap:12px;">
+            <div style="flex:1;">
+                <label style="display:block; font-size:13px; color:#555;
+                              font-weight:600; margin-bottom:5px;">
+                    First Name <span style="color:red;">*</span>
+                </label>
+                <input type="text" name="first_name" placeholder="Ahmad" required
+                       style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                              border-radius:8px; font-size:14px; margin-bottom:16px;
+                              box-sizing:border-box;">
+            </div>
+            <div style="flex:1;">
+                <label style="display:block; font-size:13px; color:#555;
+                              font-weight:600; margin-bottom:5px;">
+                    Last Name <span style="color:red;">*</span>
+                </label>
+                <input type="text" name="last_name" placeholder="Razif" required
+                       style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                              border-radius:8px; font-size:14px; margin-bottom:16px;
+                              box-sizing:border-box;">
+            </div>
+        </div>
+
+        <label style="display:block; font-size:13px; color:#555;
+                      font-weight:600; margin-bottom:5px;">
+            Username <span style="color:red;">*</span>
+        </label>
+        <input type="text" name="username" placeholder="e.g. ahmad123" required
+               style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                      border-radius:8px; font-size:14px; margin-bottom:16px;
+                      box-sizing:border-box;">
+
+        <label style="display:block; font-size:13px; color:#555;
+                      font-weight:600; margin-bottom:5px;">
+            Email <span style="color:red;">*</span>
+        </label>
+        <input type="email" name="email" placeholder="your@email.com" required
+               style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                      border-radius:8px; font-size:14px; margin-bottom:16px;
+                      box-sizing:border-box;">
+
+        <label style="display:block; font-size:13px; color:#555;
+                      font-weight:600; margin-bottom:5px;">
+            Password <span style="color:red;">*</span>
+        </label>
+        <input type="password" name="password" placeholder="Min 6 characters" required
+               style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                      border-radius:8px; font-size:14px; margin-bottom:16px;
+                      box-sizing:border-box;">
+
+        <label style="display:block; font-size:13px; color:#555;
+                      font-weight:600; margin-bottom:5px;">
+            Confirm Password <span style="color:red;">*</span>
+        </label>
+        <input type="password" name="confirm_password" placeholder="Repeat password" required
+               style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                      border-radius:8px; font-size:14px; margin-bottom:16px;
+                      box-sizing:border-box;">
+
+        <div style="display:flex; gap:12px;">
+            <div style="flex:1;">
+                <label style="display:block; font-size:13px; color:#555;
+                              font-weight:600; margin-bottom:5px;">City</label>
+                <input type="text" name="city" placeholder="e.g. Seremban"
+                       style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                              border-radius:8px; font-size:14px; margin-bottom:16px;
+                              box-sizing:border-box;">
+            </div>
+            <div style="flex:1;">
+                <label style="display:block; font-size:13px; color:#555;
+                              font-weight:600; margin-bottom:5px;">State</label>
+                <select name="state"
+                        style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                               border-radius:8px; font-size:14px; margin-bottom:16px;
+                               box-sizing:border-box;">
+                    <option value="">Select...</option>
+                    <option>Johor</option><option>Kedah</option>
+                    <option>Kelantan</option><option>Melaka</option>
+                    <option>Negeri Sembilan</option><option>Pahang</option>
+                    <option>Perak</option><option>Perlis</option>
+                    <option>Pulau Pinang</option><option>Sabah</option>
+                    <option>Sarawak</option><option>Selangor</option>
+                    <option>Terengganu</option><option>W.P. Kuala Lumpur</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit"
+                style="width:100%; padding:13px; background:#800000;
+                       color:white; border:none; border-radius:8px;
+                       font-size:15px; font-weight:bold; cursor:pointer;">
+            Register
+        </button>
+    </form>
+
+    <p style="text-align:center; margin-top:18px; font-size:13px; color:#777;">
+        Already have account?
+        <a href="/login" style="color:#800000; font-weight:bold;">Login here</a>
+    </p>
+</div>
+</div>
+
+<script>
+function selectRole(role) {
+    document.getElementById('role').value = role;
+    const b = document.getElementById('btnBuyer');
+    const s = document.getElementById('btnSeller');
+    if (role === 'buyer') {
+        b.style.cssText = 'flex:1; padding:10px; border:2px solid #800000; background:#fff5f5; color:#800000; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;';
+        s.style.cssText = 'flex:1; padding:10px; border:2px solid #ddd; background:white; color:#555; border-radius:8px; cursor:pointer; font-size:14px;';
+    } else {
+        s.style.cssText = 'flex:1; padding:10px; border:2px solid #800000; background:#fff5f5; color:#800000; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;';
+        b.style.cssText = 'flex:1; padding:10px; border:2px solid #ddd; background:white; color:#555; border-radius:8px; cursor:pointer; font-size:14px;';
+    }
+}
+</script>
