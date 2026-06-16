@@ -1607,30 +1607,6 @@ class Product:
 
 
 # ============================================================
-# PRODUCT DATA  
-# ============================================================
-
-PRODUCTS = {
-
-    1: Product(
-        name        = "13-inch MacBook Neo",
-        price       = "RM1,999.00",
-        image       = "macbookneo.jpg",
-        description = "Powerful laptop for work,and study."
-    ),
-
-    2: Product(
-        name        = "iPhone 17e",
-        price       = "RM2,949.00",
-        image       = "iphone17.png",
-        description = "Latest Apple smartphone with advanced camera system."
-    ),
-
-}
-
-PRICE_ALERTS = []
-
-# ============================================================
 # ROUTES
 # ============================================================
 
