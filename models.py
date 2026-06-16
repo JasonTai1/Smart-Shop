@@ -23,13 +23,22 @@ class ForumPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     title = db.Column(db.String(200))
-
     content = db.Column(db.Text)
+
+    author = db.Column(db.String(100))
+
+    likes = db.Column(db.Integer, default=0)
+    views = db.Column(db.Integer, default=0)
 
 # 🟢 Comment System
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    post_id = db.Column(db.Integer, db.ForeignKey('forum_post.id'))
-
     content = db.Column(db.Text)
+
+    author = db.Column(db.String(100))
+
+    post_id = db.Column(
+        db.Integer,
+        db.ForeignKey("forum_post.id")
+    )
