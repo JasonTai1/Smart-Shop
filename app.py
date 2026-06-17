@@ -23,6 +23,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = "smartshop_secret_key_2024"
 
+PRICE_ALERTS = []
 # ── Email Settings ──────────────────
 SMTP_EMAIL    = "smartshop.noreply1234@gmail.com"
 # The Gmail that SENDS the OTP
