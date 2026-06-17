@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<div style="max-width:580px; margin:40px auto; padding:0 20px;">
+<div style="background:white; border-radius:16px; padding:35px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.08); text-align:center;">
+
+    <h2 style="color:#800000; margin-bottom:5px;"> Payment</h2>
+    <p style="color:#888; font-size:14px; margin-bottom:20px;">
+        Scan QR and upload proof 
+    </p>
+
+    {% if error %}
+    <div style="color:red; background:#fff0f0; padding:12px; border-radius:8px;
+                margin-bottom:15px; font-size:14px;">❌ {{ error }}</div>
+    {% endif %}
+
+    <!-- Order Amount -->
+    <div style="background:#fff5f5; border-radius:10px; padding:16px;
+                margin-bottom:20px; border:1px solid #ffd0d0;">
+        <div style="font-size:13px; color:#888; margin-bottom:4px;">
+            Order ID 
+        </div>
+        <div style="font-size:18px; font-weight:bold; color:#333;">
+            #{{ "%05d"|format(order_id) }}
+        </div>
+        <div style="font-size:13px; color:#888; margin-top:10px; margin-bottom:4px;">
+            Amount to Pay 
+        </div>
+        <div style="font-size:32px; font-weight:bold; color:#800000;">
+            RM {{ "%.2f"|format(order_total) }}
+        </div>
+    </div>
+
+    <!-- TNG QR Code -->
+    <div style="background:#f9f9f9; border:2px dashed #ddd; border-radius:12px;
+                padding:20px; margin-bottom:20px;">
+        <div style="font-size:14px; font-weight:bold; color:#333; margin-bottom:12px;">
+            📱 Touch 'n Go eWallet
+        </div>
+        <div style="width:200px; height:200px; background:#fff; border:1px solid #ddd;
+                    border-radius:8px; margin:0 auto 12px;
+                    display:flex; align-items:center; justify-content:center;">
+            {% if tng_qr_exists %}
+            <img src="{{ url_for('static', filename='images/tng_qr.png') }}"
+                 style="width:190px; height:190px; object-fit:contain;">
+            {% else %}
+            <div style="text-align:center;">
+                <div style="font-size:50px;">📱</div>
+                <div style="font-size:11px; color:#888; margin-top:6px;">
+                    TNG QR Code<br>
+                    <b style="color:#800000;">Smart Shop</b>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div style="font-size:13px; color:#555;">
+            Open TNG → Scan → Pay
+            <b>RM {{ "%.2f"|format(order_total) }}</b>
+        </div>
+    </div>
+
+    <!-- Upload Form  -->
+    <form method="POST" enctype="multipart/form-data">
+
+        <!-- Upload proof section  -->
+        <div style="text-align:left; margin-bottom:20px;">
+            <label style="display:block; font-size:14px; font-weight:bold;
+                          color:#333; margin-bottom:8px;">
+                Upload Payment Screenshot
+            </label>
+            <p style="font-size:13px; color:#888; margin-bottom:12px;">
+                After paying, screenshot your TNG receipt and upload it here.
+            </p>
+
+            <!-- Preview container  -->
+            <div id="previewContainer"
+                 style="display:none; text-align:center; margin-bottom:12px;">
+                <img id="previewImg" src="" alt="Proof preview"
+                     style="max-width:100%; max-height:200px; object-fit:contain;
+                            border-radius:8px; border:2px solid #99dd99;">
+                <br>
+                <span onclick="removeProof()"
+                      style="display:inline-block; margin-top:8px; color:red;
+                             cursor:pointer; font-size:13px; text-decoration:underline;">
+                    ✕ Remove 
+                </span>
+            </div>
+
+            <!-- Upload box -->
+            <div id="uploadArea"
+                 style="border:2px dashed #ccc; border-radius:10px; padding:20px;
+                        text-align:center; cursor:pointer; position:relative;
+                        transition:all 0.2s; background:#fafafa;"
+                 onmouseover="this.style.borderColor='#800000'"
+                 onmouseout="this.style.borderColor='#ccc'">
+                <input type="file" name="payment_proof" id="proofInput"
+                       accept="image/*" onchange="previewProof(event)"
+                       style="position:absolute; top:0; left:0; width:100%;
+                              height:100%; opacity:0; cursor:pointer;">
+                <div style="font-size:35px; margin-bottom:8px;">📸</div>
+                <div style="color:#555; font-size:13px;">
+                    Click to upload screenshot
+                </div>
+                <div style="color:#aaa; font-size:12px; margin-top:4px;">
+                    PNG, JPG — optional but recommended
+                </div>
+            </div>
+        </div>
+
+        <!-- Steps  -->
+        <div style="text-align:left; background:#f5f5f5; border-radius:10px;
+                    padding:14px; margin-bottom:20px; font-size:13px; color:#555;">
+            <b style="color:#333;">Steps :</b><br><br>
+            1️⃣ Scan QR above with TNG app <br>
+            2️⃣ Pay RM {{ "%.2f"|format(order_total) }}<br>
+            3️⃣ Screenshot your payment receipt <br>
+            4️⃣ Upload screenshot above <br>
+            5️⃣ Click "I Have Paid" below 
+        </div>
+
+        <button type="submit"
+                style="width:100%; padding:15px; background:#800000;
+                       color:white; border:none; border-radius:8px;
+                       font-size:16px; font-weight:bold; cursor:pointer;">
+            ✅ I Have Paid 
+        </button>
+
+    </form>
+
+    <a href="/checkout"
+       style="display:block; text-align:center; margin-top:12px;
+              color:#888; font-size:13px; text-decoration:none;">
+         Back to Checkout 
+    </a>
+
+</div>
+</div>
+
+<script>
+function previewProof(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('uploadArea').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+function removeProof() {
+    document.getElementById('proofInput').value = '';
+    document.getElementById('previewImg').src = '';
+    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+}
+</script>
+{% endblock %}

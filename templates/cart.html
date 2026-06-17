@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}My Cart{% endblock %}
+
+{% block content %}
+<div style="max-width:900px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:20px;">
+        🛒 My Cart
+    </h2>
+
+    {% if items %}
+    {% for item in items %}
+    <div style="background:white; border-radius:10px; padding:18px;
+                margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                display:flex; align-items:center; gap:16px;">
+
+        {% if item['image_url'] %}
+        <img src="{{ url_for('static', filename=item['image_url']) }}"
+             alt="{{ item['name'] }}"
+             style="width:80px; height:80px; object-fit:cover;
+                    border-radius:8px; flex-shrink:0;"
+             onerror="this.style.display='none'">
+        {% else %}
+        <div style="width:80px; height:80px; background:#f0f0f0; border-radius:8px;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:30px; flex-shrink:0;">📦</div>
+        {% endif %}
+
+        <div style="flex:1;">
+            <div style="font-size:16px; font-weight:bold; color:#333; margin-bottom:4px;">
+                {{ item['name'] }}
+            </div>
+            <div style="font-size:14px; color:#888; margin-bottom:8px;">
+                RM {{ "%.2f"|format(item['price']) }} each
+            </div>
+            <form method="POST" action="/cart/update/{{ item['cart_id'] }}"
+                  style="display:flex; align-items:center; gap:8px;">
+                <button type="submit" name="quantity" value="{{ item['quantity'] - 1 }}"
+                        style="width:30px; height:30px; border:1px solid #ddd;
+                               background:white; border-radius:4px; cursor:pointer; font-size:16px;">−</button>
+                <input type="number" name="quantity" value="{{ item['quantity'] }}"
+                       min="1" max="{{ item['stock'] }}"
+                       style="width:50px; text-align:center; padding:4px;
+                              border:1px solid #ddd; border-radius:4px; font-size:15px;"
+                       onchange="this.form.submit()">
+                <button type="submit" name="quantity" value="{{ item['quantity'] + 1 }}"
+                        style="width:30px; height:30px; border:1px solid #ddd;
+                               background:white; border-radius:4px; cursor:pointer; font-size:16px;">+</button>
+            </form>
+            <a href="/cart/remove/{{ item['cart_id'] }}"
+               style="color:red; font-size:13px; margin-top:6px; display:inline-block;"
+               onclick="return confirm('Remove this item?')">🗑️ Remove</a>
+        </div>
+
+        <div style="font-size:18px; font-weight:bold; color:#800000;
+                    min-width:100px; text-align:right;">
+            RM {{ "%.2f"|format(item['subtotal']) }}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div style="background:white; border-radius:10px; padding:25px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; padding:10px 0;
+                    border-bottom:1px solid #f0f0f0; font-size:15px;">
+            <span>Items</span><span>{{ items|length }} item(s)</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0;
+                    border-bottom:1px solid #f0f0f0; font-size:15px;">
+            <span>Shipping</span><span style="color:green;">FREE</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:15px 0 0;
+                    font-size:20px; font-weight:bold; color:#800000;">
+            <span>Total</span><span>RM {{ "%.2f"|format(total) }}</span>
+        </div>
+        <a href="/checkout"
+           style="display:block; width:100%; padding:15px; background:#800000;
+                  color:white; border-radius:8px; font-size:16px; font-weight:bold;
+                  text-align:center; text-decoration:none; margin-top:15px;
+                  box-sizing:border-box;">
+            💳 Proceed to Checkout
+        </a>
+        <a href="/buyer_dashboard"
+           style="display:block; text-align:center; margin-top:12px;
+                  color:#800000; font-size:14px;">
+            ← Continue Shopping
+        </a>
+    </div>
+
+    {% else %}
+    <div style="text-align:center; padding:60px; background:white; border-radius:10px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <p style="font-size:60px;">🛒</p>
+        <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">Your cart is empty!</p>
+        <a href="/buyer_dashboard"
+           style="background:#800000; color:white; padding:12px 30px;
+                  border-radius:6px; text-decoration:none; font-weight:bold;">
+            🛍️ Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div style="max-width:1000px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:25px;">
+        💳 Checkout 
+    </h2>
+
+    {% if error %}
+    <div style="color:red; background:#fff0f0; padding:12px; border-radius:8px;
+                margin-bottom:20px; border:1px solid #ffcccc; font-size:14px;">
+        ❌ {{ error }}
+    </div>
+    {% endif %}
+
+    <div style="display:flex; gap:24px; align-items:flex-start;">
+
+        <!-- LEFT: Delivery Form  -->
+        <div style="flex:1;">
+            <div style="background:white; border-radius:16px; padding:28px;
+                        box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:20px;">
+
+                <h3 style="color:#800000; font-size:17px; margin-bottom:20px;
+                            padding-bottom:12px; border-bottom:1px solid #f0f0f0;">
+                    📦 Delivery Details 
+                </h3>
+
+                <form method="POST" id="checkoutForm">
+
+                    <label style="display:block; font-size:13px; color:#555;
+                                  font-weight:600; margin-bottom:5px;">
+                        Full Name <span style="color:red;">*</span>
+                    </label>
+                    <input type="text" name="full_name"
+                           value="{{ full_name or '' }}"
+                           placeholder="e.g. Ahmad Razif"
+                           required
+                           style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                                  border-radius:8px; font-size:14px; margin-bottom:16px;
+                                  box-sizing:border-box; outline:none;">
+
+                    <label style="display:block; font-size:13px; color:#555;
+                                  font-weight:600; margin-bottom:5px;">
+                        Phone Number <span style="color:red;">*</span>
+                    </label>
+                    <input type="text" name="phone"
+                           value="{{ phone or '' }}"
+                           placeholder="e.g. 012-3456789"
+                           required
+                           style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                                  border-radius:8px; font-size:14px; margin-bottom:16px;
+                                  box-sizing:border-box; outline:none;">
+
+                    <label style="display:block; font-size:13px; color:#555;
+                                  font-weight:600; margin-bottom:5px;">
+                        Full Address <span style="color:red;">*</span>
+                    </label>
+                    <textarea name="address"
+                              placeholder="e.g. No 12, Jalan Maju, Taman Indah"
+                              required
+                              style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                                     border-radius:8px; font-size:14px; margin-bottom:16px;
+                                     box-sizing:border-box; height:80px; resize:vertical;
+                                     outline:none;"></textarea>
+
+                    <div style="display:flex; gap:12px;">
+                        <div style="flex:1;">
+                            <label style="display:block; font-size:13px; color:#555;
+                                          font-weight:600; margin-bottom:5px;">
+                                City  <span style="color:red;">*</span>
+                            </label>
+                            <input type="text" name="city"
+                                   value="{{ city or '' }}"
+                                   placeholder="e.g. Seremban"
+                                   required
+                                   style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                                          border-radius:8px; font-size:14px; margin-bottom:16px;
+                                          box-sizing:border-box; outline:none;">
+                        </div>
+                        <div style="flex:1;">
+                            <label style="display:block; font-size:13px; color:#555;
+                                          font-weight:600; margin-bottom:5px;">
+                                Postcode  <span style="color:red;">*</span>
+                            </label>
+                            <input type="text" name="postcode"
+                                   placeholder="e.g. 70100"
+                                   required
+                                   maxlength="5"
+                                   style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                                          border-radius:8px; font-size:14px; margin-bottom:16px;
+                                          box-sizing:border-box; outline:none;">
+                        </div>
+                    </div>
+
+                    <label style="display:block; font-size:13px; color:#555;
+                                  font-weight:600; margin-bottom:5px;">
+                        State  <span style="color:red;">*</span>
+                    </label>
+                    <select name="state" required
+                            style="width:100%; padding:11px 14px; border:1px solid #ddd;
+                                   border-radius:8px; font-size:14px; margin-bottom:20px;
+                                   box-sizing:border-box; outline:none;">
+                        <option value="">Select state ...</option>
+                        {% for s in ['Johor','Kedah','Kelantan','Melaka',
+                                     'Negeri Sembilan','Pahang','Perak','Perlis',
+                                     'Pulau Pinang','Sabah','Sarawak','Selangor',
+                                     'Terengganu','W.P. Kuala Lumpur'] %}
+                        <option {% if state == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Submit button — only in form -->
+                    <button type="submit"
+                            style="width:100%; padding:14px; background:#800000;
+                                   color:white; border:none; border-radius:8px;
+                                   font-size:16px; font-weight:bold; cursor:pointer;">
+                        ✅ Confirm Order 
+                    </button>
+
+                </form>
+
+                <a href="/cart"
+                   style="display:block; text-align:center; margin-top:12px;
+                          color:#888; font-size:14px; text-decoration:none;">
+                    ← Back to Cart
+                </a>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: Order Summary  -->
+        <div style="width:360px; flex-shrink:0;">
+            <div style="background:white; border-radius:16px; padding:28px;
+                        box-shadow:0 2px 12px rgba(0,0,0,0.08); position:sticky; top:120px;">
+
+                <h3 style="color:#800000; font-size:17px; margin-bottom:20px;
+                            padding-bottom:12px; border-bottom:1px solid #f0f0f0;">
+                    🧾 Order Summary 
+                </h3>
+
+                <!-- Cart items list  -->
+                {% for item in items %}
+                <div style="display:flex; align-items:center; gap:12px;
+                            padding:10px 0; border-bottom:1px solid #f5f5f5;">
+
+                    <!-- Product image  -->
+                    {% if item['image_url'] %}
+                    <img src="{{ url_for('static', filename=item['image_url']) }}"
+                         alt="{{ item['name'] }}"
+                         style="width:50px; height:50px; object-fit:cover;
+                                border-radius:6px; flex-shrink:0;"
+                         onerror="this.style.display='none'">
+                    {% else %}
+                    <div style="width:50px; height:50px; background:#f0f0f0;
+                                border-radius:6px; display:flex; align-items:center;
+                                justify-content:center; font-size:20px; flex-shrink:0;">
+                        📦
+                    </div>
+                    {% endif %}
+
+                    <!-- Item info -->
+                    <div style="flex:1;">
+                        <div style="font-size:13px; font-weight:600; color:#333;">
+                            {{ item['name'] }}
+                        </div>
+                        <div style="font-size:12px; color:#888; margin-top:2px;">
+                            Qty : {{ item['quantity'] }} ×
+                            RM {{ "%.2f"|format(item['price']) }}
+                        </div>
+                    </div>
+
+                    <!-- Subtotal -->
+                    <div style="font-size:14px; font-weight:bold; color:#800000;">
+                        RM {{ "%.2f"|format(item['subtotal']) }}
+                    </div>
+
+                </div>
+                {% endfor %}
+
+                <!-- Price breakdown -->
+                <div style="margin-top:15px;">
+                    <div style="display:flex; justify-content:space-between;
+                                padding:8px 0; font-size:14px; color:#555;">
+                        <span>Subtotal</span>
+                        <span>RM {{ "%.2f"|format(total) }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;
+                                padding:8px 0; font-size:14px; color:#555;
+                                border-bottom:1px solid #f0f0f0;">
+                        <span>Shipping </span>
+                        <span style="color:green; font-weight:600;">FREE </span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;
+                                padding:12px 0 0; font-size:18px; font-weight:bold;
+                                color:#800000;">
+                        <span>Total </span>
+                        <span>RM {{ "%.2f"|format(total) }}</span>
+                    </div>
+                </div>
+
+                <!-- Info note -->
+                <div style="margin-top:16px; background:#fff5f5; border-radius:8px;
+                            padding:12px; font-size:12px; color:#888;">
+                    🔒 Your order is safe and secure.
+                    <br>
+                    <br><br>
+                    📦 Estimated delivery: 3-5 working days
+                    <br>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

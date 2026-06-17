@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div style="max-width:900px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:20px;">
+          My Orders 
+    </h2>
+
+    {% if orders_with_items %}
+    {% for entry in orders_with_items %}
+
+    {% set order = entry['order'] %}
+    {% set items = entry['items'] %}
+
+    <div style="background:white; border-radius:12px; padding:24px;
+                margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+        <!-- Order header  -->
+        <div style="display:flex; justify-content:space-between;
+                    align-items:center; margin-bottom:15px;
+                    padding-bottom:15px; border-bottom:1px solid #f0f0f0;">
+            <div>
+                <div style="font-size:16px; font-weight:bold; color:#333;">
+                    Order #{{ "%05d"|format(order['id']) }}
+                </div>
+                <div style="font-size:12px; color:#888; margin-top:3px;">
+                    📅 {{ order['created_at'][:16] }}
+                </div>
+            </div>
+
+            <!-- Status badge  -->
+            {% if order['status'] == 'pending' %}
+            <span style="background:#f0f0f0; color:#555; padding:6px 14px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                  Pending
+            </span>
+            {% elif order['status'] == 'payment_pending' %}
+            <span style="background:#fff3cd; color:#856404; padding:6px 14px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                  Verifying Payment
+            </span>
+            {% elif order['status'] == 'paid' %}
+            <span style="background:#d4edda; color:#155724; padding:6px 14px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                  Paid 
+            </span>
+            {% elif order['status'] == 'shipped' %}
+            <span style="background:#cce5ff; color:#004085; padding:6px 14px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                  Shipped
+            </span>
+            {% elif order['status'] == 'delivered' %}
+            <span style="background:#d4edda; color:#155724; padding:6px 14px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                 Delivered 
+            </span>
+            {% elif order['status'] == 'cancelled' %}
+            <span style="background:#f8d7da; color:#721c24; padding:6px 14px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                 Cancelled 
+            </span>
+            {% elif order['status'] == 'rejected' %}
+            <span style="background:#f8d7da; color:#721c24; padding:6px 14px;
+                         border-radius:20px; font-size:13px; font-weight:bold;">
+                 Payment Rejected 
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Order items  -->
+        {% for item in items %}
+        <div style="display:flex; align-items:center; gap:12px;
+                    padding:10px 0; border-bottom:1px solid #f9f9f9;">
+
+            {% if item['image_url'] %}
+            <img src="{{ url_for('static', filename=item['image_url']) }}"
+                 alt="{{ item['name'] }}"
+                 style="width:55px; height:55px; object-fit:cover;
+                        border-radius:6px; flex-shrink:0;"
+                 onerror="this.style.display='none'">
+            {% else %}
+            <div style="width:55px; height:55px; background:#f0f0f0;
+                        border-radius:6px; display:flex; align-items:center;
+                        justify-content:center; font-size:22px; flex-shrink:0;">
+                📦
+            </div>
+            {% endif %}
+
+            <div style="flex:1;">
+                <div style="font-size:14px; font-weight:600; color:#333;">
+                    {{ item['name'] }}
+                </div>
+                <div style="font-size:13px; color:#888; margin-top:2px;">
+                    Qty : {{ item['quantity'] }} ×
+                    RM {{ "%.2f"|format(item['price']) }}
+                </div>
+            </div>
+
+            <div style="font-size:14px; font-weight:bold; color:#800000;">
+                RM {{ "%.2f"|format(item['price'] * item['quantity']) }}
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Order footer  -->
+        <div style="display:flex; justify-content:space-between;
+                    align-items:center; margin-top:15px; padding-top:15px;
+                    border-top:1px solid #f0f0f0;">
+
+            <!-- Delivery info  -->
+            <div style="font-size:13px; color:#888;">
+                📍 {{ order['full_name'] }},
+                {{ order['city'] }}, {{ order['state'] }}
+            </div>
+
+            <!-- Total + Cancel button -->
+            <div style="display:flex; align-items:center; gap:12px;">
+
+                <!-- Cancel button — only for pending orders -->
+                {% if order['status'] in ['pending', 'payment_pending'] %}
+                <a href="/buyer/cancel_order/{{ order['id'] }}"
+                   style="padding:7px 16px; border:1px solid #cc0000;
+                          color:#cc0000; border-radius:6px; font-size:13px;
+                          text-decoration:none; font-weight:600;"
+                   onclick="return confirm('Cancel this order?')">
+                     Cancel
+                </a>
+                {% endif %}
+
+                <div style="text-align:right;">
+                    <div style="font-size:12px; color:#888;">Total </div>
+                    <div style="font-size:18px; font-weight:bold; color:#800000;">
+                        RM {{ "%.2f"|format(order['total_amount']) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <!-- No orders yet  -->
+    <div style="text-align:center; padding:60px; background:white;
+                border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <p style="font-size:50px;">📋</p>
+        <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">
+            No orders yet!
+        </p>
+        <p style="color:#888; margin-bottom:20px;">
+            Start shopping to place your first order!
+        </p>
+        <a href="/buyer_dashboard"
+           style="background:#800000; color:white; padding:12px 30px;
+                  border-radius:6px; text-decoration:none; font-weight:bold;">
+             Start Shopping 
+        </a>
+    </div>
+    {% endif %}
+
+    <a href="/buyer_dashboard"
+       style="display:inline-block; margin-top:10px; color:#800000;
+              font-size:14px; text-decoration:none;">
+        ← Continue Shopping 
+    </a>
+
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div style="max-width:1000px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:20px;">
+         My Orders 
+    </h2>
+
+    {% if orders %}
+    {% for order in orders %}
+    <div style="background:white; border-radius:12px; padding:20px;
+                margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    margin-bottom:12px; padding-bottom:12px;
+                    border-bottom:1px solid #f0f0f0;">
+            <div>
+                <span style="font-size:16px; font-weight:bold; color:#333;">
+                    Order #{{ "%05d"|format(order['id']) }}
+                </span>
+                <span style="font-size:12px; color:#888; margin-left:10px;">
+                    {{ order['created_at'][:16] }}
+                </span>
+            </div>
+
+            <!-- Status badge  -->
+            {% if order['status'] == 'payment_pending' %}
+            <span style="background:#fff3cd; color:#856404; padding:4px 12px;
+                         border-radius:20px; font-size:12px; font-weight:bold;">
+                ⏳ Payment Pending 
+            </span>
+            {% elif order['status'] == 'paid' %}
+            <span style="background:#d4edda; color:#155724; padding:4px 12px;
+                         border-radius:20px; font-size:12px; font-weight:bold;">
+                ✅ Paid 
+            </span>
+            {% elif order['status'] == 'shipped' %}
+            <span style="background:#cce5ff; color:#004085; padding:4px 12px;
+                         border-radius:20px; font-size:12px; font-weight:bold;">
+                🚚 Shipped 
+            </span>
+            {% else %}
+            <span style="background:#f0f0f0; color:#555; padding:4px 12px;
+                         border-radius:20px; font-size:12px;">
+                {{ order['status'] }}
+            </span>
+            {% endif %}
+        </div>
+
+        <div style="display:flex; gap:24px; font-size:14px; color:#555;">
+            <div>
+                <b>Buyer :</b> {{ order['buyer_email'] }}
+            </div>
+            <div>
+                <b>Amount :</b>
+                <span style="color:#800000; font-weight:bold;">
+                    RM {{ "%.2f"|format(order['total_amount']) }}
+                </span>
+            </div>
+        </div>
+
+        <div style="margin-top:8px; font-size:13px; color:#888;">
+            📍 {{ order['full_name'] }} | {{ order['phone'] }}
+            | {{ order['address'] }}, {{ order['city'] }}, {{ order['state'] }}
+        </div>
+
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div style="text-align:center; padding:60px; background:white;
+                border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <p style="font-size:50px;">📋</p>
+        <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">
+            No orders yet! 
+        </p>
+        <p style="color:#888;">Orders will appear here when buyers purchase your products.</p>
+    </div>
+    {% endif %}
+
+    <a href="/seller_dashboard"
+       style="display:inline-block; margin-top:10px; color:#800000; font-size:14px;">
+        ← Back to Dashboard 
+    </a>
+</div>
+{% endblock %}

@@ -6,7 +6,11 @@
   <title>SmartShop Malaysia | 3{% block title %}{% endblock %}</title>
 
   <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_css %}{% endblock %}
+
 </head>
 
 <body>
@@ -36,7 +40,7 @@
 
       <!-- Nav Links -->
       <ul class="nav-links">
-        <li><a href="/" onmouseenter="closeMenu()">Home</a></li>
+        <li><a href="/buyer_dashboard" onmouseenter="closeMenu()">Home</a></li>
 
         <li>
           <a href="#" onmouseenter="openMenu(event, 'collections')">
@@ -49,25 +53,21 @@
             Brands
           </a>
         </li>
-        
-        <!-- 🔥 FORUM -->
-        <li>
-          <a href="/forum"
-             onmouseenter="closeMenu()">
-            Forum
-          </a>
-        </li>
-        
+
         <li><a href="/about" onmouseenter="closeMenu()">About</a></li>
       </ul>
 
       <!-- Right Side -->
       <div class="nav-right">
         <button class="icon-btn" title="Search">🔍</button>
-        <button class="login-btn">Sign up</button>
-        <button class="primary-btn">
-          Cart <span class="cart-badge">0</span>
-        </button>
+
+        {% if session.get('user_id') %}
+          <a href="/profile" class="elegant-profile-btn">
+            <span class="user-icon">👤</span> Profile
+          </a>
+        {% else %}
+          <button><a href="/login" class="login-btn">Sign up</a></button>
+        {% endif %}
       </div>
     </div>
 
@@ -134,9 +134,9 @@
     <div class="footer-col">
       <h4>Customer Service</h4>
       <ul>
-        <li>Help Centre</li>
+        <li><a href="/helpcentre">Help Centre</a></li>
         <li><a href="/returnpolicy">Return Policy</a></li>
-        <li>Warranty</li>
+        <li><a href="/warranty">Warranty</a></li>
       </ul>
     </div>
 
@@ -144,7 +144,6 @@
       <h4>About Us</h4>
       <ul>
         <li><a href="/about">About SmartShop</a></li>
-        <li><a href="#">Careers</a></li>
         <li><a href="/policy">Privacy Policy</a></li>
     </ul>
     </div>
@@ -163,10 +162,16 @@
   </div>
 
   <div class="footer-bottom">
-    <p>© 2026 SmartShop. All Rights Reserved.</p>
+    <p>
+    <a href="/admin">
+        © 2026 SmartShop. All Rights Reserved.
+    </a>
+    </p>
   </div>
 
 </footer>
+
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>
