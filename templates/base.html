@@ -60,7 +60,14 @@
       <!-- Right Side -->
       <div class="nav-right">
         <button class="icon-btn" title="Search">🔍</button>
-        <button><a href="/login" class="login-btn">Sign up</a></button> 
+
+        {% if session.get('user_id') %}
+          <a href="/profile" class="elegant-profile-btn">
+            <span class="user-icon">👤</span> Profile
+          </a>
+        {% else %}
+          <button><a href="/login" class="login-btn">Sign up</a></button>
+        {% endif %}
       </div>
     </div>
 

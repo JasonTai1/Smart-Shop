@@ -1607,30 +1607,6 @@ class Product:
 
 
 # ============================================================
-# PRODUCT DATA  
-# ============================================================
-
-PRODUCTS = {
-
-    1: Product(
-        name        = "13-inch MacBook Neo",
-        price       = "RM1,999.00",
-        image       = "macbookneo.jpg",
-        description = "Powerful laptop for work,and study."
-    ),
-
-    2: Product(
-        name        = "iPhone 17e",
-        price       = "RM2,949.00",
-        image       = "iphone17.png",
-        description = "Latest Apple smartphone with advanced camera system."
-    ),
-
-}
-
-PRICE_ALERTS = []
-
-# ============================================================
 # ROUTES
 # ============================================================
 
@@ -1691,22 +1667,63 @@ def set_alert(id, target):
 
 @app.route("/admin")
 def admin_dashboard():
-
-    total_products = len(PRODUCTS)
-
-    pending_orders = 3
-
-    orders_today = 12
-
-    revenue = 18240
-
+    if "user_id" not in session:
+        return redirect("/login")
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM products")
+    total_products = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT COUNT(*) FROM orders WHERE DATE(created_at) = DATE('now', 'localtime')")
+    orders_today = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT COUNT(*) FROM orders WHERE status = 'payment_pending'")
+    pending_count = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT SUM(total_amount) FROM orders WHERE status IN ('paid', 'shipped', 'completed')")
+    revenue = cursor.fetchone()[0] or 0.0
+    
+    cursor.execute("""
+        SELECT orders.id, users.email AS buyer_email, orders.total_amount, 
+               orders.payment_proof, orders.full_name
+        FROM orders
+        JOIN users ON orders.buyer_id = users.id
+        WHERE orders.status = 'payment_pending'
+        ORDER BY orders.created_at DESC
+    """)
+    pending_approval_list = cursor.fetchall()
+    
+    conn.close()
+    
     return render_template(
         "Admin/dashboard.html",
         total_products=total_products,
-        pending_orders=pending_orders,
         orders_today=orders_today,
-        revenue=revenue
+        pending_count=pending_count,
+        revenue=revenue,
+        pending_orders=pending_approval_list 
     )
+
+@app.route("/admin/approve_payment/<int:order_id>")
+def admin_approve_payment(order_id):
+    if "user_id" not in session:
+        return redirect("/login")
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE orders 
+        SET status = 'paid' 
+        WHERE id = ? AND status = 'payment_pending'
+    """, (order_id,))
+    
+    conn.commit()
+    conn.close()
+    
+    return redirect("/admin")
 
 @app.route('/helpcentre')
 def helpcentre():

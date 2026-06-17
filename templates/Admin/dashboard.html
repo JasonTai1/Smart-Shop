@@ -1,98 +1,82 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 
 <div class="sidebar">
-
-<div class="logo">
-SmartShop
-<span>Admin Panel</span>
-</div>
-
-<div class="menu"><a href="/admin">Dashboard</a></div>
-
-<div class="menu"><a href="/admin/products">Products</a></div>
-
-<div class="menu"><a href="/admin/orders">Orders</a></div>
-
-<div class="menu"><a href="/admin/notifications">Notifications</a></div>
-
-<div class="menu"><a href="/admin/settings">Settings</a></div>
-
+  <div class="logo">
+    SmartShop
+    <span>Admin Panel</span>
+  </div>
+  <div class="menu"><a href="/admin">Dashboard</a></div>
+  <div class="menu"><a href="/admin/products">Products</a></div>
+  <div class="menu"><a href="/admin/notifications">Notifications</a></div>
 </div>
 
 <div class="main">
+  <h1>Dashboard</h1>
 
-<h1>Dashboard</h1>
+  <div class="cards">
+    <div class="card">
+      <p>Total Products</p>
+      <div class="big">{{ total_products }}</div>
+    </div>
 
-<div class="cards">
+    <div class="card">
+      <p>Orders Today</p>
+      <div class="big">{{ orders_today }}</div>
+    </div>
 
-<div class="card">
-<p>Total Products</p>
-<div class="big">{{ total_products }}</div>
+    <div class="card">
+      <p>Pending Approval</p>
+      <div class="big">{{ pending_count }}</div>
+    </div>
+
+    <div class="card">
+      <p>Revenue</p>
+      <div class="big">RM{{ "%.2f"|format(revenue) }}</div>
+    </div>
+  </div>
+
+  <div class="table-box">
+    <h2> Recent Pending Payments</h2>
+    <table>
+      <tr>
+        <th>Order ID</th>
+        <th>Buyer Email</th>
+        <th>Recipient Name</th>
+        <th>Amount</th>
+        <th>Payment Proof</th>
+        <th>Action</th>
+      </tr>
+
+      {% if pending_orders %}
+        {% for order in pending_orders %}
+        <tr>
+          <td>#ORD-{{ order['id'] }}</td>
+          <td>{{ order['buyer_email'] }}</td>
+          <td>{{ order['full_name'] }}</td>
+          <td>RM {{ "%.2f"|format(order['total_amount']) }}</td>
+          <td>
+            {% if order['payment_proof'] %}
+              <a href="{{ url_for('static', filename=order['payment_proof']) }}" target="_blank" style="color: #0066cc; font-weight: bold;">
+                View Receipt
+              </a>
+            {% else %}
+              <span style="color: #999;">No proof</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="/admin/approve_payment/{{ order['id'] }}" class="btn" style="background: #1a7a3a; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-size: 12px;">
+              Notify Seller
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 20px; color: #888;">
+            No pending payments to approve today.
+          </td>
+        </tr>
+      {% endif %}
+    </table>
+  </div>
 </div>
-
-<div class="card">
-<p>Orders Today</p>
-<div class="big">{{ orders_today }}</div>
-</div>
-
-<div class="card">
-<p>Pending Shipment</p>
-<div class="big">{{ pending_orders }}</div>
-</div>
-
-<div class="card">
-<p>Revenue</p>
-<div class="big">RM{{ revenue }}</div>
-</div>
-
-</div>
-
-<div class="table-box">
-
-<h2>Recent Orders</h2>
-
-<table>
-
-<tr>
-<th>Order ID</th>
-<th>Buyer</th>
-<th>Product</th>
-<th>Amount</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-
-<tr>
-<td>#ORD-1021</td>
-<td>Ahmad Zaki</td>
-<td>MacBook Neo 13</td>
-<td>RM2499</td>
-<td><span class="status">Pending</span></td>
-<td><button class="btn">Notify Seller</button></td>
-</tr>
-
-<tr>
-<td>#ORD-1020</td>
-<td>Siti Nora</td>
-<td>iPhone 17e</td>
-<td>RM2949</td>
-<td><span class="shipped">Shipped</span></td>
-<td>Done</td>
-</tr>
-
-<tr>
-<td>#ORD-1019</td>
-<td>Raju Kumar</td>
-<td>MacBook Neo 13</td>
-<td>RM2499</td>
-<td><span class="status">Pending</span></td>
-<td><button class="btn">Notify Seller</button></td>
-</tr>
-
-</table>
-
-</div>
-
-</div>
-
-
