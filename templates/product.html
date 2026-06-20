@@ -1,643 +1,128 @@
-{% extends "base.html" %}
-
-{% block title %}
-{{ product.name }}
-{% endblock %}
-
-{% block extra_css %}
-
-<link rel="stylesheet"
-      href="{{ url_for('static',
-      filename='css/product_detail.css') }}">
-
-{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
-
-<div class="pg-wrapper">
-
-  <!-- BREADCRUMB -->
-  <div class="breadcrumb">
-
-    <span>Home</span>
-
-    <span class="bc-sep">›</span>
-
-    <span>Computers &amp; Laptops</span>
-
-    <span class="bc-sep">›</span>
-
-    <span>{{ product.name }}</span>
-
-  </div>
-
-  <!-- PRODUCT SECTION -->
-  <div class="product-section">
-
-    <!-- LEFT: IMAGE -->
-    <div class="left-side">
-
-      <div class="main-image-box">
-
-        <img id="mainImg"
-             src="{{ url_for('static',
-             filename='images/' + product.image) }}"
-             class="main-image"
-             alt="{{ product.name }}">
-
-      </div>
-
-      <!-- Optional: add more images to product model & loop here -->
-      <div class="thumb-strip" id="thumbStrip">
-
-        <img class="thumb active"
-             src="{{ url_for('static',
-             filename='images/' + product.image) }}"
-             data-full="{{ url_for('static',
-             filename='images/' + product.image) }}"
-             alt="">
-
-        {# If your product model has a `images` list, loop: #}
-
-        {#
-        {% for img in product.images %}
-
-        <img class="thumb"
-             src="{{ url_for('static',
-             filename='images/' + img) }}"
-             data-full="{{ url_for('static',
-             filename='images/' + img) }}"
-             alt="">
-
-        {% endfor %}
-        #}
-
-      </div>
-
-    </div>
-
-    <!-- RIGHT: INFO -->
-    <div class="right-side">
-
-      <div class="eyebrow">
-
-        Official Store &nbsp;·&nbsp; Apple
-
-      </div>
-
-      <h1 class="product-title">
-
-        {{ product.name }}
-
-      </h1>
-
-      <!-- RATING -->
-      <div class="rating-row">
-
-        <span class="stars">★★★★★</span>
-
-        <span class="r-count">
-          4.9 Ratings &nbsp;·&nbsp; 2.3k Sold
-        </span>
-
-      </div>
-
-      <!-- PRICE -->
-      <div class="price-box">
-
-        <span class="price-now" id="priceDisplay">
-
-          {{ product.price }}
-
-        </span>
-
-        <!-- Optional original price if in model: -->
-
-        {#
-        <span class="price-was">
-          {{ product.original_price }}
-        </span>
-
-        <span class="price-save">
-          You save RM500
-        </span>
-        #}
-
-      </div>
-
-      <!-- VOUCHERS -->
-      <div class="vouchers">
-
-        <button class="voucher v-dark">
-          4% OFF
-        </button>
-
-        <button class="voucher v-dark">
-          RM100 OFF
-        </button>
-
-        <button class="voucher v-amber">
-          RM50 CASHBACK
-        </button>
-
-        <button class="voucher v-leaf">
-          Free Shipping +
-        </button>
-
-      </div>
-
-      <div class="section-divider"></div>
-
-      <!-- STORAGE VARIANTS -->
-      <div class="row-label">
-
-        Storage
-
-      </div>
-
-      <div class="spec-grid" id="storGrid">
-
-        <div class="spec-card active"
-             data-price="4699">
-
-          <div class="sc-label">
-            16GB RAM
-          </div>
-
-          <div class="sc-val">
-            512GB SSD
-          </div>
-
-          <div class="sc-price">
-            RM4,699
-          </div>
-
-        </div>
-
-        <div class="spec-card"
-             data-price="5199">
-
-          <div class="sc-label">
-            16GB RAM
-          </div>
-
-          <div class="sc-val">
-            1TB SSD
-          </div>
-
-          <div class="sc-price">
-            RM5,199
-          </div>
-
-        </div>
-
-        <div class="spec-card"
-             data-price="6399">
-
-          <div class="sc-label">
-            24GB RAM
-          </div>
-
-          <div class="sc-val">
-            1TB SSD
-          </div>
-
-          <div class="sc-price">
-            RM6,399
-          </div>
-
-        </div>
-
-      </div>
-
-      <div class="section-divider"></div>
-
-      <!-- COLOUR -->
-      <div class="row-label">
-
-        Colour
-
-      </div>
-
-      <div class="color-row" id="colorRow">
-
-        <button class="color-btn active"
-                data-color="Midnight">
-
-          <span class="swatch"
-                style="background:#1c2028"></span>
-
-          Midnight
-
-        </button>
-
-        <button class="color-btn"
-                data-color="Starlight">
-
-          <span class="swatch"
-                style="background:#e8ddd0"></span>
-
-          Starlight
-
-        </button>
-
-        <button class="color-btn"
-                data-color="Silver">
-
-          <span class="swatch"
-                style="background:#d0d0d5"></span>
-
-          Silver
-
-        </button>
-
-        <button class="color-btn"
-                data-color="Sky Blue">
-
-          <span class="swatch"
-                style="background:#b4cde6"></span>
-
-          Sky Blue
-
-        </button>
-
-      </div>
-
-      <div class="section-divider"></div>
-
-      <!-- QUANTITY -->
-      <div class="quantity-section">
-
-        <div class="quantity-box">
-
-          <button id="qMinus"
-                  aria-label="Decrease quantity">
-
-            −
-
-          </button>
-
-          <input type="text"
-                 id="qInput"
-                 value="1"
-                 readonly
-                 aria-label="Quantity">
-
-          <button id="qPlus"
-                  aria-label="Increase quantity">
-
-            +
-
-          </button>
-
-        </div>
-
-        <span class="stock-note">
-
-          48 units in stock
-
-        </span>
-
-      </div>
-
-      <div class="section-divider"></div>
-
-      <!-- SHIPPING -->
-      <div class="info-row">
-
-        <div class="label">
-
-          Shipping
-
-        </div>
-
-        <div class="value">
-
-          🚚 Free Shipping Available
-
-        </div>
-
-      </div>
-
-      <!-- GUARANTEE -->
-      <div class="info-row">
-
-        <div class="label">
-
-          Guarantee
-
-        </div>
-
-        <div class="value">
-
-          ✅ 100% Authentic Product
-
-        </div>
-
-      </div>
-
-      <!-- RETURN -->
-      <div class="info-row">
-
-        <div class="label">
-
-          Return
-
-        </div>
-
-        <div class="value">
-
-          🔄 15 Days Free Returns
-
-        </div>
-
-      </div>
-
-      <div class="section-divider"></div>
-
-      <!-- BUTTONS -->
-      <div class="button-group">
-
-        <button class="cart-btn"
-                id="btnCart">
-
-          Add to cart
-
-        </button>
-
-        <button class="buy-btn"
-                id="btnBuy">
-
-          Buy now
-
-        </button>
-
-        <button class="alert-btn"
-          id="btnAlert">
-          
-          Price Alert
-        
-        </button>
-
-      </div>
-
-      <!-- TRUST STRIP -->
-      <div class="trust-strip">
-
-        <span class="trust-item">
-          100% authentic
-        </span>
-
-        <span class="trust-item">
-          15-day returns
-        </span>
-
-        <span class="trust-item">
-          Free delivery
-        </span>
-
-        <span class="trust-item">
-          Fulfilled by Mall
-        </span>
-
-      </div>
-
-      <!-- DESCRIPTION -->
-      <div class="description-box">
-
-        <h3>About this item</h3>
-
-        <p>{{ product.description }}</p>
-
-      </div>
-
-      <!-- TOAST NOTIFICATION -->
-      <div class="toast-msg" id="toastMsg"></div>
-
-      <!-- PRICE ALERT MODAL -->
-
-<div id="priceModal" class="price-modal">
-
-  <div class="price-modal-content">
-
-    <h2>🔔 Price Alert</h2>
-
-    <p>
-      Notify me when price drops below:
-    </p>
-
-    <input
-      type="number"
-      id="targetPrice"
-      placeholder="Enter target price (RM)">
+<div class="product-detail-container" style="max-width: 1200px; margin: 40px auto; padding: 0 20px; font-family: sans-serif;">
     
+    <a href="{{ url_for('buyer_dashboard') }}" style="text-decoration: none; color: #800000; font-weight: bold; display: inline-flex; align-items: center; margin-bottom: 20px; transition: 0.2s;">
+        ← Back to Main
+    </a>
 
-    <div class="modal-buttons">
+    <div class="product-detail-layout" style="display: flex; flex-wrap: wrap; gap: 40px; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        
+        <!-- PRODUCT IMAGE SECTION -->
+        <div class="product-image-section" style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: center; background: #f9f9f9; border-radius: 8px; padding: 40px; min-height: 400px;">
+            {% if product['image_url'] %}
+                <!-- FIXED IMAGE PATH TO REFERENCE STATIC UPLOADS FOLDER ACCURATELY -->
+                <img src="{{ url_for('static', filename=product['image_url']) }}"
+                     alt="{{ product['name'] }}"
+                     style="max-width:100%; max-height:400px; object-fit:contain;">
+            {% else %}
+                <div style="text-align:center; color:#aaa;">
+                    <span style="font-size:72px;">📦</span>
+                    <p>No image available</p>
+                </div>
+            {% endif %}
+        </div>
 
-      <button id="cancelAlert">
-        Cancel
-      </button>
+        <!-- PRODUCT INFO SECTION -->
+        <div class="product-info-section" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; justify-content: center;">
+            
+            <!-- CHANGED: REPLACED 'ALIEN STORE' WITH SELLER NAME FROM JOIN QUERY -->
+            <span style="color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: inline-block;">
+                🏪 {{ product['seller_name'] if product['seller_name'] else 'Unknown Seller' }}
+            </span>
+            
+            <h1 style="margin: 0 0 15px 0; font-size: 32px; color: #333; font-weight: bold;">
+                {{ product['name'] }}
+            </h1>
 
-      <button id="confirmAlert">
-        Set Alert
-      </button>
+            <div style="font-size: 28px; color: #800000; font-weight: bold; margin-bottom: 20px;">
+                RM {{ "%.2f"|format(product['price']) if product['price'] is number else product['price'] }}
+            </div>
 
+            <hr style="border: none; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+            <!-- FIXED: SHOW DESCRIPTION -->
+            <div style="margin-bottom: 25px; color: #666; line-height: 1.6;">
+                <h3 style="color: #333; font-size: 16px; margin-bottom: 8px;">Product Description</h3>
+                <p style="margin: 0; white-space: pre-line;">
+                    {% if product['description'] %}
+                        {{ product['description'] }}
+                    {% else %}
+                        No description provided for this product.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div style="margin-bottom: 20px; font-size: 14px; color: {% if product['stock'] > 0 %}#2e7d32{% else %}#c62828{% endif %}; font-weight: bold;">
+                ● Stock Status: {{ product['stock'] }} units available
+            </div>
+
+            <!-- BUYING ACTIONS -->
+            {% if session.get('user_id') and session.get('role') == 'buyer' %}
+                {% if product['stock'] > 0 %}
+                    <form method="POST" action="/cart/add/{{ product['id'] }}" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;">
+                        
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <label style="font-weight: bold; color: #555; font-size: 14px;">Quantity:</label>
+                            <input type="number" name="quantity" value="1" min="1" max="{{ product['stock'] }}" 
+                                   style="width: 70px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 16px;">
+                        </div>
+                        
+                        <button type="submit" name="buy_now" value="true" style="flex: 1; background: #2e7d32; color: white; border: none; padding: 15px 20px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 6px rgba(46,125,50,0.15);">
+                            ⚡ Buy Now
+                        </button>
+                        
+                        <button type="submit" style="background: #800000; color: white; border: none; padding: 15px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 4px 6px rgba(128,0,0,0.15);">
+                            🛒 Add to Cart
+                        </button>
+                    </form>
+                {% else %}
+                    <button disabled style="background: #ccc; color: #666; border: none; padding: 15px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; width: 100%; cursor: not-allowed; margin-bottom: 25px;">
+                        Out of Stock
+                    </button>
+                {% endif %}
+                
+                <!-- ADDED: PRICE ALERT ACTION SECTION -->
+                <div style="background: #fff9e6; border: 1px solid #ffe0b2; padding: 20px; border-radius: 8px; margin-top: 10px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 16px; color: #b78103; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        🚨 Set a Price Alert
+                    </h4>
+                    <p style="margin: 0 0 15px 0; font-size: 13px; color: #666; line-height: 1.4;">
+                        Get tracked system dashboard alerts whenever this product matches your budget choice.
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <div style="position: relative; flex: 1;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; font-weight: bold; font-size: 14px;">RM</span>
+                            <input type="number" id="targetPriceInput" placeholder="e.g. 50" min="1"
+                                   style="width: 100px; padding: 10px 10px 10px 40px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <button type="button" onclick="triggerPriceAlert()" style="background: #f5a623; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                            Set Alert
+                        </button>
+                    </div>
+                </div>
+
+            {% else %}
+                <div style="background: #fff3cd; color: #856404; padding: 12px 15px; border-radius: 6px; border: 1px solid #ffeeba; font-size: 14px; text-align: center;">
+                    Please <a href="/login" style="color: #800000; font-weight: bold; text-decoration: underline;">Login as a Buyer</a> to manage shopping interactions.
+                </div>
+            {% endif %}
+
+        </div>
     </div>
-
-  </div>
-
 </div>
 
-    </div>
-
-  </div>
-
-</div>
-
-{% endblock %}
-
-{% block extra_js %}
-
+<!-- CLIENT JAVASCRIPT FOR ROUTING PRICE ALERT INPUT PARAMETERS -->
 <script>
-
-(function () {
-
-  /* ---- Quantity ---- */
-
-  let qty = 1;
-
-  document.getElementById('qMinus')
-    .addEventListener('click', function () {
-
-      if (qty > 1) {
-
-        qty--;
-
-        document.getElementById('qInput').value = qty;
-
-      }
-
-    });
-
-  document.getElementById('qPlus')
-    .addEventListener('click', function () {
-
-      if (qty < 48) {
-
-        qty++;
-
-        document.getElementById('qInput').value = qty;
-
-      }
-
-    });
-
-  /* ---- Thumbnails ---- */
-
-  document.getElementById('thumbStrip')
-    .querySelectorAll('.thumb')
-    .forEach(function (t) {
-
-      t.addEventListener('click', function () {
-
-        document.querySelectorAll('.thumb')
-          .forEach(function (x) {
-
-            x.classList.remove('active');
-
-          });
-
-        t.classList.add('active');
-
-        document.getElementById('mainImg').src =
-          t.dataset.full;
-
-      });
-
-    });
-
-  /* ---- Storage variants ---- */
-
-  document.getElementById('storGrid')
-    .querySelectorAll('.spec-card')
-    .forEach(function (c) {
-
-      c.addEventListener('click', function () {
-
-        document.querySelectorAll('.spec-card')
-          .forEach(function (x) {
-
-            x.classList.remove('active');
-
-          });
-
-        c.classList.add('active');
-
-        document.getElementById('priceDisplay').textContent =
-          'RM' + parseInt(c.dataset.price).toLocaleString();
-
-      });
-
-    });
-
-  /* ---- Colour ---- */
-
-  document.getElementById('colorRow')
-    .querySelectorAll('.color-btn')
-    .forEach(function (b) {
-
-      b.addEventListener('click', function () {
-
-        document.querySelectorAll('.color-btn')
-          .forEach(function (x) {
-
-            x.classList.remove('active');
-
-          });
-
-        b.classList.add('active');
-
-      });
-
-    });
-
-  /* ---- Toast helper ---- */
-
-  function toast(msg) {
-
-    var el = document.getElementById('toastMsg');
-
-    el.textContent = msg;
-
-    el.classList.add('show');
-
-    setTimeout(function () {
-
-      el.classList.remove('show');
-
-    }, 2400);
-
-  }
-
-  /* ---- Cart Button ---- */
-
-  document.getElementById('btnCart')
-    .addEventListener('click', function () {
-
-      toast('Added to cart');
-
-    });
-
-  /* ---- Buy Button ---- */
-
-  document.getElementById('btnBuy')
-    .addEventListener('click', function () {
-
-      toast('Redirecting to checkout...');
-
-    });
-
-  /* ---- Price Alert Modal ---- */
-
-  const modal =
-    document.getElementById('priceModal');
-
-  document.getElementById('btnAlert')
-    .addEventListener('click', function () {
-
-      modal.classList.add('show');
-
-    });
-
-  document.getElementById('cancelAlert')
-    .addEventListener('click', function () {
-
-      modal.classList.remove('show');
-
-    });
-
-  document.getElementById('confirmAlert')
-    .addEventListener('click', function () {
-
-      let target =
-        document.getElementById('targetPrice').value;
-
-      if (!target) {
-
-        toast('Please enter target price');
-
+function triggerPriceAlert() {
+    const inputVal = document.getElementById("targetPriceInput").value;
+    if (!inputVal || inputVal <= 0) {
+        alert("Please enter a valid target alert price threshold value.");
         return;
-
-      }
-
-      window.location.href =
-        '/set-alert/{{ product_id }}/' + target;
-
-    });
-
-})();
-
-
+    }
+    // Automatically dynamic forwards properties to match the /set-alert/<id>/<target> endpoint structure
+    window.location.href = "/set-alert/{{ product['id'] }}/" + parseInt(inputVal);
+}
 </script>
-
 {% endblock %}

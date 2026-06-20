@@ -144,6 +144,9 @@
                max="{{ product['stock'] }}"
                style="width:55px; padding:7px; border:1px solid #ddd;
                       border-radius:4px; text-align:center; font-size:14px;">
+        <a href="{{ url_for('product_detail',id=product['id']) }}" class="btn-view">
+        View
+        </a>
         <button type="submit"
                 style="flex:1; padding:8px; background:#800000; color:white;
                        border:none; border-radius:6px; cursor:pointer;

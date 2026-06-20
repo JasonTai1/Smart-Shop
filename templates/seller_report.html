@@ -5,10 +5,10 @@
 <div style="max-width:1000px; margin:40px auto; padding:0 20px;">
 
     <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:5px;">
-        📊 Sales Report 销售报告
+        📊 Sales Report
     </h2>
     <p style="color:#888; font-size:14px; margin-bottom:25px;">
-        Your sales performance overview 你的销售业绩概览
+        Your sales performance overview 
     </p>
 
     <!-- Summary Stats 总体统计 -->
@@ -19,7 +19,7 @@
                     box-shadow:0 2px 8px rgba(0,0,0,0.08);
                     border-top:4px solid #800000; text-align:center;">
             <div style="font-size:12px; color:#888; margin-bottom:8px;">
-                Total Revenue 总收入
+                Total Revenue 
             </div>
             <div style="font-size:22px; font-weight:bold; color:#800000;">
                 RM {{ "%.2f"|format(summary['total_revenue'] or 0) }}
@@ -30,7 +30,7 @@
                     box-shadow:0 2px 8px rgba(0,0,0,0.08);
                     border-top:4px solid #1a6cb8; text-align:center;">
             <div style="font-size:12px; color:#888; margin-bottom:8px;">
-                Total Orders 总订单
+                Total Orders 
             </div>
             <div style="font-size:22px; font-weight:bold; color:#1a6cb8;">
                 {{ summary['total_orders'] or 0 }}
@@ -41,7 +41,7 @@
                     box-shadow:0 2px 8px rgba(0,0,0,0.08);
                     border-top:4px solid #1a7a3a; text-align:center;">
             <div style="font-size:12px; color:#888; margin-bottom:8px;">
-                Items Sold 已售商品
+                Items Sold 
             </div>
             <div style="font-size:22px; font-weight:bold; color:#1a7a3a;">
                 {{ summary['total_items_sold'] or 0 }}
@@ -52,7 +52,7 @@
                     box-shadow:0 2px 8px rgba(0,0,0,0.08);
                     border-top:4px solid #e8a000; text-align:center;">
             <div style="font-size:12px; color:#888; margin-bottom:8px;">
-                Avg Order Value 平均订单价值
+                Avg Order Value 
             </div>
             <div style="font-size:22px; font-weight:bold; color:#e8a000;">
                 RM {{ "%.2f"|format(summary['avg_order_value'] or 0) }}
@@ -66,7 +66,7 @@
                 box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:25px;">
 
         <h3 style="font-size:16px; font-weight:bold; color:#333; margin-bottom:20px;">
-            📈 Monthly Revenue 月度收入 (Last 6 Months 最近6个月)
+            📈 Monthly Revenue 
         </h3>
 
         {% if months %}
@@ -76,7 +76,7 @@
         {% else %}
         <div style="text-align:center; padding:40px; color:#888;">
             <p style="font-size:40px; margin-bottom:10px;">📊</p>
-            <p>No sales data yet. Start selling! 还没有销售数据。开始销售吧！</p>
+            <p>No sales data yet. Start selling!</p>
         </div>
         {% endif %}
 
@@ -87,11 +87,10 @@
                 box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:25px;">
 
         <h3 style="font-size:16px; font-weight:bold; color:#333; margin-bottom:20px;">
-            🏆 Top Selling Products 最畅销商品
+            🏆 Top Selling Products 
         </h3>
 
         {% if top_products %}
-        {% for i, product in enumerate(top_products) if loop %}
         {% for product in top_products %}
         <div style="display:flex; align-items:center; gap:14px;
                     padding:12px 0; border-bottom:1px solid #f5f5f5;">
@@ -123,7 +122,7 @@
                     {{ product['name'] }}
                 </div>
                 <div style="font-size:12px; color:#888; margin-top:2px;">
-                    Sold 已售: {{ product['total_sold'] }} units 件
+                    Sold : {{ product['total_sold'] }} units 
                 </div>
             </div>
 
@@ -132,7 +131,7 @@
                 <div style="font-size:15px; font-weight:bold; color:#800000;">
                     RM {{ "%.2f"|format(product['total_revenue']) }}
                 </div>
-                <div style="font-size:12px; color:#888;">revenue 收入</div>
+                <div style="font-size:12px; color:#888;">revenue </div>
             </div>
 
         </div>
@@ -140,7 +139,7 @@
 
         {% else %}
         <div style="text-align:center; padding:30px; color:#888; font-size:14px;">
-            No sales yet. 还没有销售记录。
+            No sales yet.
         </div>
         {% endif %}
 
@@ -149,7 +148,7 @@
     <a href="/seller_dashboard"
        style="display:inline-block; margin-top:5px; color:#800000;
               font-size:14px; text-decoration:none;">
-        ← Back to Dashboard 返回仪表板
+        ← Back to Dashboard 
     </a>
 
 </div>
@@ -180,7 +179,7 @@ new Chart(ctx, {
         // labels = x-axis labels (x轴标签)
 
         datasets: [{
-            label: 'Revenue (RM) 收入',
+            label: 'Revenue (RM)',
             data: revenues,
             // data = the actual values (实际数值)
 

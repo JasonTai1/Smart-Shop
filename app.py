@@ -2,7 +2,7 @@
 # app.py — Smart Shop
 # ════════════════════════════════════════════
 
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session,url_for
 from routes.main import main 
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -13,7 +13,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 # MIMEText, MIMEMultipart = helps us build email content
-
+from models import db,Product,ForumPost,Comment
 import os
 from werkzeug.utils import secure_filename
 # secure_filename = makes filename safe to save
@@ -22,6 +22,9 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "smartshop_secret_key_2024"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
 
 PRICE_ALERTS = []
 # ── Email Settings ──────────────────
@@ -183,7 +186,27 @@ def init_db():
     # product_id = which product
     # quantity   = how many
     # price      = price at time of order
+    
+    cursor.execute("""
+       CREATE TABLE IF NOT EXISTS forum_post (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        content TEXT,
+        author TEXT,
+        likes INTEGER DEFAULT 0,
+        views INTEGER DEFAULT 0
+       )
+   """)
 
+    cursor.execute("""
+       CREATE TABLE IF NOT EXISTS comment (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT,
+        author TEXT,
+        post_id INTEGER,
+        FOREIGN KEY(post_id) REFERENCES forum_post(id)
+        )
+    """)
 # Seller payout info table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS seller_payout (
@@ -910,7 +933,7 @@ def buyer_dashboard():
         p_id = alert['product_id']
         target = alert['target_price']
         
-        product = PRODUCTS.get(p_id)
+        product = Product.get(p_id)
         if product:
             try:
                 current_price_num = float(product.price.replace('RM', '').replace(',', '').strip())
@@ -979,6 +1002,9 @@ def add_to_cart(product_id):
 
     conn.commit()
     conn.close()
+    
+    if "buy_now" in request.form:
+        return redirect("/checkout")
 
     return redirect("/cart")
     # After adding, go to cart page
@@ -1595,23 +1621,10 @@ def reset_resend_otp():
     return redirect("/reset_verify_otp")
 
 # Jason part
-# ============================================================
-# PRODUCT CLASS
-# ============================================================
-
-class Product:
-    def __init__(self, name, price, image, description):
-        self.name        = name
-        self.price       = price
-        self.image       = image
-        self.description = description
-
 
 # ============================================================
 # ROUTES
 # ============================================================
-
-
 
 @app.route('/about')
 def about():
@@ -1636,15 +1649,30 @@ def warranty():
 
 @app.route('/product/<int:id>')
 def product_detail(id):
-    product = PRODUCTS.get(id)
+    if "user_id" not in session:
+        return redirect("/login")
 
-    if product is None:
-        return render_template('404.html'), 404
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Get product details
+    cursor.execute("SELECT * FROM products WHERE id=?", (id,))
+    product = cursor.fetchone()
+
+    # Get cart count for the header navbar layout consistency
+    cursor.execute("SELECT SUM(quantity) FROM cart WHERE buyer_id = ?", (session["user_id"],))
+    result = cursor.fetchone()
+    cart_count = result[0] if result[0] else 0
+
+    conn.close()
+
+    if not product:
+        return "Product not found", 404
 
     return render_template(
-        'product_detail.html',
-        product = product,
-        product_id = id
+        "product.html",
+        product=product,
+        cart_count=cart_count
     )
 
 @app.route('/set-alert/<int:id>/<int:target>')
@@ -1729,6 +1757,295 @@ def admin_approve_payment(order_id):
 @app.route('/helpcentre')
 def helpcentre():
     return render_template('helpcentre.html')
+
+@app.route('/forum')
+def forum():
+    
+    posts = ForumPost.query.all()
+
+    return render_template(
+        'forum.html',
+        posts=posts
+    )
+
+
+@app.route('/forum/add', methods=['GET', 'POST'])
+def add_post():
+    # Force user to login before they can create a post
+    if "user_id" not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        post = ForumPost(
+            title=request.form['title'],
+            content=request.form['content'],
+            author=session["username"]  # <-- Automatically saves who created it
+        )
+        db.session.add(post)
+        db.session.commit()
+
+        return redirect('/forum')
+
+    return render_template('add_post.html')
+
+@app.route("/delete_post/<int:id>")
+def delete_post(id):
+    # 1. Security Check: Is the user even logged in?
+    if "user_id" not in session:
+        return redirect("/login")
+
+    post = ForumPost.query.get_or_404(id)
+
+    # 2. Authorization Check:
+    # Allow deletion ONLY if the logged-in user is the author OR if they are an admin.
+    # (Since your app uses session["role"], we check if they are 'admin' or if their username matches)
+    is_author = (post.author == session["username"])
+    is_admin = (session.get("role") == "admin" or request.referrer and "/admin" in request.referrer) 
+    
+    if not is_author and not is_admin:
+        return "You do not have permission to delete this post.", 403  # HTTP Forbidden Error
+
+    # 3. If passed, delete the post
+    db.session.delete(post)
+    db.session.commit()
+
+    return redirect("/forum")
+
+@app.route('/')
+def index():
+    products = Product.query.all()
+    return render_template('index.html', products=products)
+
+@app.route("/post/<int:id>")
+def view_post(id):
+
+    post = ForumPost.query.get_or_404(id)
+
+    post.views += 1
+    db.session.commit()
+
+    comments = Comment.query.filter_by(
+        post_id=id
+    ).all()
+
+    return render_template(
+        "view_post.html",
+        post=post,
+        comments=comments
+    )
+
+@app.route("/like_post/<int:id>")
+def like_post(id):
+
+    post = ForumPost.query.get_or_404(id)
+
+    post.likes += 1
+
+    db.session.commit()
+
+    return redirect(
+        url_for("view_post", id=id)
+    )
+
+@app.route("/add_comment/<int:id>", methods=["POST"])
+def add_comment(id):
+
+    content = request.form["content"]
+
+    comment = Comment(
+        author="Guest",
+        content=content,
+        post_id=id
+    )
+
+    db.session.add(comment)
+    db.session.commit()
+
+    return redirect(
+        url_for("view_post", id=id)
+    )
+
+# ── SELLER EARNINGS  ──────────────────
+@app.route("/seller/earning")
+def seller_earning():
+    if "user_id" not in session or session["role"] != "seller":
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Total earnings from ALL paid orders
+    cursor.execute("""
+        SELECT
+            COALESCE(SUM(order_items.price * order_items.quantity), 0)
+            as total_earned
+        FROM order_items
+        JOIN products ON order_items.product_id = products.id
+        JOIN orders   ON order_items.order_id   = orders.id
+        WHERE products.seller_id = ?
+        AND   orders.status IN ('paid', 'shipped', 'delivered')
+    """, (session["user_id"],))
+    total_earned = cursor.fetchone()["total_earned"]
+
+    # Pending earnings (payment_pending orders)
+    cursor.execute("""
+        SELECT
+            COALESCE(SUM(order_items.price * order_items.quantity), 0)
+            as pending_earned
+        FROM order_items
+        JOIN products ON order_items.product_id = products.id
+        JOIN orders   ON order_items.order_id   = orders.id
+        WHERE products.seller_id = ?
+        AND   orders.status = 'payment_pending'
+    """, (session["user_id"],))
+    pending_earned = cursor.fetchone()["pending_earned"]
+
+    # This week earnings
+    cursor.execute("""
+        SELECT
+            COALESCE(SUM(order_items.price * order_items.quantity), 0)
+            as week_earned
+        FROM order_items
+        JOIN products ON order_items.product_id = products.id
+        JOIN orders   ON order_items.order_id   = orders.id
+        WHERE products.seller_id = ?
+        AND   orders.status IN ('paid', 'shipped', 'delivered')
+        AND   orders.created_at >= datetime('now', '-7 days')
+    """, (session["user_id"],))
+    # datetime('now', '-7 days') = 7 days ago
+    week_earned = cursor.fetchone()["week_earned"]
+
+    # Total orders count 
+    cursor.execute("""
+        SELECT COUNT(DISTINCT orders.id) as order_count
+        FROM orders
+        JOIN order_items ON orders.id   = order_items.order_id
+        JOIN products    ON order_items.product_id = products.id
+        WHERE products.seller_id = ?
+        AND   orders.status IN ('paid', 'shipped', 'delivered')
+    """, (session["user_id"],))
+    order_count = cursor.fetchone()["order_count"]
+
+    # Recent orders 
+    cursor.execute("""
+        SELECT DISTINCT
+            orders.id,
+            orders.created_at,
+            orders.status,
+            orders.total_amount,
+            orders.full_name,
+            users.email as buyer_email,
+            COALESCE(SUM(
+                order_items.price * order_items.quantity
+            ), 0) as seller_amount
+        FROM orders
+        JOIN order_items ON orders.id = order_items.order_id
+        JOIN products    ON order_items.product_id = products.id
+        JOIN users       ON orders.buyer_id = users.id
+        WHERE products.seller_id = ?
+        GROUP BY orders.id
+        ORDER BY orders.created_at DESC
+        LIMIT 10
+    """, (session["user_id"],))
+    recent_orders = cursor.fetchall()
+
+    # Payout info 
+    cursor.execute("""
+        SELECT * FROM seller_payout WHERE seller_id = ?
+    """, (session["user_id"],))
+    payout_info = cursor.fetchone()
+
+    conn.close()
+
+    return render_template("seller_earning.html",
+        total_earned   = total_earned,
+        pending_earned = pending_earned,
+        week_earned    = week_earned,
+        order_count    = order_count,
+        recent_orders  = recent_orders,
+        payout_info    = payout_info,
+        first_name     = session["first_name"]
+    )
+
+# ── SELLER SALES REPORT  ─────────────
+@app.route("/seller/report")
+def seller_report():
+    if "user_id" not in session or session["role"] != "seller":
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Sales by month (last 6 months)
+    cursor.execute("""
+        SELECT
+            strftime('%Y-%m', orders.created_at) as month,
+            COALESCE(SUM(order_items.price * order_items.quantity), 0) as revenue,
+            COUNT(DISTINCT orders.id) as order_count
+        FROM orders
+        JOIN order_items ON orders.id = order_items.order_id
+        JOIN products    ON order_items.product_id = products.id
+        WHERE products.seller_id = ?
+        AND   orders.status IN ('paid', 'shipped', 'delivered')
+        AND   orders.created_at >= datetime('now', '-6 months')
+        GROUP BY strftime('%Y-%m', orders.created_at)
+        ORDER BY month ASC
+    """, (session["user_id"],))
+    # strftime('%Y-%m', ...) = formats date as "2026-05"
+    monthly_sales = cursor.fetchall()
+
+    # Top 5 best selling products
+    cursor.execute("""
+        SELECT
+            products.name,
+            products.image_url,
+            SUM(order_items.quantity) as total_sold,
+            SUM(order_items.price * order_items.quantity) as total_revenue
+        FROM order_items
+        JOIN products ON order_items.product_id = products.id
+        JOIN orders   ON order_items.order_id   = orders.id
+        WHERE products.seller_id = ?
+        AND   orders.status IN ('paid', 'shipped', 'delivered')
+        GROUP BY products.id
+        ORDER BY total_sold DESC
+        LIMIT 5
+    """, (session["user_id"],))
+    top_products = cursor.fetchall()
+
+    # Overall summary 
+    cursor.execute("""
+        SELECT
+            COUNT(DISTINCT orders.id)                                  as total_orders,
+            COALESCE(SUM(order_items.quantity), 0)                     as total_items_sold,
+            COALESCE(SUM(order_items.price * order_items.quantity), 0) as total_revenue,
+            COALESCE(AVG(orders.total_amount), 0)                      as avg_order_value
+        FROM orders
+        JOIN order_items ON orders.id = order_items.order_id
+        JOIN products    ON order_items.product_id = products.id
+        WHERE products.seller_id = ?
+        AND   orders.status IN ('paid', 'shipped', 'delivered')
+    """, (session["user_id"],))
+    summary = cursor.fetchone()
+
+    conn.close()
+
+    # Convert to lists for chart
+    months   = [row["month"]   for row in monthly_sales]
+    revenues = [row["revenue"] for row in monthly_sales]
+    orders_count = [row["order_count"] for row in monthly_sales]
+
+    return render_template("seller_report.html",
+        months        = months,
+        revenues      = revenues,
+        orders_count  = orders_count,
+        top_products  = top_products,
+        summary       = summary,
+        first_name    = session["first_name"]
+    )
+
+with app.app_context():
+
+    db.create_all()
 
 # ── RUN  ─────────────────────────────────
 if __name__ == "__main__":
