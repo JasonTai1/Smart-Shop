@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}Sales Report{% endblock %}
+
+{% block content %}
+<div style="max-width:1000px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:5px;">
+        📊 Sales Report
+    </h2>
+    <p style="color:#888; font-size:14px; margin-bottom:25px;">
+        Your sales performance overview 
+    </p>
+
+    <!-- Summary Stats 总体统计 -->
+    <div style="display:grid; grid-template-columns:repeat(4,1fr);
+                gap:16px; margin-bottom:25px;">
+
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #800000; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                Total Revenue 
+            </div>
+            <div style="font-size:22px; font-weight:bold; color:#800000;">
+                RM {{ "%.2f"|format(summary['total_revenue'] or 0) }}
+            </div>
+        </div>
+
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #1a6cb8; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                Total Orders 
+            </div>
+            <div style="font-size:22px; font-weight:bold; color:#1a6cb8;">
+                {{ summary['total_orders'] or 0 }}
+            </div>
+        </div>
+
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #1a7a3a; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                Items Sold 
+            </div>
+            <div style="font-size:22px; font-weight:bold; color:#1a7a3a;">
+                {{ summary['total_items_sold'] or 0 }}
+            </div>
+        </div>
+
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #e8a000; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                Avg Order Value 
+            </div>
+            <div style="font-size:22px; font-weight:bold; color:#e8a000;">
+                RM {{ "%.2f"|format(summary['avg_order_value'] or 0) }}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Sales Chart 销售图表 -->
+    <div style="background:white; border-radius:12px; padding:24px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:25px;">
+
+        <h3 style="font-size:16px; font-weight:bold; color:#333; margin-bottom:20px;">
+            📈 Monthly Revenue 
+        </h3>
+
+        {% if months %}
+        <!-- Chart container 图表容器 -->
+        <canvas id="salesChart" style="max-height:300px;"></canvas>
+
+        {% else %}
+        <div style="text-align:center; padding:40px; color:#888;">
+            <p style="font-size:40px; margin-bottom:10px;">📊</p>
+            <p>No sales data yet. Start selling!</p>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Top Products 最畅销商品 -->
+    <div style="background:white; border-radius:12px; padding:24px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:25px;">
+
+        <h3 style="font-size:16px; font-weight:bold; color:#333; margin-bottom:20px;">
+            🏆 Top Selling Products 
+        </h3>
+
+        {% if top_products %}
+        {% for product in top_products %}
+        <div style="display:flex; align-items:center; gap:14px;
+                    padding:12px 0; border-bottom:1px solid #f5f5f5;">
+
+            <!-- Rank 排名 -->
+        <div style="width:32px; height:32px; border-radius:50%; background:{% if loop.index == 1 %}#FFD700{% elif loop.index == 2 %}#C0C0C0{% elif loop.index == 3 %}#CD7F32{% else %}#f0f0f0{% endif %}; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; flex-shrink:0; color:{% if loop.index <= 3 %}white{% else %}#555{% endif %};">
+        {{ loop.index }}
+        </div>
+
+
+
+            <!-- Product image 商品图片 -->
+            {% if product['image_url'] %}
+            <img src="{{ url_for('static', filename=product['image_url']) }}"
+                 style="width:45px; height:45px; object-fit:cover;
+                        border-radius:6px; flex-shrink:0;"
+                 onerror="this.style.display='none'">
+            {% else %}
+            <div style="width:45px; height:45px; background:#f0f0f0;
+                        border-radius:6px; display:flex; align-items:center;
+                        justify-content:center; font-size:18px; flex-shrink:0;">
+                📦
+            </div>
+            {% endif %}
+
+            <!-- Product info 商品信息 -->
+            <div style="flex:1;">
+                <div style="font-size:14px; font-weight:600; color:#333;">
+                    {{ product['name'] }}
+                </div>
+                <div style="font-size:12px; color:#888; margin-top:2px;">
+                    Sold : {{ product['total_sold'] }} units 
+                </div>
+            </div>
+
+            <!-- Revenue 收入 -->
+            <div style="text-align:right;">
+                <div style="font-size:15px; font-weight:bold; color:#800000;">
+                    RM {{ "%.2f"|format(product['total_revenue']) }}
+                </div>
+                <div style="font-size:12px; color:#888;">revenue </div>
+            </div>
+
+        </div>
+        {% endfor %}
+
+        {% else %}
+        <div style="text-align:center; padding:30px; color:#888; font-size:14px;">
+            No sales yet.
+        </div>
+        {% endif %}
+
+    </div>
+
+    <a href="/seller_dashboard"
+       style="display:inline-block; margin-top:5px; color:#800000;
+              font-size:14px; text-decoration:none;">
+        ← Back to Dashboard 
+    </a>
+
+</div>
+
+<!-- Chart.js library for charts 图表库 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+{% if months %}
+// Get data from Flask 从Flask获取数据
+const months   = {{ months | tojson }};
+const revenues = {{ revenues | tojson }};
+// tojson = converts Python list to JavaScript array
+// tojson = 把Python列表转换成JavaScript数组
+
+// Create the chart 创建图表
+const ctx = document.getElementById('salesChart').getContext('2d');
+// getContext('2d') = gets the drawing context for canvas
+// getContext('2d') = 获取canvas的绘图上下文
+
+new Chart(ctx, {
+    type: 'bar',
+    // type: 'bar' = bar chart (柱状图)
+    // other options: 'line' (折线图), 'pie' (饼图)
+
+    data: {
+        labels: months,
+        // labels = x-axis labels (x轴标签)
+
+        datasets: [{
+            label: 'Revenue (RM)',
+            data: revenues,
+            // data = the actual values (实际数值)
+
+            backgroundColor: 'rgba(128, 0, 0, 0.7)',
+            // bar color (柱子颜色)
+
+            borderColor: 'rgba(128, 0, 0, 1)',
+            // bar border color (柱子边框颜色)
+
+            borderWidth: 1,
+            borderRadius: 6
+            // rounded corners on bars (柱子圆角)
+        }]
+    },
+
+    options: {
+        responsive: true,
+        // responsive = chart resizes with screen
+        // responsive = 图表随屏幕大小调整
+
+        plugins: {
+            legend: { display: true },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'RM ' + context.parsed.y.toFixed(2);
+                        // Shows "RM 123.45" in tooltip
+                        // 在提示框显示 "RM 123.45"
+                    }
+                }
+            }
+        },
+
+        scales: {
+            y: {
+                beginAtZero: true,
+                // y-axis starts from 0
+                // y轴从0开始
+
+                ticks: {
+                    callback: function(value) {
+                        return 'RM ' + value;
+                        // Shows "RM" prefix on y-axis
+                        // 在y轴显示 "RM" 前缀
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+
+{% endblock %}

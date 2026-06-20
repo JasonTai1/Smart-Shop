@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="forum-container">
+
+    <div class="forum-header">
+        <h1>💬 SmartShop Community Forum</h1>
+        <p>
+            Discuss products, ask questions and share experiences.
+        </p>
+
+       <!-- 建议将 href 改为动态的 url_for -->
+       <a href="{{ url_for('add_post') }}" class="forum-btn">
+    + Create New Post
+       </a>
+
+    </div>
+
+    <div class="forum-posts">
+
+        {% for post in posts %}
+
+        <div class="forum-card">
+
+            <div class="forum-top">
+
+                <h3>{{ post.title }}</h3>
+
+                <span class="author">
+                    Posted by {{ post.author }}
+                </span>
+
+            </div>
+
+            <p class="forum-content">
+                {{ post.content }}
+            </p>
+
+            <div class="forum-actions">
+
+    <a href="/post/{{ post.id }}"
+       class="view-post-btn">
+        View
+    </a>
+
+    <a href="/delete_post/{{ post.id }}"
+       class="delete-btn"
+       onclick="return confirm('Delete this post?')">
+        Delete
+    </a>
+
+</div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

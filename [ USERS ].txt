@@ -1,0 +1,26 @@
+[ USERS ]
+- user_id (PK)
+- username
+- email
+- password
+
+        │
+        │
+        ▼
+
+[ PRICE_ALERTS ]
+- alert_id (PK)
+- user_id (FK)
+- product_id (FK)
+- target_price
+
+        ▲
+        │
+        │
+
+[ PRODUCTS ] ----------------------< [ PRICES ] >---------------------- [ SELLERS ]
+- product_id (PK)                  - price_id (PK)                     - seller_id (PK)
+- name                             - product_id (FK)                  - seller_name
+- category                         - seller_id (FK)                   - contact_info
+- description                      - price
+                                   - last_updated

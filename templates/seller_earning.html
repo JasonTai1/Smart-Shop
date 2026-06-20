@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}My Earnings{% endblock %}
+
+{% block content %}
+<div style="max-width:1000px; margin:40px auto; padding:0 20px;">
+
+    <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:5px;">
+          My Earnings 
+    </h2>
+    <p style="color:#888; font-size:14px; margin-bottom:25px;">
+        Track your sales and earnings 
+    </p>
+
+    <!-- Stats cards 统计卡片 -->
+    <div style="display:grid; grid-template-columns:repeat(4,1fr);
+                gap:16px; margin-bottom:25px;">
+
+        <!-- Total Earned 总收入 -->
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #800000; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                Total Earned 
+            </div>
+            <div style="font-size:24px; font-weight:bold; color:#800000;">
+                RM {{ "%.2f"|format(total_earned) }}
+            </div>
+        </div>
+
+        <!-- This Week 本周 -->
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #1a7a3a; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                This Week 
+            </div>
+            <div style="font-size:24px; font-weight:bold; color:#1a7a3a;">
+                RM {{ "%.2f"|format(week_earned) }}
+            </div>
+        </div>
+
+        <!-- Pending 待确认 -->
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #e8a000; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                Pending 
+            </div>
+            <div style="font-size:24px; font-weight:bold; color:#e8a000;">
+                RM {{ "%.2f"|format(pending_earned) }}
+            </div>
+        </div>
+
+        <!-- Total Orders 总订单数 -->
+        <div style="background:white; border-radius:12px; padding:20px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+                    border-top:4px solid #1a6cb8; text-align:center;">
+            <div style="font-size:12px; color:#888; margin-bottom:8px;">
+                Orders 
+            </div>
+            <div style="font-size:24px; font-weight:bold; color:#1a6cb8;">
+                {{ order_count }}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Payout info card 收款信息卡片 -->
+    <div style="background:white; border-radius:12px; padding:20px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:25px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:15px; font-weight:bold; color:#333;
+                            margin-bottom:8px;">
+                      Payout Account 
+                </div>
+                {% if payout_info %}
+                    {% if payout_info['tng_phone'] %}
+                    <div style="font-size:14px; color:#555; margin-bottom:4px;">
+                          TNG: {{ payout_info['tng_phone'] }}
+                    </div>
+                    {% endif %}
+                    {% if payout_info['bank_account'] %}
+                    <div style="font-size:14px; color:#555;">
+                          {{ payout_info['bank_name'] }}:
+                        {{ payout_info['bank_account'] }}
+                    </div>
+                    {% endif %}
+                {% else %}
+                <div style="color:#e8a000; font-size:14px;">
+                     No payout account set up yet!
+                </div>
+                {% endif %}
+            </div>
+            <a href="/seller/payout"
+               style="background:#800000; color:white; padding:10px 20px;
+                      border-radius:8px; text-decoration:none;
+                      font-weight:bold; font-size:14px; white-space:nowrap;">
+                 Edit 
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent orders table 最近订单表格 -->
+    <div style="background:white; border-radius:12px; overflow:hidden;
+                box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+        <div style="padding:20px; border-bottom:1px solid #f0f0f0;">
+            <h3 style="font-size:16px; font-weight:bold; color:#333; margin:0;">
+                  Recent Orders 
+            </h3>
+        </div>
+
+        {% if recent_orders %}
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f9f9f9;">
+                    <th style="padding:12px 16px; text-align:left;
+                               font-size:13px; color:#888; font-weight:600;">
+                        Order 
+                    </th>
+                    <th style="padding:12px 16px; text-align:left;
+                               font-size:13px; color:#888; font-weight:600;">
+                        Buyer 
+                    </th>
+                    <th style="padding:12px 16px; text-align:left;
+                               font-size:13px; color:#888; font-weight:600;">
+                        Date 
+                    </th>
+                    <th style="padding:12px 16px; text-align:left;
+                               font-size:13px; color:#888; font-weight:600;">
+                        Status 
+                    </th>
+                    <th style="padding:12px 16px; text-align:right;
+                               font-size:13px; color:#888; font-weight:600;">
+                        Amount 
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr style="border-bottom:1px solid #f5f5f5;">
+                    <td style="padding:13px 16px; font-size:14px; font-weight:bold;">
+                        #{{ "%05d"|format(order['id']) }}
+                    </td>
+                    <td style="padding:13px 16px; font-size:13px; color:#555;">
+                        {{ order['buyer_email'] }}
+                    </td>
+                    <td style="padding:13px 16px; font-size:13px; color:#888;">
+                        {{ order['created_at'][:10] }}
+                    </td>
+                    <td style="padding:13px 16px;">
+                        {% if order['status'] == 'payment_pending' %}
+                        <span style="background:#fff3cd; color:#856404;
+                                     padding:3px 10px; border-radius:20px;
+                                     font-size:12px; font-weight:bold;">
+                             Pending
+                        </span>
+                        {% elif order['status'] == 'paid' %}
+                        <span style="background:#d4edda; color:#155724;
+                                     padding:3px 10px; border-radius:20px;
+                                     font-size:12px; font-weight:bold;">
+                             Paid
+                        </span>
+                        {% elif order['status'] == 'shipped' %}
+                        <span style="background:#cce5ff; color:#004085;
+                                     padding:3px 10px; border-radius:20px;
+                                     font-size:12px; font-weight:bold;">
+                             Shipped
+                        </span>
+                        {% elif order['status'] == 'cancelled' %}
+                        <span style="background:#f8d7da; color:#721c24;
+                                     padding:3px 10px; border-radius:20px;
+                                     font-size:12px; font-weight:bold;">
+                             Cancelled
+                        </span>
+                        {% else %}
+                        <span style="background:#f0f0f0; color:#555;
+                                     padding:3px 10px; border-radius:20px;
+                                     font-size:12px;">
+                            {{ order['status'] }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding:13px 16px; font-size:14px;
+                               font-weight:bold; color:#800000; text-align:right;">
+                        RM {{ "%.2f"|format(order['seller_amount']) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+        <div style="text-align:center; padding:40px; color:#888; font-size:14px;">
+            No orders yet. Start selling!
+        </div>
+        {% endif %}
+
+    </div>
+
+    <a href="/seller_dashboard"
+       style="display:inline-block; margin-top:15px; color:#800000;
+              font-size:14px; text-decoration:none;">
+         Back to Dashboard 
+    </a>
+
+</div>
+{% endblock %}
