@@ -1718,6 +1718,9 @@ def admin_dashboard():
     pending_approval_list = cursor.fetchall()
     
     conn.close()
+
+    # Fetch all forum posts ordered by newest first
+    all_posts = ForumPost.query.order_by(ForumPost.id.desc()).all()
     
     return render_template(
         "Admin/dashboard.html",
@@ -1727,6 +1730,31 @@ def admin_dashboard():
         revenue=revenue,
         pending_orders=pending_approval_list 
     )
+
+@app.route("/admin/delete_post/<int:post_id>")
+def admin_delete_post(post_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    post = ForumPost.query.get_or_404(post_id)
+
+    # Delete all associated comments first to prevent orphaned data
+    Comment.query.filter_by(post_id=post_id).delete()
+
+    db.session.delete(post)
+    db.session.commit()
+
+    return redirect("/admin/forum")
+
+@app.route("/admin/forum")
+def admin_forum_page():
+    if "user_id" not in session:
+        return redirect("/login")
+        
+    # Fetch all forum posts ordered by newest first
+    all_posts = ForumPost.query.order_by(ForumPost.id.desc()).all()
+    
+    return render_template("Admin/forum.html", forum_posts=all_posts)
 
 # ── SET PRICE ALERT  ──
 @app.route("/set_price_alert/<int:product_id>", methods=["POST"])
