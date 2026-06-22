@@ -1,0 +1,62 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+<div class="sidebar">
+  <div class="logo">
+    SmartShop
+    <span>Admin Panel</span>
+  </div>
+  <div class="menu"><a href="/admin">Dashboard</a></div>
+  <div class="menu"><a href="/admin/forum">Forum</a></div>
+  <div class="menu"><a href="/admin/notifications">Notifications</a></div>
+</div>
+
+<div class="main">
+  <h1>Forum Management</h1>
+
+  <div class="table-box" style="margin-top: 20px;">
+    <h2>User Published Posts</h2>
+    <table>
+      <tr>
+        <th style="width: 8%;">Post ID</th>
+        <th style="width: 15%;">Author</th>
+        <th style="width: 25%;">Title</th>
+        <th style="width: 32%;">Content Snippet</th>
+        <th style="width: 10%;">Stats</th>
+        <th style="width: 10%;">Action</th>
+      </tr>
+
+      {% if forum_posts %}
+        {% for post in forum_posts %}
+        <tr>
+          <td style="color: #666; font-weight: bold;">#P-{{ post.id }}</td>
+          <td>
+            <span style=" padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+              {{ post.author }}
+            </span>
+          </td>
+          <td style="font-weight: bold;">{{ post.title }}</td>
+          <td style="color: #555; font-size: 13px; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {{ post.content }}
+          </td>
+          <td style="font-size: 12px; color: #888;">
+            👍 {{ post.likes }} | 👁️ {{ post.views }}
+          </td>
+          <td>
+            <a href="/admin/delete_post/{{ post.id }}" 
+               onclick="return confirm(' CAUTION: Are you sure you want to PERMANENTLY delete this post written by {{ post.author }}?');"
+               class="btn" style="background: #d93025; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;">
+               Delete
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 30px; color: #888; font-style: italic;">
+            No forum posts published by users yet.
+          </td>
+        </tr>
+      {% endif %}
+    </table>
+  </div>
+</div>
