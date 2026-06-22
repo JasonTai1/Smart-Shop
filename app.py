@@ -2,7 +2,7 @@
 # app.py — Smart Shop
 # ════════════════════════════════════════════
 
-from flask import Flask, render_template, request, redirect, session,url_for
+from flask import Flask, render_template, request, redirect, session,url_for, flash
 from routes.main import main 
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -26,7 +26,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
-PRICE_ALERTS = []
+
 # ── Email Settings ──────────────────
 SMTP_EMAIL    = "smartshop.noreply1234@gmail.com"
 # The Gmail that SENDS the OTP
@@ -218,6 +218,20 @@ def init_db():
             bank_holder    TEXT,
             created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (seller_id) REFERENCES users(id)
+        )
+    """)
+
+# ── Price Alerts Table  ──
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS price_alerts (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            buyer_id     INTEGER NOT NULL,
+            product_id   INTEGER NOT NULL,
+            target_price REAL NOT NULL,
+            created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (buyer_id)   REFERENCES users(id),
+            FOREIGN KEY (product_id) REFERENCES products(id),
+            UNIQUE(buyer_id, product_id) 
         )
     """)
     # tng_phone    = TNG registered phone number 
@@ -926,23 +940,20 @@ def buyer_dashboard():
     result = cursor.fetchone()
     cart_count = result[0] if result[0] else 0
     # if result[0] is None (empty cart), use 0
+
+    cursor.execute("""
+        SELECT p.name, p.price, a.target_price, p.id as product_id
+        FROM price_alerts a
+        JOIN products p ON a.product_id = p.id
+        WHERE a.buyer_id = ? AND p.price <= a.target_price
+    """, (session["user_id"],))
+    triggered_alerts = cursor.fetchall()
+
+    for alert in triggered_alerts:
+        flash(f"🚨 PRICE DROP ALERT: '{alert['name']}' is now RM {alert['price']:.2f}! (Your target was RM {alert['target_price']:.2f})", "info")
+
+
     conn.close()
-
-#Jason part-----------
-    for alert in PRICE_ALERTS:
-        p_id = alert['product_id']
-        target = alert['target_price']
-        
-        product = Product.query.get(p_id)
-        if product:
-            try:
-                current_price_num = float(product.price.replace('RM', '').replace(',', '').strip())
-                if current_price_num <= target:
-                    # 以前是 print，现在换成 flash 发送给网页
-                    flash(f"🚨 Price Alert：{product.name} is now {product.price}，reaching your target of RM{target}！", "warning")
-            except ValueError:
-                pass 
-
 
     return render_template("buyer_dashboard.html",
         first_name = session["first_name"],
@@ -1675,24 +1686,6 @@ def product_detail(id):
         cart_count=cart_count
     )
 
-@app.route('/set-alert/<int:id>/<int:target>')
-def set_alert(id, target):
-    already_exists = False
-    for alert in PRICE_ALERTS:
-        if alert['product_id'] == id:
-            alert['target_price'] = target
-            already_exists = True
-            break
-            
-    if not already_exists:
-        PRICE_ALERTS.append({
-            'product_id': id,
-            'target_price': target
-        })
-
-    print(PRICE_ALERTS)
-
-    return redirect(f'/product/{id}')
 
 @app.route("/admin")
 def admin_dashboard():
@@ -1734,6 +1727,57 @@ def admin_dashboard():
         revenue=revenue,
         pending_orders=pending_approval_list 
     )
+
+# ── SET PRICE ALERT  ──
+@app.route("/set_price_alert/<int:product_id>", methods=["POST"])
+def set_price_alert(product_id):
+    if "user_id" not in session or session.get("role") != "buyer":
+        return redirect("/login")
+
+    target_price = request.form.get("target_price")
+    
+    if not target_price:
+        flash("Please enter a target price.", "warning")
+        return redirect(f"/product/{product_id}")
+
+    try:
+        target_price = float(target_price)
+        if target_price <= 0:
+            flash("Target price must be greater than RM 0.", "warning")
+            return redirect(f"/product/{product_id}")
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id FROM price_alerts 
+            WHERE buyer_id = ? AND product_id = ?
+        """, (session["user_id"], product_id))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute("""
+                UPDATE price_alerts 
+                SET target_price = ?, created_at = CURRENT_TIMESTAMP
+                WHERE buyer_id = ? AND product_id = ?
+            """, (target_price, session["user_id"], product_id))
+            msg = f"Target price updated to RM {target_price:.2f}!"
+        else:
+            cursor.execute("""
+                INSERT INTO price_alerts (buyer_id, product_id, target_price)
+                VALUES (?, ?, ?)
+            """, (session["user_id"], product_id, target_price))
+            msg = f"Price alert successfully set for RM {target_price:.2f}!"
+
+        conn.commit()
+        conn.close()
+        flash(msg, "success")
+
+    except ValueError:
+        flash("Invalid price format entered.", "warning")
+
+    return redirect(f"/product/{product_id}")
+
 
 @app.route("/admin/approve_payment/<int:order_id>")
 def admin_approve_payment(order_id):
