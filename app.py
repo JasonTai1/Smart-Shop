@@ -933,7 +933,7 @@ def buyer_dashboard():
         p_id = alert['product_id']
         target = alert['target_price']
         
-        product = Product.get(p_id)
+        product = Product.query.get(p_id)
         if product:
             try:
                 current_price_num = float(product.price.replace('RM', '').replace(',', '').strip())
@@ -1865,7 +1865,7 @@ def add_comment(id):
         url_for("view_post", id=id)
     )
 
-# ── SELLER EARNINGS  ──────────────────
+# ── SELLER EARNINGS 卖家收入追踪 ──────────────────
 @app.route("/seller/earning")
 def seller_earning():
     if "user_id" not in session or session["role"] != "seller":
@@ -1875,6 +1875,7 @@ def seller_earning():
     cursor = conn.cursor()
 
     # Total earnings from ALL paid orders
+    # 所有已付款订单的总收入
     cursor.execute("""
         SELECT
             COALESCE(SUM(order_items.price * order_items.quantity), 0)
@@ -1888,6 +1889,7 @@ def seller_earning():
     total_earned = cursor.fetchone()["total_earned"]
 
     # Pending earnings (payment_pending orders)
+    # 待确认收入（付款待确认的订单）
     cursor.execute("""
         SELECT
             COALESCE(SUM(order_items.price * order_items.quantity), 0)
@@ -1900,7 +1902,7 @@ def seller_earning():
     """, (session["user_id"],))
     pending_earned = cursor.fetchone()["pending_earned"]
 
-    # This week earnings
+    # This week earnings 本周收入
     cursor.execute("""
         SELECT
             COALESCE(SUM(order_items.price * order_items.quantity), 0)
@@ -1913,9 +1915,10 @@ def seller_earning():
         AND   orders.created_at >= datetime('now', '-7 days')
     """, (session["user_id"],))
     # datetime('now', '-7 days') = 7 days ago
+    # 7天前
     week_earned = cursor.fetchone()["week_earned"]
 
-    # Total orders count 
+    # Total orders count 总订单数
     cursor.execute("""
         SELECT COUNT(DISTINCT orders.id) as order_count
         FROM orders
@@ -1926,7 +1929,7 @@ def seller_earning():
     """, (session["user_id"],))
     order_count = cursor.fetchone()["order_count"]
 
-    # Recent orders 
+    # Recent orders 最近的订单
     cursor.execute("""
         SELECT DISTINCT
             orders.id,
@@ -1949,7 +1952,7 @@ def seller_earning():
     """, (session["user_id"],))
     recent_orders = cursor.fetchall()
 
-    # Payout info 
+    # Payout info 收款信息
     cursor.execute("""
         SELECT * FROM seller_payout WHERE seller_id = ?
     """, (session["user_id"],))
@@ -1967,7 +1970,7 @@ def seller_earning():
         first_name     = session["first_name"]
     )
 
-# ── SELLER SALES REPORT  ─────────────
+# ── SELLER SALES REPORT 卖家销售报告 ─────────────
 @app.route("/seller/report")
 def seller_report():
     if "user_id" not in session or session["role"] != "seller":
@@ -1976,7 +1979,7 @@ def seller_report():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Sales by month (last 6 months)
+    # Sales by month (last 6 months) 最近6个月按月销售额
     cursor.execute("""
         SELECT
             strftime('%Y-%m', orders.created_at) as month,
@@ -1992,9 +1995,10 @@ def seller_report():
         ORDER BY month ASC
     """, (session["user_id"],))
     # strftime('%Y-%m', ...) = formats date as "2026-05"
+    # strftime('%Y-%m', ...) = 把日期格式化为 "2026-05"
     monthly_sales = cursor.fetchall()
 
-    # Top 5 best selling products
+    # Top 5 best selling products 前5名最畅销商品
     cursor.execute("""
         SELECT
             products.name,
@@ -2012,7 +2016,7 @@ def seller_report():
     """, (session["user_id"],))
     top_products = cursor.fetchall()
 
-    # Overall summary 
+    # Overall summary 总体摘要
     cursor.execute("""
         SELECT
             COUNT(DISTINCT orders.id)                                  as total_orders,
@@ -2030,6 +2034,7 @@ def seller_report():
     conn.close()
 
     # Convert to lists for chart
+    # 转换成列表给图表用
     months   = [row["month"]   for row in monthly_sales]
     revenues = [row["revenue"] for row in monthly_sales]
     orders_count = [row["order_count"] for row in monthly_sales]

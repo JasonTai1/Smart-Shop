@@ -34,18 +34,24 @@
                 RM {{ "%.2f"|format(item['price']) }} each
             </div>
             <form method="POST" action="/cart/update/{{ item['cart_id'] }}"
-                  style="display:flex; align-items:center; gap:8px;">
-                <button type="submit" name="quantity" value="{{ item['quantity'] - 1 }}"
-                        style="width:30px; height:30px; border:1px solid #ddd;
-                               background:white; border-radius:4px; cursor:pointer; font-size:16px;">−</button>
-                <input type="number" name="quantity" value="{{ item['quantity'] }}"
-                       min="1" max="{{ item['stock'] }}"
-                       style="width:50px; text-align:center; padding:4px;
-                              border:1px solid #ddd; border-radius:4px; font-size:15px;"
-                       onchange="this.form.submit()">
-                <button type="submit" name="quantity" value="{{ item['quantity'] + 1 }}"
-                        style="width:30px; height:30px; border:1px solid #ddd;
-                               background:white; border-radius:4px; cursor:pointer; font-size:16px;">+</button>
+                 style="display: inline-flex; align-items: center; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #fff; height: 32px; margin-bottom: 8px;">
+    
+             <button type="button" 
+              onclick="var input = this.nextElementSibling; if(input.value > 1) { input.value--; this.form.submit(); }"
+              style="width: 32px; height: 100%; border: none; background: #f8f9fa; cursor: pointer; font-size: 16px; font-weight: bold; color: #555; display: flex; align-items: center; justify-content: center; outline: none;">
+               −
+             </button>
+    
+             <input type="number" name="quantity" value="{{ item['quantity'] }}"
+              min="1" max="{{ item['stock'] }}"
+              style="width: 45px; height: 100%; text-align: center; border-top: none; border-bottom: none; border-left: 1px solid #ddd; border-right: 1px solid #ddd; outline: none; font-size: 14px; margin: 0; padding: 0; box-sizing: border-box;"
+              onchange="this.form.submit()">
+    
+            <button type="button" 
+             onclick="var input = this.previousElementSibling; if(input.value < parseInt(input.max || 999)) { input.value++; this.form.submit(); }"
+             style="width: 32px; height: 100%; border: none; background: #f8f9fa; cursor: pointer; font-size: 16px; font-weight: bold; color: #555; display: flex; align-items: center; justify-content: center; outline: none;">
+             +
+            </button>
             </form>
             <a href="/cart/remove/{{ item['cart_id'] }}"
                style="color:red; font-size:13px; margin-top:6px; display:inline-block;"

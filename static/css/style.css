@@ -905,20 +905,20 @@ button{
     align-items: center;
     justify-content: center;
     padding: 10px 20px;
-    background-color: #ffffff;      
-    color: #800000;                 
-    border: 2px solid #800000;      
-    border-radius: 6px;             
+    background-color: #ffffff;      /* 白色背景 */
+    color: #800000;                 /* 深红色的文字，契合你的主题色 */
+    border: 2px solid #800000;      /* 深红色边框 */
+    border-radius: 6px;             /* 略带圆角 */
     font-weight: bold;
-    text-decoration: none;          
+    text-decoration: none;          /* 去掉超链接下划线 */
     cursor: pointer;
     transition: all 0.2s ease;
-    height: 42px;                   
+    height: 42px;                   /* 确保和输入框、购物车按钮高度对齐 */
     box-sizing: border-box;
 }
 
 /* 鼠标悬停时的视觉效果 */
 .btn-view:hover {
-    background-color: #800000;      
-    color: #ffffff;                 
+    background-color: #800000;      /* 变成深红底 */
+    color: #ffffff;                 /* 文字变成白色 */
 }
