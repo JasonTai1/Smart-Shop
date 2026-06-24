@@ -2,7 +2,7 @@
 # app.py — Smart Shop
 # ════════════════════════════════════════════
 
-from flask import Flask, render_template, request, redirect, session,url_for, flash, Response
+from flask import Flask, render_template, request, redirect, session,url_for, flash, Response, abort
 from routes.main import main 
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -18,6 +18,7 @@ import os
 from werkzeug.utils import secure_filename
 import csv
 import io
+from functools import wraps
 # secure_filename = makes filename safe to save
 # Example: "my photo!.jpg" → "my_photo_.jpg"
 
@@ -249,6 +250,76 @@ def init_db():
             FOREIGN KEY (seller_id) REFERENCES users(id)
         )
     """)
+
+# ==============================================================================
+# RBAC (Role-Based Access Control) SECURITY ENGINE
+# ==============================================================================
+
+# ─── The Security Guard Decorator (@admin_required) ───
+def admin_required(f):
+    """
+    This is a custom Python decorator. It acts as a strict security checkpoint 
+    stacked directly on top of protected administrative routes.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Security Check 1: Does the browser have an active logged-in user session?
+        if "user_id" not in session:
+            flash("System Security: You must login first to access the administration portal.", "warning")
+            return redirect("/login")
+        
+        # Security Check 2: Is the logged-in user's role explicitly defined as 'admin'?
+        if session.get("role") != "admin":
+            # If the user is a standard 'buyer' or 'seller', trigger HTTP 403 Forbidden Error immediately!
+            abort(403)
+            
+        # If both security checks pass, grant access and execute the actual route function
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# ─── The HTTP 403 Access Denied Interceptor ───
+@app.errorhandler(403)
+def access_forbidden_error(error):
+    """
+    When abort(403) is triggered above, Flask catches it here and renders 
+    our custom security warning page instead of crashing the server.
+    """
+    # Grab the identity of the trespasser from their session
+    current_username = session.get("username", "Guest")
+    current_user_role = session.get("role", "Unknown")
+    
+    # Render the 403 violation page and send a 403 HTTP status code back to the browser
+    return render_template("403.html", username=current_username, role=current_user_role), 403
+
+
+# ─ Automated Super-Admin Account Generator (The Seeder) ───
+def seed_default_admin():
+    """
+    Runs automatically when the Flask app starts. If it detects that the database 
+    has zero 'admin' accounts, it injects an official master admin account.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Scan the users table to verify if an administrator already exists
+    cursor.execute("SELECT id FROM users WHERE role = 'admin'")
+    admin_exists = cursor.fetchone()
+    
+    # If the database is completely missing an admin user, create one!
+    if not admin_exists:
+        default_email = "admin@smartshop.com"
+        # Generate an encrypted cryptographic password hash for 'SmartShop_Admin_2026'
+        secure_pass = generate_password_hash("SmartShop_Admin_2026")
+        
+        cursor.execute("""
+            INSERT INTO users (first_name, last_name, username, email, password, role, city, state)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, ("System", "Administrator", "SuperAdmin", default_email, secure_pass, "admin", "Cyberjaya", "Selangor"))
+        
+        conn.commit()
+        print(" [SYSTEM BOOT]: Successfully auto-provisioned default root Admin (admin@smartshop.com)")
+
 
     # tng_phone    = TNG registered phone number 
     # bank_name    = bank name 
@@ -611,6 +682,8 @@ def login():
                 session["state"]      = user["state"]
                 session["created_at"] = user["created_at"]
 
+                if user["role"] == "admin":
+                    return redirect("/admin")
                 if user["role"] == "seller":
                     return redirect("/seller_dashboard")
                 else:
@@ -686,6 +759,10 @@ def profile():
 def seller_dashboard():
     if "user_id" not in session:
         return redirect("/login")
+    
+    # ———— Admin Bounce Protection ——————
+    if session["role"] == "admin":
+        return redirect("admin")
     if session["role"] != "seller":
         return redirect("/buyer_dashboard")
 
@@ -930,6 +1007,10 @@ def delete_product(product_id):
 def buyer_dashboard():
     if "user_id" not in session:
         return redirect("/login")
+    
+    # —————— Admin Bounce Protection ————————
+    if session["role"] =="admin":
+        return redirect("/admin")
     if session["role"] != "buyer":
         return redirect("/seller_dashboard")
 
@@ -1797,6 +1878,7 @@ def product_detail(id):
 
 
 @app.route("/admin")
+@admin_required
 def admin_dashboard():
     if "user_id" not in session:
         return redirect("/login")
@@ -2417,4 +2499,5 @@ with app.app_context():
 # ── RUN  ─────────────────────────────────
 if __name__ == "__main__":
     init_db()
+    seed_default_admin()
     app.run(debug=True)
