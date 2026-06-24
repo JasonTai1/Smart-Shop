@@ -5,7 +5,7 @@
 <div style="max-width:900px; margin:40px auto; padding:0 20px;">
 
     <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:20px;">
-        🛒 My Cart 
+          My Cart 
     </h2>
 
     {% if items %}
@@ -18,56 +18,54 @@
                style="width:18px; height:18px; cursor:pointer; accent-color:#800000;">
         <label for="selectAll"
                style="font-size:14px; font-weight:600; color:#333; cursor:pointer;">
-            Select All (<span id="selectedCount">0</span> selected)
+            Select All 
+            (<span id="selectedCount">0</span> selected)
         </label>
     </div>
 
-    <!-- Cart items -->
-    <div id="checkoutForm">
+    <!-- Cart items — NO nested forms! -->
+    {% for item in items %}
+    <div style="background:white; border-radius:10px; padding:18px;
+                margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
+                display:flex; align-items:center; gap:14px;">
 
-        {% for item in items %}
-        <div style="background:white; border-radius:10px; padding:18px;
-                    margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
-                    display:flex; align-items:center; gap:14px;
-                    transition:all 0.2s;"
-             id="item-row-{{ item['cart_id'] }}">
+        <!-- Checkbox -->
+        <input type="checkbox"
+               class="item-checkbox"
+               data-cart-id="{{ item['cart_id'] }}"
+               data-price="{{ item['price'] }}"
+               data-quantity="{{ item['quantity'] }}"
+               onchange="updateTotal()"
+               style="width:18px; height:18px; cursor:pointer;
+                      flex-shrink:0; accent-color:#800000;">
 
-            <!-- Checkbox -->
-            <input type="checkbox"
-                   name="selected_items"
-                   value="{{ item['cart_id'] }}"
-                   class="item-checkbox"
-                   onchange="updateTotal()"
-                   style="width:18px; height:18px; cursor:pointer;
-                          flex-shrink:0; accent-color:#800000;">
+        <!-- Product image -->
+        {% if item['image_url'] %}
+        <img src="{{ url_for('static', filename=item['image_url']) }}"
+             alt="{{ item['name'] }}"
+             style="width:75px; height:75px; object-fit:cover;
+                    border-radius:8px; flex-shrink:0;"
+             onerror="this.style.display='none'">
+        {% else %}
+        <div style="width:75px; height:75px; background:#f0f0f0;
+                    border-radius:8px; display:flex; align-items:center;
+                    justify-content:center; font-size:28px; flex-shrink:0;">
+            📦
+        </div>
+        {% endif %}
 
-            <!-- Product image -->
-            {% if item['image_url'] %}
-            <img src="{{ url_for('static', filename=item['image_url']) }}"
-                 alt="{{ item['name'] }}"
-                 style="width:75px; height:75px; object-fit:cover;
-                        border-radius:8px; flex-shrink:0;"
-                 onerror="this.style.display='none'">
-            {% else %}
-            <div style="width:75px; height:75px; background:#f0f0f0;
-                        border-radius:8px; display:flex; align-items:center;
-                        justify-content:center; font-size:28px; flex-shrink:0;">
-                📦
+        <!-- Product details -->
+        <div style="flex:1;">
+            <div style="font-size:15px; font-weight:bold; color:#333;
+                        margin-bottom:3px;">
+                {{ item['name'] }}
             </div>
-            {% endif %}
+            <div style="font-size:13px; color:#888; margin-bottom:8px;">
+                RM {{ "%.2f"|format(item['price']) }} each
+            </div>
 
-            <!-- Product details -->
-            <div style="flex:1;">
-                <div style="font-size:15px; font-weight:bold; color:#333;
-                            margin-bottom:3px;">
-                    {{ item['name'] }}
-                </div>
-                <div style="font-size:13px; color:#888; margin-bottom:8px;">
-                    RM {{ "%.2f"|format(item['price']) }} each
-                </div>
-
-                <!-- Quantity controls -->
-                <div style="display:flex; align-items:center; gap:8px;">
+            <!-- Quantity controls — SEPARATE forms -->
+            <div style="display:flex; align-items:center; gap:8px;">
 
                     <form method="POST"
                         action="/cart/update/{{ item['cart_id'] }}">
@@ -88,43 +86,47 @@
 
                     </form>
 
-                    <!-- Remove button -->
-                    <a href="/cart/remove/{{ item['cart_id'] }}"
-                       style="color:#cc0000; font-size:13px; margin-left:8px;"
-                       onclick="return confirm('Remove this item?')">
-                         Remove
-                    </a>
-                </div>
+                <!-- Remove button -->
+                <a href="/cart/remove/{{ item['cart_id'] }}"
+                   style="color:#cc0000; font-size:13px; margin-left:8px;
+                          text-decoration:none;"
+                   onclick="return confirm('Remove?')">
+                     Remove
+                </a>
             </div>
-
-            <!-- Subtotal  -->
-            <div style="text-align:right; flex-shrink:0;">
-                <div style="font-size:16px; font-weight:bold; color:#800000;"
-                     data-price="{{ item['price'] }}"
-                     data-quantity="{{ item['quantity'] }}"
-                     id="subtotal-{{ item['cart_id'] }}">
-                    RM {{ "%.2f"|format(item['subtotal']) }}
-                </div>
-            </div>
-
         </div>
-        {% endfor %}
 
-        <!-- Order Summary -->
+        <!-- Subtotal  -->
+        <div style="text-align:right; flex-shrink:0;">
+            <div style="font-size:16px; font-weight:bold; color:#800000;"
+                 id="subtotal-{{ item['cart_id'] }}">
+                RM {{ "%.2f"|format(item['subtotal']) }}
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+
+    <!-- Order Summary + Checkout form -->
+    <form method="POST" action="/checkout_selected" id="checkoutForm">
+
+        <!-- Hidden inputs for selected cart IDs -->
+        <div id="hiddenInputs"></div>
+
         <div style="background:white; border-radius:10px; padding:25px;
                     box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-top:20px;">
 
             <div style="display:flex; justify-content:space-between;
                         padding:10px 0; border-bottom:1px solid #f0f0f0;
                         font-size:15px;">
-                <span>Selected Items</span>
+                <span>Selected Items </span>
                 <span id="summaryCount">0 item(s)</span>
             </div>
             <div style="display:flex; justify-content:space-between;
                         padding:10px 0; border-bottom:1px solid #f0f0f0;
                         font-size:15px;">
-                <span>Shipping</span>
-                <span style="color:green; font-weight:600;">FREE</span>
+                <span>Shipping </span>
+                <span style="color:green; font-weight:600;">FREE </span>
             </div>
             <div style="display:flex; justify-content:space-between;
                         padding:15px 0 0; font-size:20px; font-weight:bold;
@@ -133,7 +135,6 @@
                 <span id="selectedTotal">RM 0.00</span>
             </div>
 
-            <!-- Checkout button -->
             <button type="submit"
                     id="checkoutBtn"
                     disabled
@@ -142,21 +143,19 @@
                            border-radius:8px; font-size:16px; font-weight:bold;
                            cursor:not-allowed; margin-top:15px;
                            transition:all 0.3s;">
-                  Checkout Selected
+                  Checkout Selected 
             </button>
 
             <a href="/buyer_dashboard"
                style="display:block; text-align:center; margin-top:12px;
                       color:#800000; font-size:14px; text-decoration:none;">
-                ← Continue Shopping 
+                ← Continue Shopping
             </a>
 
         </div>
-
-    </div>
+    </form>
 
     {% else %}
-    <!-- Empty cart -->
     <div style="text-align:center; padding:60px; background:white;
                 border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <p style="font-size:60px;">🛒</p>
@@ -174,66 +173,73 @@
 </div>
 
 <script>
-// Toggle all checkboxes 
+// Toggle all checkboxes
 function toggleAll(source) {
-    const checkboxes = document.querySelectorAll('.item-checkbox');
-    checkboxes.forEach(cb => {
+    document.querySelectorAll('.item-checkbox').forEach(cb => {
         cb.checked = source.checked;
     });
     updateTotal();
 }
 
-// Update total price based on selected items
+// Update total and hidden inputs
+// 更新总价和隐藏输入
 function updateTotal() {
     const checkboxes = document.querySelectorAll('.item-checkbox');
-    let total     = 0;
-    let count     = 0;
+    let total      = 0;
+    let count      = 0;
     let allChecked = true;
     let anyChecked = false;
 
+    // Clear hidden inputs
+    document.getElementById('hiddenInputs').innerHTML = '';
+
     checkboxes.forEach(cb => {
         if (cb.checked) {
-            // Get cart_id from checkbox value
-            const cartId = cb.value;
-
-            // Get price and quantity from subtotal div
-            const subtotalEl = document.getElementById('subtotal-' + cartId);
-            const price    = parseFloat(subtotalEl.getAttribute('data-price'));
-            const quantity = parseInt(subtotalEl.getAttribute('data-quantity'));
+            const cartId   = cb.getAttribute('data-cart-id');
+            const price    = parseFloat(cb.getAttribute('data-price'));
+            const quantity = parseInt(cb.getAttribute('data-quantity'));
 
             total += price * quantity;
             count++;
             anyChecked = true;
+
+            // Add hidden input for this selected item
+            const input = document.createElement('input');
+            input.type  = 'hidden';
+            input.name  = 'selected_items';
+            input.value = cartId;
+            document.getElementById('hiddenInputs').appendChild(input);
+            // This is how form sends selected IDs to server
         } else {
             allChecked = false;
         }
     });
 
-    // Update Select All checkbox state
-    document.getElementById('selectAll').checked = allChecked && checkboxes.length > 0;
-    document.getElementById('selectAll').indeterminate = anyChecked && !allChecked;
-    // indeterminate = partially checked (dash) state
+    // Update Select All checkbox
+    const selectAll = document.getElementById('selectAll');
+    selectAll.checked       = allChecked && checkboxes.length > 0;
+    selectAll.indeterminate = anyChecked && !allChecked;
 
-    // Update display
+    // Update display 
     document.getElementById('selectedCount').textContent = count;
     document.getElementById('summaryCount').textContent  = count + ' item(s)';
-    document.getElementById('selectedTotal').textContent = 'RM ' + total.toFixed(2);
-    // toFixed(2) = show 2 decimal places
+    document.getElementById('selectedTotal').textContent =
+        'RM ' + total.toFixed(2);
 
-    // Enable/disable checkout button
+    // Enable/disable button 
     const btn = document.getElementById('checkoutBtn');
     if (count > 0) {
-        btn.disabled = false;
+        btn.disabled          = false;
         btn.style.background  = '#800000';
         btn.style.cursor      = 'pointer';
     } else {
-        btn.disabled = true;
+        btn.disabled          = true;
         btn.style.background  = '#ccc';
         btn.style.cursor      = 'not-allowed';
     }
 }
 
-// Run on page load to initialize
+// Initialize on page load
 updateTotal();
 </script>
 

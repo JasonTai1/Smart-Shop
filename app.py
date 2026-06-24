@@ -1222,6 +1222,59 @@ def checkout_selected():
 
     return redirect("/checkout")
 
+# ── BUY NOW  ──────────────────────────
+@app.route("/buy_now/<int:product_id>", methods=["POST"])
+def buy_now(product_id):
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    quantity = int(request.form.get("quantity", 1))
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Check product exists and has stock
+    cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
+    product = cursor.fetchone()
+
+    if not product or product["stock"] < quantity:
+        conn.close()
+        return redirect("/")
+
+    # Check if already in cart
+    cursor.execute("""
+        SELECT * FROM cart
+        WHERE buyer_id=? AND product_id=?
+    """, (session["user_id"], product_id))
+    existing = cursor.fetchone()
+
+    if existing:
+        # Update quantity 
+        cursor.execute("""
+            UPDATE cart SET quantity = quantity + ?
+            WHERE buyer_id=? AND product_id=?
+        """, (quantity, session["user_id"], product_id))
+        cart_id = existing["id"]
+    else:
+        # Add to cart 
+        cursor.execute("""
+            INSERT INTO cart (buyer_id, product_id, quantity)
+            VALUES (?, ?, ?)
+        """, (session["user_id"], product_id, quantity))
+        cart_id = cursor.lastrowid
+        # lastrowid = ID of just inserted row
+
+    conn.commit()
+    conn.close()
+
+    # Set ONLY this item as selected for checkout
+    session["selected_cart_ids"] = [str(cart_id)]
+
+    # Go directly to checkout!
+    return redirect("/checkout")
+
 # ════════════════════════════════════════════
 # CHECKOUT SYSTEM 
 # ════════════════════════════════════════════
@@ -1231,6 +1284,9 @@ def checkout_selected():
 def checkout():
     if "user_id" not in session:
         return redirect("/login")
+    
+    selected_ids = session.get("selected_cart_ids", [])
+    
     if session["role"] != "buyer":
         return redirect("/seller_dashboard")
 
