@@ -5,105 +5,236 @@
 <div style="max-width:900px; margin:40px auto; padding:0 20px;">
 
     <h2 style="font-size:22px; font-weight:bold; color:#333; margin-bottom:20px;">
-        🛒 My Cart
+        🛒 My Cart 
     </h2>
 
     {% if items %}
-    {% for item in items %}
-    <div style="background:white; border-radius:10px; padding:18px;
-                margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.08);
-                display:flex; align-items:center; gap:16px;">
 
-        {% if item['image_url'] %}
-        <img src="{{ url_for('static', filename=item['image_url']) }}"
-             alt="{{ item['name'] }}"
-             style="width:80px; height:80px; object-fit:cover;
-                    border-radius:8px; flex-shrink:0;"
-             onerror="this.style.display='none'">
-        {% else %}
-        <div style="width:80px; height:80px; background:#f0f0f0; border-radius:8px;
-                    display:flex; align-items:center; justify-content:center;
-                    font-size:30px; flex-shrink:0;">📦</div>
-        {% endif %}
-
-        <div style="flex:1;">
-            <div style="font-size:16px; font-weight:bold; color:#333; margin-bottom:4px;">
-                {{ item['name'] }}
-            </div>
-            <div style="font-size:14px; color:#888; margin-bottom:8px;">
-                RM {{ "%.2f"|format(item['price']) }} each
-            </div>
-            <form method="POST" action="/cart/update/{{ item['cart_id'] }}"
-                 style="display: inline-flex; align-items: center; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #fff; height: 32px; margin-bottom: 8px;">
-    
-             <button type="button" 
-              onclick="var input = this.nextElementSibling; if(input.value > 1) { input.value--; this.form.submit(); }"
-              style="width: 32px; height: 100%; border: none; background: #f8f9fa; cursor: pointer; font-size: 16px; font-weight: bold; color: #555; display: flex; align-items: center; justify-content: center; outline: none;">
-               −
-             </button>
-    
-             <input type="number" name="quantity" value="{{ item['quantity'] }}"
-              min="1" max="{{ item['stock'] }}"
-              style="width: 45px; height: 100%; text-align: center; border-top: none; border-bottom: none; border-left: 1px solid #ddd; border-right: 1px solid #ddd; outline: none; font-size: 14px; margin: 0; padding: 0; box-sizing: border-box;"
-              onchange="this.form.submit()">
-    
-            <button type="button" 
-             onclick="var input = this.previousElementSibling; if(input.value < parseInt(input.max || 999)) { input.value++; this.form.submit(); }"
-             style="width: 32px; height: 100%; border: none; background: #f8f9fa; cursor: pointer; font-size: 16px; font-weight: bold; color: #555; display: flex; align-items: center; justify-content: center; outline: none;">
-             +
-            </button>
-            </form>
-            <a href="/cart/remove/{{ item['cart_id'] }}"
-               style="color:red; font-size:13px; margin-top:6px; display:inline-block;"
-               onclick="return confirm('Remove this item?')">🗑️ Remove</a>
-        </div>
-
-        <div style="font-size:18px; font-weight:bold; color:#800000;
-                    min-width:100px; text-align:right;">
-            RM {{ "%.2f"|format(item['subtotal']) }}
-        </div>
+    <!-- Select All bar  -->
+    <div style="background:white; border-radius:10px; padding:14px 18px;
+                margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
+                display:flex; align-items:center; gap:12px;">
+        <input type="checkbox" id="selectAll" onchange="toggleAll(this)"
+               style="width:18px; height:18px; cursor:pointer; accent-color:#800000;">
+        <label for="selectAll"
+               style="font-size:14px; font-weight:600; color:#333; cursor:pointer;">
+            Select All (<span id="selectedCount">0</span> selected)
+        </label>
     </div>
-    {% endfor %}
 
-    <div style="background:white; border-radius:10px; padding:25px;
-                box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-top:20px;">
-        <div style="display:flex; justify-content:space-between; padding:10px 0;
-                    border-bottom:1px solid #f0f0f0; font-size:15px;">
-            <span>Items</span><span>{{ items|length }} item(s)</span>
+    <!-- Cart items -->
+    <div id="checkoutForm">
+
+        {% for item in items %}
+        <div style="background:white; border-radius:10px; padding:18px;
+                    margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
+                    display:flex; align-items:center; gap:14px;
+                    transition:all 0.2s;"
+             id="item-row-{{ item['cart_id'] }}">
+
+            <!-- Checkbox -->
+            <input type="checkbox"
+                   name="selected_items"
+                   value="{{ item['cart_id'] }}"
+                   class="item-checkbox"
+                   onchange="updateTotal()"
+                   style="width:18px; height:18px; cursor:pointer;
+                          flex-shrink:0; accent-color:#800000;">
+
+            <!-- Product image -->
+            {% if item['image_url'] %}
+            <img src="{{ url_for('static', filename=item['image_url']) }}"
+                 alt="{{ item['name'] }}"
+                 style="width:75px; height:75px; object-fit:cover;
+                        border-radius:8px; flex-shrink:0;"
+                 onerror="this.style.display='none'">
+            {% else %}
+            <div style="width:75px; height:75px; background:#f0f0f0;
+                        border-radius:8px; display:flex; align-items:center;
+                        justify-content:center; font-size:28px; flex-shrink:0;">
+                📦
+            </div>
+            {% endif %}
+
+            <!-- Product details -->
+            <div style="flex:1;">
+                <div style="font-size:15px; font-weight:bold; color:#333;
+                            margin-bottom:3px;">
+                    {{ item['name'] }}
+                </div>
+                <div style="font-size:13px; color:#888; margin-bottom:8px;">
+                    RM {{ "%.2f"|format(item['price']) }} each
+                </div>
+
+                <!-- Quantity controls -->
+                <div style="display:flex; align-items:center; gap:8px;">
+
+                    <form method="POST"
+                        action="/cart/update/{{ item['cart_id'] }}">
+
+                    <input type="number"
+                       name="quantity"
+                       value="{{ item['quantity'] }}"
+                       min="1"
+                       max="{{ item['stock'] }}"
+                       style="width:70px;
+                              text-align:center;
+                              padding:6px;
+                              border:1px solid #ddd;
+                              border-radius:4px;
+                              font-size:14px;
+                              font-weight:bold;"
+                       onchange="this.form.submit()">
+
+                    </form>
+
+                    <!-- Remove button -->
+                    <a href="/cart/remove/{{ item['cart_id'] }}"
+                       style="color:#cc0000; font-size:13px; margin-left:8px;"
+                       onclick="return confirm('Remove this item?')">
+                         Remove
+                    </a>
+                </div>
+            </div>
+
+            <!-- Subtotal  -->
+            <div style="text-align:right; flex-shrink:0;">
+                <div style="font-size:16px; font-weight:bold; color:#800000;"
+                     data-price="{{ item['price'] }}"
+                     data-quantity="{{ item['quantity'] }}"
+                     id="subtotal-{{ item['cart_id'] }}">
+                    RM {{ "%.2f"|format(item['subtotal']) }}
+                </div>
+            </div>
+
         </div>
-        <div style="display:flex; justify-content:space-between; padding:10px 0;
-                    border-bottom:1px solid #f0f0f0; font-size:15px;">
-            <span>Shipping</span><span style="color:green;">FREE</span>
+        {% endfor %}
+
+        <!-- Order Summary -->
+        <div style="background:white; border-radius:10px; padding:25px;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-top:20px;">
+
+            <div style="display:flex; justify-content:space-between;
+                        padding:10px 0; border-bottom:1px solid #f0f0f0;
+                        font-size:15px;">
+                <span>Selected Items</span>
+                <span id="summaryCount">0 item(s)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;
+                        padding:10px 0; border-bottom:1px solid #f0f0f0;
+                        font-size:15px;">
+                <span>Shipping</span>
+                <span style="color:green; font-weight:600;">FREE</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;
+                        padding:15px 0 0; font-size:20px; font-weight:bold;
+                        color:#800000;">
+                <span>Total</span>
+                <span id="selectedTotal">RM 0.00</span>
+            </div>
+
+            <!-- Checkout button -->
+            <button type="submit"
+                    id="checkoutBtn"
+                    disabled
+                    style="display:block; width:100%; padding:15px;
+                           background:#ccc; color:white; border:none;
+                           border-radius:8px; font-size:16px; font-weight:bold;
+                           cursor:not-allowed; margin-top:15px;
+                           transition:all 0.3s;">
+                  Checkout Selected
+            </button>
+
+            <a href="/buyer_dashboard"
+               style="display:block; text-align:center; margin-top:12px;
+                      color:#800000; font-size:14px; text-decoration:none;">
+                ← Continue Shopping 
+            </a>
+
         </div>
-        <div style="display:flex; justify-content:space-between; padding:15px 0 0;
-                    font-size:20px; font-weight:bold; color:#800000;">
-            <span>Total</span><span>RM {{ "%.2f"|format(total) }}</span>
-        </div>
-        <a href="/checkout"
-           style="display:block; width:100%; padding:15px; background:#800000;
-                  color:white; border-radius:8px; font-size:16px; font-weight:bold;
-                  text-align:center; text-decoration:none; margin-top:15px;
-                  box-sizing:border-box;">
-            💳 Proceed to Checkout
-        </a>
-        <a href="/buyer_dashboard"
-           style="display:block; text-align:center; margin-top:12px;
-                  color:#800000; font-size:14px;">
-            ← Continue Shopping
-        </a>
+
     </div>
 
     {% else %}
-    <div style="text-align:center; padding:60px; background:white; border-radius:10px;
-                box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <!-- Empty cart -->
+    <div style="text-align:center; padding:60px; background:white;
+                border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <p style="font-size:60px;">🛒</p>
-        <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">Your cart is empty!</p>
+        <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">
+            Your cart is empty!
+        </p>
         <a href="/buyer_dashboard"
            style="background:#800000; color:white; padding:12px 30px;
                   border-radius:6px; text-decoration:none; font-weight:bold;">
-            🛍️ Start Shopping
+             Start Shopping 
         </a>
     </div>
     {% endif %}
+
 </div>
+
+<script>
+// Toggle all checkboxes 
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = source.checked;
+    });
+    updateTotal();
+}
+
+// Update total price based on selected items
+function updateTotal() {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    let total     = 0;
+    let count     = 0;
+    let allChecked = true;
+    let anyChecked = false;
+
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            // Get cart_id from checkbox value
+            const cartId = cb.value;
+
+            // Get price and quantity from subtotal div
+            const subtotalEl = document.getElementById('subtotal-' + cartId);
+            const price    = parseFloat(subtotalEl.getAttribute('data-price'));
+            const quantity = parseInt(subtotalEl.getAttribute('data-quantity'));
+
+            total += price * quantity;
+            count++;
+            anyChecked = true;
+        } else {
+            allChecked = false;
+        }
+    });
+
+    // Update Select All checkbox state
+    document.getElementById('selectAll').checked = allChecked && checkboxes.length > 0;
+    document.getElementById('selectAll').indeterminate = anyChecked && !allChecked;
+    // indeterminate = partially checked (dash) state
+
+    // Update display
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('summaryCount').textContent  = count + ' item(s)';
+    document.getElementById('selectedTotal').textContent = 'RM ' + total.toFixed(2);
+    // toFixed(2) = show 2 decimal places
+
+    // Enable/disable checkout button
+    const btn = document.getElementById('checkoutBtn');
+    if (count > 0) {
+        btn.disabled = false;
+        btn.style.background  = '#800000';
+        btn.style.cursor      = 'pointer';
+    } else {
+        btn.disabled = true;
+        btn.style.background  = '#ccc';
+        btn.style.cursor      = 'not-allowed';
+    }
+}
+
+// Run on page load to initialize
+updateTotal();
+</script>
+
 {% endblock %}

@@ -1031,7 +1031,7 @@ def view_cart():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get all cart items with product details
+     # Get all cart items with product details
     cursor.execute("""
         SELECT
             cart.id        as cart_id,
@@ -1054,7 +1054,6 @@ def view_cart():
     # Calculate total price 
     total = sum(item["subtotal"] for item in items)
     # sum() = adds up all subtotals
-
     conn.close()
 
     return render_template("cart.html",
@@ -1104,6 +1103,28 @@ def remove_from_cart(cart_id):
 
     return redirect("/cart")
 
+# ── CHECKOUT SELECTED ITEMS ──────
+@app.route("/checkout_selected", methods=["POST"])
+def checkout_selected():
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    # Get selected cart item IDs from form
+    selected_items = request.form.getlist("selected_items")
+    # getlist() = gets ALL values with same name
+    # Returns list like: ["3", "5", "7"]
+
+    if not selected_items:
+        return redirect("/cart")
+
+    # Save selected cart IDs in session
+    session["selected_cart_ids"] = selected_items
+    # We use this in checkout to only process selected items
+
+    return redirect("/checkout")
+
 # ════════════════════════════════════════════
 # CHECKOUT SYSTEM 
 # ════════════════════════════════════════════
@@ -1119,8 +1140,12 @@ def checkout():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get cart items
-    cursor.execute("""
+    # Create placeholders for SQL query
+    placeholders = ",".join(["?" for _ in selected_ids])
+    # If selected_ids = ["3","5","7"]
+    # placeholders = "?,?,?"
+
+    cursor.execute(f"""
         SELECT
             cart.id        as cart_id,
             cart.quantity,
@@ -1133,9 +1158,15 @@ def checkout():
         FROM cart
         JOIN products ON cart.product_id = products.id
         WHERE cart.buyer_id = ?
+        AND cart.id IN ({placeholders})
         ORDER BY cart.created_at DESC
-    """, (session["user_id"],))
+    """, [session["user_id"]] + list(selected_ids))
+    # AND cart.id IN (?,?,?) = only selected items!
     items = cursor.fetchall()
+
+    # Calculate total price 
+    total = sum(item["subtotal"] for item in items)
+    # sum() = adds up all subtotals
 
     # If cart is empty redirect back
     if not items:
@@ -1192,11 +1223,17 @@ def checkout():
             """, (item["quantity"], item["product_id"]))
             # stock = stock - quantity
 
-        # Clear the cart after order placed
-        cursor.execute("""
-            DELETE FROM cart WHERE buyer_id = ?
-        """, (session["user_id"],))
+       # Only delete SELECTED items from cart
+        placeholders = ",".join(["?" for _ in selected_ids])
+        cursor.execute(f"""
+            DELETE FROM cart
+            WHERE buyer_id = ?
+            AND id IN ({placeholders})
+        """, [session["user_id"]] + list(selected_ids))
+        # Other items STAY in cart! 
 
+        # Clear selected items from session
+        session.pop("selected_cart_ids", None)
         conn.commit()
         conn.close()
 
