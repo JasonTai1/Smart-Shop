@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>403 Access Denied | SmartShop Security</title>
+    <!-- Internal CSS styling defining a clean, modern security violation screen -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .security-card {
+            background-color: white;
+            border-top: 5px solid #dc3545; /* Red danger stripe emphasizing security halt */
+            border-radius: 8px;
+            padding: 40px;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .error-code {
+            font-size: 72px;
+            font-weight: bold;
+            color: #dc3545;
+            margin: 0;
+        }
+        .audit-log {
+            background-color: #f1f3f5;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #495057;
+            margin: 20px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .btn-safe {
+            background-color: #800000;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="security-card">
+    <h1 class="error-code">403</h1>
+    <h2>Security Violation: Access Denied</h2>
+    <p>Your current account clearance level lacks the administrative compliance required to view this portal.</p>
+    
+    <!-- Dynamic Jinja output rendering the intercepted trespasser's session trace -->
+    <div class="audit-log">
+        <strong>Attempted User:</strong> {{ username }}<br>
+        <strong>Detected Role:</strong> <span style="color: red; font-weight: bold;">{{ role }}</span><br>
+        <strong>Required Role:</strong> admin
+    </div>
+
+    <a href="/buyer_dashboard" class="btn-safe">Return to Safe Store</a>
+</div>
+
+</body>
+</html>
