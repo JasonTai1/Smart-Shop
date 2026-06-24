@@ -2,7 +2,7 @@
 # app.py — Smart Shop
 # ════════════════════════════════════════════
 
-from flask import Flask, render_template, request, redirect, session,url_for, flash
+from flask import Flask, render_template, request, redirect, session,url_for, flash, Response
 from routes.main import main 
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,6 +16,8 @@ from email.mime.multipart import MIMEMultipart
 from models import db,Product,ForumPost,Comment
 import os
 from werkzeug.utils import secure_filename
+import csv
+import io
 # secure_filename = makes filename safe to save
 # Example: "my photo!.jpg" → "my_photo_.jpg"
 
@@ -234,6 +236,20 @@ def init_db():
             UNIQUE(buyer_id, product_id) 
         )
     """)
+
+# ── Payout History Log Table  ──
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS payout_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            seller_id INTEGER NOT NULL,
+            gross_amount REAL NOT NULL,
+            platform_fee REAL NOT NULL,
+            net_paid REAL NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (seller_id) REFERENCES users(id)
+        )
+    """)
+
     # tng_phone    = TNG registered phone number 
     # bank_name    = bank name 
     # bank_account = account number 
@@ -1792,6 +1808,187 @@ def admin_forum_page():
     all_posts = ForumPost.query.order_by(ForumPost.id.desc()).all()
     
     return render_template("Admin/forum.html", forum_posts=all_posts)
+
+# ============================================================
+# ADMIN PAYOUT MANAGEMENT (Features 1, 2, & 3 combined)
+# ============================================================
+
+# ── ROUTE A: Main Payout Dashboard & 2% Fee Calculator ──
+@app.route("/admin/payouts")
+def admin_payouts():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # 1. Fetch all sellers who have configured their banking/TNG details
+    cursor.execute("""
+        SELECT u.id as seller_id, u.username, u.email,
+               p.tng_phone, p.bank_name, p.bank_account, p.bank_holder
+        FROM users u
+        JOIN seller_payout p ON u.id = p.seller_id
+    """)
+    sellers = cursor.fetchall()
+
+    payout_list = []
+    total_platform_pending = 0.0
+    total_platform_commission = 0.0
+
+    for s in sellers:
+        sid = s["seller_id"]
+
+        # 2. Calculate lifetime gross sales of this seller from completed orders
+        cursor.execute("""
+            SELECT COALESCE(SUM(oi.price * oi.quantity), 0)
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            JOIN orders o ON oi.order_id = o.id
+            WHERE p.seller_id = ?
+            AND o.status IN ('paid', 'shipped', 'delivered', 'completed')
+        """, (sid,))
+        gross_sales = cursor.fetchone()[0]
+
+        # 3. Apply Feature 3: Platform Service Fee (2%)
+        platform_fee = gross_sales * 0.02
+        net_earnings = gross_sales * 0.98
+
+        # 4. Check how much we have already paid this seller in the past
+        cursor.execute("""
+            SELECT COALESCE(SUM(net_paid), 0)
+            FROM payout_history
+            WHERE seller_id = ?
+        """, (sid,))
+        already_paid = cursor.fetchone()[0]
+
+        # 5. Calculate remaining unpaid balance
+        pending_payable = net_earnings - already_paid
+        
+        # Clean up weird floating point decimals (e.g., 0.000000001 -> 0)
+        if pending_payable < 0.01:
+            pending_payable = 0.0
+
+        total_platform_pending += pending_payable
+        total_platform_commission += platform_fee
+
+        payout_list.append({
+            "seller_id": sid,
+            "username": s["username"],
+            "email": s["email"],
+            "tng_phone": s["tng_phone"],
+            "bank_name": s["bank_name"],
+            "bank_account": s["bank_account"],
+            "bank_holder": s["bank_holder"],
+            "gross_sales": gross_sales,
+            "platform_fee": platform_fee,
+            "already_paid": already_paid,
+            "pending_payable": pending_payable
+        })
+
+    # 6. Fetch recent completed payout logs (Feature 1 History)
+    cursor.execute("""
+        SELECT ph.*, u.username
+        FROM payout_history ph
+        JOIN users u ON ph.seller_id = u.id
+        ORDER BY ph.created_at DESC
+        LIMIT 10
+    """)
+    history_logs = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "Admin/payouts.html",
+        payouts=payout_list,
+        total_pending=total_platform_pending,
+        total_commission=total_platform_commission,
+        history_logs=history_logs
+    )
+
+
+# ── ROUTE B: Trigger 'Mark as Paid' (Feature 1 Action) ──
+@app.route("/admin/payouts/mark_paid/<int:seller_id>", methods=["POST"])
+def mark_payout_paid(seller_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    # Retrieve financial breakdown from hidden form inputs
+    gross_sales = float(request.form.get("gross_sales", 0))
+    platform_fee = float(request.form.get("platform_fee", 0))
+    net_paid = float(request.form.get("net_paid", 0))
+
+    if net_paid > 0:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO payout_history (seller_id, gross_amount, platform_fee, net_paid)
+            VALUES (?, ?, ?, ?)
+        """, (seller_id, gross_sales, platform_fee, net_paid))
+        conn.commit()
+        conn.close()
+        flash("Payout successfully recorded into history log!", "success")
+
+    return redirect("/admin/payouts")
+
+
+# ── ROUTE C: Bulk Export CSV (Feature 2 Action) ──
+@app.route("/admin/payouts/export_csv")
+def export_payouts_csv():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT u.id as seller_id, u.username, u.email,
+               p.tng_phone, p.bank_name, p.bank_account, p.bank_holder
+        FROM users u
+        JOIN seller_payout p ON u.id = p.seller_id
+    """)
+    sellers = cursor.fetchall()
+
+    # Create an in-memory string buffer to write CSV data
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write CSV Column Headers
+    writer.writerow([
+        "Seller ID", "Seller Name", "Email", "TNG Phone", 
+        "Bank Name", "Bank Account", "Account Holder", 
+        "Gross Sales (RM)", "2% Fee (RM)", "Net Payable Owed (RM)"
+    ])
+
+    for s in sellers:
+        sid = s["seller_id"]
+        
+        cursor.execute("""
+            SELECT COALESCE(SUM(oi.price * oi.quantity), 0)
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            JOIN orders o ON oi.order_id = o.id
+            WHERE p.seller_id = ?
+            AND o.status IN ('paid', 'shipped', 'delivered', 'completed')
+        """, (sid,))
+        gross = cursor.fetchone()[0]
+        
+        already_paid = cursor.execute("SELECT COALESCE(SUM(net_paid), 0) FROM payout_history WHERE seller_id = ?", (sid,)).fetchone()[0]
+        net = (gross * 0.98) - already_paid
+        
+        # Only export sellers who actually have money owed to them
+        if net > 0.01:
+            writer.writerow([
+                sid, s["username"], s["email"], 
+                s["tng_phone"] or "-", s["bank_name"] or "-", 
+                s["bank_account"] or "-", s["bank_holder"] or "-",
+                f"{gross:.2f}", f"{gross*0.02:.2f}", f"{net:.2f}"
+            ])
+
+    conn.close()
+
+    # Convert buffer to Flask downloadable HTTP response
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=SmartShop_Pending_Payouts.csv"
+    return response
 
 # ── SET PRICE ALERT  ──
 @app.route("/set_price_alert/<int:product_id>", methods=["POST"])

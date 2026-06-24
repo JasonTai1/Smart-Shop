@@ -1,0 +1,126 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_payouts.css') }}">
+
+<div class="sidebar">
+  <div class="logo">SmartShop<span>Admin Panel</span></div>
+  <div class="menu"><a href="/admin">Dashboard</a></div>
+  <div class="menu"><a href="/admin/forum">Forum</a></div>
+  <div class="menu">
+    <a href="/admin/payouts" class="active-link">Seller Payouts</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="top-header">
+    <h1>Seller Financial & Payouts</h1>
+    <a href="/admin/payouts/export_csv" class="btn-csv">📥 Export Owed Payouts (CSV)</a>
+  </div>
+
+  <div class="cards payout-summary-cards">
+    <div class="card debt-card">
+      <p>Total Platform Debt (Unpaid to Sellers)</p>
+      <div class="big debt-amount">RM {{ "%.2f"|format(total_pending) }}</div>
+    </div>
+
+    <div class="card revenue-card">
+      <p>Platform Revenue (2% Service Fee)</p>
+      <div class="big revenue-amount">RM {{ "%.2f"|format(total_commission) }}</div>
+    </div>
+  </div>
+
+  <h2>Pending Seller Balances</h2>
+  <div class="table-box">
+    <table>
+      <tr>
+        <th>Seller Profile</th>
+        <th>Payout Account</th>
+        <th>Gross Sales</th>
+        <th>2% Fee</th>
+        <th>Net Owed</th>
+        <th>Action</th>
+      </tr>
+
+      {% for p in payouts %}
+      <tr>
+        <td>
+          <strong>{{ p['username'] }}</strong><br>
+          <span class="seller-email">{{ p['email'] }}</span>
+        </td>
+
+        <td>
+          {% if p['tng_phone'] %}
+            <span class="label-tng">TNG:</span> {{ p['tng_phone'] }}
+          {% elif p['bank_account'] %}
+            <span class="label-bank">{{ p['bank_name'] }}:</span><br>
+            {{ p['bank_account'] }} ({{ p['bank_holder'] }})
+          {% else %}
+            <span class="not-configured">Not Configured</span>
+          {% endif %}
+        </td>
+
+        <td>RM {{ "%.2f"|format(p['gross_sales']) }}</td>
+
+        <td class="platform-fee">
+          - RM {{ "%.2f"|format(p['platform_fee']) }}
+        </td>
+
+        <td class="net-owed">
+          RM {{ "%.2f"|format(p['pending_payable']) }}
+        </td>
+
+        <td>
+          {% if p['pending_payable'] > 0 %}
+            <form action="/admin/payouts/mark_paid/{{ p['seller_id'] }}" method="POST" class="payout-form">
+              <input type="hidden" name="gross_sales" value="{{ p['gross_sales'] }}">
+              <input type="hidden" name="platform_fee" value="{{ p['platform_fee'] }}">
+              <input type="hidden" name="net_paid" value="{{ p['pending_payable'] }}">
+
+              <button
+                type="submit"class="btn-pay"onclick="return confirm('Confirm transfer of RM {{ '%.2f'|format(p['pending_payable']) }} to {{ p['username'] }}?');">
+                Mark as Paid
+              </button>
+            </form>
+          {% else %}
+            <span class="badge-cleared">✔ Paid</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" class="empty-row">No sellers found on the platform.</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <h2 class="section-title">Recent Payout Transfer Logs</h2>
+  <div class="table-box">
+    <table>
+      <tr>
+        <th>Log ID</th>
+        <th>Recipient Seller</th>
+        <th>Gross Calculated</th>
+        <th>Platform Fee Deducted</th>
+        <th>Amount Transferred</th>
+        <th>Timestamp</th>
+      </tr>
+
+      {% for log in history_logs %}
+      <tr>
+        <td>#PAY-{{ log['id'] }}</td>
+        <td><strong>{{ log['username'] }}</strong></td>
+        <td>RM {{ "%.2f"|format(log['gross_amount']) }}</td>
+        <td>RM {{ "%.2f"|format(log['platform_fee']) }}</td>
+        <td class="paid-amount">RM {{ "%.2f"|format(log['net_paid']) }}</td>
+        <td class="log-time">{{ log['created_at'] }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" class="empty-row muted-row">No payment history logs recorded yet.</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+</div>
