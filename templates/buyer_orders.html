@@ -26,7 +26,7 @@
                     Order #{{ "%05d"|format(order['id']) }}
                 </div>
                 <div style="font-size:12px; color:#888; margin-top:3px;">
-                    📅 {{ order['created_at'][:16] }}
+                    {{ order['created_at'][:16] }}
                 </div>
             </div>
 
@@ -129,6 +129,16 @@
                 </a>
                 {% endif %}
 
+                <!-- Track Order button — only for active/shipped/delivered orders -->
+                {% if order['status'] in ['paid', 'shipped', 'delivered'] %}
+                <button onclick="showTracking('{{ order['id'] }}', '{{ order['status'] }}', '{{ order['created_at'][:16] }}')"
+                        style="padding:7px 16px; border:1px solid #800000;
+                               background:#800000; color:white; border-radius:6px;
+                               font-size:13px; font-weight:600; cursor:pointer;">
+                     Track Order
+                </button>
+                {% endif %}
+
                 <div style="text-align:right;">
                     <div style="font-size:12px; color:#888;">Total </div>
                     <div style="font-size:18px; font-weight:bold; color:#800000;">
@@ -167,4 +177,160 @@
     </a>
 
 </div>
+
+<!-- ── TRACKING MODAL ──────────────────────────────────────── -->
+<div id="trackingModal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+            z-index:1000; align-items:center; justify-content:center;">
+
+    <div style="background:white; border-radius:16px; padding:32px 28px;
+                max-width:460px; width:90%; box-shadow:0 8px 30px rgba(0,0,0,0.18);
+                position:relative;">
+
+        <!-- Close button -->
+        <button onclick="closeTracking()"
+                style="position:absolute; top:14px; right:16px; background:none;
+                       border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+
+        <h3 style="margin:0 0 6px; font-size:17px; color:#333;">
+              Order Tracking
+        </h3>
+        <p id="trackOrderId" style="margin:0 0 24px; font-size:13px; color:#888;"></p>
+
+        <!-- Progress steps -->
+        <div style="position:relative; padding-left:28px;">
+
+            <!-- Vertical line -->
+            <div id="trackLine"
+                 style="position:absolute; left:10px; top:12px; width:2px;
+                        background:#e0e0e0; bottom:12px; border-radius:2px;">
+                <div id="trackLineFill"
+                     style="width:100%; background:#800000; border-radius:2px;
+                            transition:height 0.5s ease;"></div>
+            </div>
+
+            <!-- Step: Order Placed -->
+            <div class="track-step" id="step-placed" style="display:flex; align-items:flex-start; margin-bottom:24px; position:relative;">
+                <div class="track-dot" style="width:20px; height:20px; border-radius:50%;
+                     background:#800000; border:3px solid white; box-shadow:0 0 0 2px #800000;
+                     position:absolute; left:-28px; top:1px; flex-shrink:0;"></div>
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#333;">Order Placed</div>
+                    <div id="track-placed-date" style="font-size:12px; color:#888; margin-top:2px;"></div>
+                </div>
+            </div>
+
+            <!-- Step: Payment Confirmed -->
+            <div class="track-step" id="step-paid" style="display:flex; align-items:flex-start; margin-bottom:24px; position:relative;">
+                <div class="track-dot" id="dot-paid"
+                     style="width:20px; height:20px; border-radius:50%;
+                            position:absolute; left:-28px; top:1px; flex-shrink:0;"></div>
+                <div>
+                    <div id="lbl-paid" style="font-size:14px; font-weight:700;"></div>
+                    <div id="sub-paid" style="font-size:12px; color:#888; margin-top:2px;">Payment verified by seller</div>
+                </div>
+            </div>
+
+            <!-- Step: Shipped -->
+            <div class="track-step" id="step-shipped" style="display:flex; align-items:flex-start; margin-bottom:24px; position:relative;">
+                <div class="track-dot" id="dot-shipped"
+                     style="width:20px; height:20px; border-radius:50%;
+                            position:absolute; left:-28px; top:1px; flex-shrink:0;"></div>
+                <div>
+                    <div id="lbl-shipped" style="font-size:14px; font-weight:700;"></div>
+                    <div id="sub-shipped" style="font-size:12px; color:#888; margin-top:2px;">Your order is on the way</div>
+                </div>
+            </div>
+
+            <!-- Step: Delivered -->
+            <div class="track-step" id="step-delivered" style="display:flex; align-items:flex-start; position:relative;">
+                <div class="track-dot" id="dot-delivered"
+                     style="width:20px; height:20px; border-radius:50%;
+                            position:absolute; left:-28px; top:1px; flex-shrink:0;"></div>
+                <div>
+                    <div id="lbl-delivered" style="font-size:14px; font-weight:700;"></div>
+                    <div id="sub-delivered" style="font-size:12px; color:#888; margin-top:2px;">Package received</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Status banner -->
+        <div id="trackBanner"
+             style="margin-top:24px; padding:12px 16px; border-radius:10px;
+                    font-size:13px; font-weight:600; text-align:center;"></div>
+
+    </div>
+</div>
+
+<script>
+function showTracking(orderId, status, createdAt) {
+    // Populate order id label
+    document.getElementById('trackOrderId').textContent = 'Order #' + String(orderId).padStart(5, '0');
+    document.getElementById('track-placed-date').textContent = createdAt;
+
+    // Define steps in order
+    const steps = ['paid', 'shipped', 'delivered'];
+    const stepIndex = steps.indexOf(status);  // -1 if not found (shouldn't happen)
+
+    const configs = {
+        paid:      { label: 'Payment Confirmed', active: true },
+        shipped:   { label: 'Out for Delivery',  active: false },
+        delivered: { label: 'Delivered',          active: false }
+    };
+
+    // Mark each dot as active (done) or inactive (pending)
+    steps.forEach(function(step, idx) {
+        var dot   = document.getElementById('dot-'   + step);
+        var lbl   = document.getElementById('lbl-'   + step);
+        lbl.textContent = configs[step].label;
+
+        if (idx <= stepIndex) {
+            // completed / current
+            dot.style.background   = '#800000';
+            dot.style.border       = '3px solid white';
+            dot.style.boxShadow    = '0 0 0 2px #800000';
+            lbl.style.color        = '#333';
+        } else {
+            // pending
+            dot.style.background   = '#e0e0e0';
+            dot.style.border       = '3px solid white';
+            dot.style.boxShadow    = '0 0 0 2px #ccc';
+            lbl.style.color        = '#aaa';
+        }
+    });
+
+    // Animate the vertical fill line
+    var fillPct = { paid: '33%', shipped: '66%', delivered: '100%' };
+    document.getElementById('trackLineFill').style.height = fillPct[status] || '0%';
+
+    // Status banner
+    var banners = {
+        paid:      { text: '✅ Payment confirmed — preparing your order', bg: '#d4edda', color: '#155724' },
+        shipped:   { text: '🚚 Your order is on the way!',                bg: '#cce5ff', color: '#004085' },
+        delivered: { text: '🎉 Your order has been delivered!',            bg: '#d4edda', color: '#155724' }
+    };
+    var b = banners[status];
+    var banner = document.getElementById('trackBanner');
+    banner.textContent       = b.text;
+    banner.style.background  = b.bg;
+    banner.style.color       = b.color;
+
+    // Show modal
+    var modal = document.getElementById('trackingModal');
+    modal.style.display = 'flex';
+}
+
+function closeTracking() {
+    document.getElementById('trackingModal').style.display = 'none';
+    // Reset line fill so animation replays next time
+    document.getElementById('trackLineFill').style.height = '0%';
+}
+
+// Close when clicking backdrop
+document.getElementById('trackingModal').addEventListener('click', function(e) {
+    if (e.target === this) closeTracking();
+});
+</script>
+
 {% endblock %}
