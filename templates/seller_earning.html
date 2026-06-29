@@ -26,8 +26,15 @@
                 RM {{ "%.2f"|format(total_earned) }}
             </div>
         </div>
-
-        <!-- This Week 本周 -->
+        
+        <div class="earning-card" style="flex: 1; min-width: 150px; background: #fff; border: 1px solid #ddd; border-top: 4px solid #800000; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+           <span style="font-size: 14px; color: #666; display: block;">Processing Fee (2%)</span>
+           <h2 style="font-size: 24px; color: #800000; margin-top: 10px; font-weight: bold;">
+            RM {{ "%.2f"|format(processing_fee) }}
+           </h2>
+         </div>
+        
+         <!-- This Week 本周 -->
         <div style="background:white; border-radius:12px; padding:20px;
                     box-shadow:0 2px 8px rgba(0,0,0,0.08);
                     border-top:4px solid #1a7a3a; text-align:center;">
@@ -202,7 +209,7 @@
     <a href="/seller_dashboard"
        style="display:inline-block; margin-top:15px; color:#800000;
               font-size:14px; text-decoration:none;">
-         Back to Dashboard 
+         ← Back to Dashboard 
     </a>
 
 </div>
