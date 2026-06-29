@@ -38,17 +38,18 @@ class ForumPost(db.Model):
 
     views = db.Column(db.Integer, default=0)
 
+    image_url = db.Column(db.String(300), nullable=True)
+
 # 🟢 Comment System
 class Comment(db.Model):
-    __tablename__ = "comment"
-
     id = db.Column(db.Integer, primary_key=True)
+    
+    content = db.Column(db.Text, nullable=False)
+    
+    author = db.Column(db.String(100), nullable=False) # 存名字展示（如 session["username"]）
+    
+    user_id = db.Column(db.Integer, nullable=False)    # 🔥 核心：必须存是谁发的 ID
+    
+    post_id = db.Column(db.Integer, db.ForeignKey('forum_post.id'), nullable=False)
 
-    content = db.Column(db.Text)
-
-    author = db.Column(db.String(100))
-
-    post_id = db.Column(
-        db.Integer,
-        db.ForeignKey("forum_post.id")
-    )
+    image_url = db.Column(db.String(300), nullable=True)
