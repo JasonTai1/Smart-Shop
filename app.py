@@ -1596,6 +1596,52 @@ def seller_orders():
         first_name = session["first_name"]
     )
 
+#-------update order status-------- 
+@app.route("/seller/update_order_status/<int:order_id>", methods=["POST"])
+def seller_update_order_status(order_id):
+    if "user_id" not in session or session["role"] != "seller":
+        return {"success": False, "error": "Unauthorized"}, 403
+
+    import json as _json
+    data       = _json.loads(request.data)
+    new_status = data.get("status", "")
+
+    allowed = ["shipped", "delivered"]
+    if new_status not in allowed:
+        return {"success": False, "error": "Invalid status"}, 400
+
+    conn   = get_db()
+    cursor = conn.cursor()
+
+    # Verify this order contains at least one product belonging to this seller
+    cursor.execute("""
+        SELECT COUNT(*) as cnt
+        FROM order_items
+        JOIN products ON order_items.product_id = products.id
+        WHERE order_items.order_id = ?
+          AND products.seller_id   = ?
+    """, (order_id, session["user_id"]))
+    row = cursor.fetchone()
+    if not row or row["cnt"] == 0:
+        conn.close()
+        return {"success": False, "error": "Order not found"}, 404
+
+    # Only allow valid progressions: paid→shipped, shipped→delivered
+    cursor.execute("SELECT status FROM orders WHERE id = ?", (order_id,))
+    order = cursor.fetchone()
+    if not order:
+        conn.close()
+        return {"success": False, "error": "Order not found"}, 404
+
+    progression = {"paid": "shipped", "shipped": "delivered"}
+    if progression.get(order["status"]) != new_status:
+        conn.close()
+        return {"success": False, "error": "Invalid status transition"}, 400
+
+    cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (new_status, order_id))
+    conn.commit()
+    conn.close()
+    return {"success": True, "status": new_status}
 
 # ── BUYER ORDER HISTORY  ─────────────
 @app.route("/buyer/orders")
@@ -2220,22 +2266,17 @@ def add_post():
         content = request.form['content']
         author = session["username"]
         
-        # 🛠️ 1. 接收前端传过来的图片文件
         file = request.files.get('post_image')
-        image_url = None # 默认没有照片
+        image_url = None 
         
-        # 🛠️ 2. 判断用户是否真的选了照片，并且文件名不为空
         if file and file.filename != '':
             filename = secure_filename(file.filename)
             
-            # 为了防止不同用户上传同名图片冲突，我们可以给文件名加个时间戳前缀
             import time
             filename = f"{int(time.time())}_{filename}"
             
-            # 保存到本地：static/uploads/xxxx_filename.png
             file.save(os.path.join(UPLOAD_FOLDER, filename))
             
-            # 存入数据库的相对路径（网页前端可以通过这个路径直接读取）
             image_url = f"/static/uploads/{filename}"
         
         post = ForumPost(
@@ -2312,29 +2353,24 @@ def like_post(id):
 
 @app.route("/add_comment/<int:id>", methods=["POST"])
 def add_comment(id):
-    # 🔥 修正：发评论前必须确保登录，不然拿不到真正的用户名和ID
+
     if "user_id" not in session:
         return redirect("/login")
 
     content = request.form["content"]
     
-    # 🛠️ 1. 接收前端传来的评论图片
     file = request.files.get('comment_image')
-    image_url = None # 默认没有图片
+    image_url = None 
     
-    # 🛠️ 2. 如果用户选了图片，执行保存
     if file and file.filename != '':
         filename = secure_filename(file.filename)
         import time
-        filename = f"comment_{int(time.time())}_{filename}" # 加前缀防止和帖子图片混淆
-        
-        # 保存到 static/uploads/
+        filename = f"comment_{int(time.time())}_{filename}" 
         file.save(os.path.join(UPLOAD_FOLDER, filename))
         image_url = f"/static/uploads/{filename}"
-    # 🔥 修正：不要再写死 "Guest" 了，直接存入当前登录用户的名字和真实的 user_id
     comment = Comment(
-        author=session.get("username", "Anonymous"), # 存入发帖人的昵称
-        user_id=session["user_id"],                 # 存入发帖人的用户ID，以便后续判断删除权
+        author=session.get("username", "Anonymous"), 
+        user_id=session["user_id"],                
         content=content,
         post_id=id,
         image_url=image_url
@@ -2348,27 +2384,20 @@ def add_comment(id):
 
 @app.route("/comment/delete/<int:comment_id>", methods=["POST"])
 def delete_comment(comment_id):
-    # 1. 检查用户是否登录
     if "user_id" not in session:
         return redirect("/login")
     
-    # 2. 统一用 SQLAlchemy 语法查询这条评论 (安全、统一，拒绝混用 sqlite3)
     comment = Comment.query.get_or_404(comment_id)
-    post_id = comment.post_id # 先把属于哪篇帖子记录下来，删完好跳回去
-        
-    # 3. 🛡️ 核心权限检查：
-    # 允许删除的条件：当前登录的人是评论的原作者 OR 当前登录的人是管理员(admin)
+    post_id = comment.post_id 
     is_author = (comment.user_id == session["user_id"])
     is_admin = (session.get("role") == "admin")
 
     if not is_author and not is_admin:
         return "You are not authorized to delete this comment.", 403
         
-    # 4. 执行删除操作
     db.session.delete(comment)
     db.session.commit()
     
-    # 5. 删完之后，精准让网页重定向刷回到当前的论坛帖子页面
     return redirect(url_for("view_post", id=post_id))
 
 # ── SELLER EARNINGS  ──────────────────
@@ -2393,7 +2422,6 @@ def seller_earning():
     """, (session["user_id"],))
     total_earned_db = cursor.fetchone()["total_earned"]
     
-    # 🛠️ 1. 精确计算总收益与手续费 (扣除 2%)
     raw_total_earned = float(total_earned_db)
     processing_fee = raw_total_earned * 0.02
     total_earned = raw_total_earned - processing_fee
@@ -2411,7 +2439,7 @@ def seller_earning():
     """, (session["user_id"],))
     pending_earned = cursor.fetchone()["pending_earned"]
 
-    # This week earnings 本周收入
+    # This week earnings 
     cursor.execute("""
         SELECT
             COALESCE(SUM(order_items.price * order_items.quantity), 0)
@@ -2425,11 +2453,10 @@ def seller_earning():
     """, (session["user_id"],))
     week_earned_db = cursor.fetchone()["week_earned"]
     
-    # 🛠️ 2. 新增修改：将本周收入也同步扣除 2% 的手续费，保持数据一致
     raw_week_earned = float(week_earned_db)
     week_earned = raw_week_earned - (raw_week_earned * 0.02)
 
-    # Total orders count 总订单数
+    # Total orders count 
     cursor.execute("""
         SELECT COUNT(DISTINCT orders.id) as order_count
         FROM orders
@@ -2440,7 +2467,7 @@ def seller_earning():
     """, (session["user_id"],))
     order_count = cursor.fetchone()["order_count"]
 
-    # Recent orders 最近的订单
+    # Recent orders
     cursor.execute("""
         SELECT DISTINCT
             orders.id,
@@ -2463,7 +2490,7 @@ def seller_earning():
     """, (session["user_id"],))
     recent_orders = cursor.fetchall()
 
-    # Payout info 收款信息
+    # Payout info
     cursor.execute("""
         SELECT * FROM seller_payout WHERE seller_id = ?
     """, (session["user_id"],))
@@ -2471,19 +2498,18 @@ def seller_earning():
 
     conn.close()
 
-    # 返回所有正确计算后的数据给前端页面
     return render_template("seller_earning.html",
         total_earned   = total_earned,
         processing_fee = processing_fee,
         pending_earned = pending_earned,
-        week_earned    = week_earned,       # 这里已经成功变为扣费后的金额
+        week_earned    = week_earned,    
         order_count    = order_count,
         recent_orders  = recent_orders,
         payout_info    = payout_info,
         first_name     = session["first_name"]
     )
 
-# ── SELLER SALES REPORT 卖家销售报告 ─────────────
+# ── SELLER SALES REPORT  ─────────────
 @app.route("/seller/report")
 def seller_report():
     if "user_id" not in session or session["role"] != "seller":
@@ -2492,7 +2518,7 @@ def seller_report():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Sales by month (last 6 months) 最近6个月按月销售额
+    # Sales by month (last 6 months)
     cursor.execute("""
         SELECT
             strftime('%Y-%m', orders.created_at) as month,
@@ -2509,7 +2535,7 @@ def seller_report():
     """, (session["user_id"],))
     monthly_sales = cursor.fetchall()
 
-    # Top 5 best selling products 前5名最畅销商品
+    # Top 5 best selling products 
     cursor.execute("""
         SELECT
             products.name,
@@ -2527,14 +2553,13 @@ def seller_report():
     """, (session["user_id"],))
     top_products_db = cursor.fetchall()
     
-    # 🛠️ 1. 将前 5 畅销商品的“总营业额”同步扣除 2% 手续费，防止点开列表发现对不上总账
     top_products = []
     for row in top_products_db:
-        modified_row = dict(row) # 转换为可修改的字典
+        modified_row = dict(row) 
         modified_row["total_revenue"] = float(row["total_revenue"]) * 0.98
         top_products.append(modified_row)
 
-    # Overall summary 总体摘要
+    # Overall summary 
     cursor.execute("""
         SELECT
             COUNT(DISTINCT orders.id)                                  as total_orders,
@@ -2549,14 +2574,12 @@ def seller_report():
     """, (session["user_id"],))
     summary_db = cursor.fetchone()
     
-    # 🛠️ 2. 处理卡片总体摘要（主要修改 Total Revenue 和 Avg Order Value）
-    summary = dict(summary_db) # 转换为普通 Python 字典以便修改
+    summary = dict(summary_db)
     
     raw_total_revenue = float(summary["total_revenue"])
-    # 扣除 2% 后的总营收，这样你卡片显示的 RM 1000.00 就会自动变成 RM 980.00 啦！
+ 
     summary["total_revenue"] = raw_total_revenue * 0.98 
     
-    # 如果有订单，平均单价也要用“扣除后总营收 / 总订单数”重新计算，数据才精准
     if summary["total_orders"] > 0:
         summary["avg_order_value"] = summary["total_revenue"] / summary["total_orders"]
     else:
@@ -2564,20 +2587,18 @@ def seller_report():
 
     conn.close()
 
-    # Convert to lists for chart 转换成列表给图表用
+    # Convert to lists for chart 
     months = [row["month"] for row in monthly_sales]
     orders_count = [row["order_count"] for row in monthly_sales]
     
-    # 🛠️ 3. 将最近 6 个月趋势图表里的每月的销售额 (revenue) 也扣除 2% 手续费
-    # 这样图表画出来的折线/柱状图高度就能和你的总收益完全对上！
     revenues = [float(row["revenue"]) * 0.98 for row in monthly_sales]
 
     return render_template("seller_report.html",
         months        = months,
-        revenues      = revenues,       # 图表数据（已扣除 2%）
+        revenues      = revenues,      
         orders_count  = orders_count,
-        top_products  = top_products,   # 畅销排行（已扣除 2%）
-        summary       = summary,        # 卡片总统计（已扣除 2%）
+        top_products  = top_products,  
+        summary       = summary,       
         first_name    = session["first_name"]
     )
 

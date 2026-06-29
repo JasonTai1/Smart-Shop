@@ -25,21 +25,26 @@
                 </span>
             </div>
 
-            <!-- Status badge  -->
+            <!-- Status badge -->
             {% if order['status'] == 'payment_pending' %}
             <span style="background:#fff3cd; color:#856404; padding:4px 12px;
                          border-radius:20px; font-size:12px; font-weight:bold;">
-                ⏳ Payment Pending 
+                 Payment Pending
             </span>
             {% elif order['status'] == 'paid' %}
             <span style="background:#d4edda; color:#155724; padding:4px 12px;
                          border-radius:20px; font-size:12px; font-weight:bold;">
-                ✅ Paid 
+                 Paid
             </span>
             {% elif order['status'] == 'shipped' %}
             <span style="background:#cce5ff; color:#004085; padding:4px 12px;
                          border-radius:20px; font-size:12px; font-weight:bold;">
-                🚚 Shipped 
+                 Shipped
+            </span>
+            {% elif order['status'] == 'delivered' %}
+            <span style="background:#d4edda; color:#155724; padding:4px 12px;
+                         border-radius:20px; font-size:12px; font-weight:bold;">
+                 Delivered
             </span>
             {% else %}
             <span style="background:#f0f0f0; color:#555; padding:4px 12px;
@@ -50,9 +55,7 @@
         </div>
 
         <div style="display:flex; gap:24px; font-size:14px; color:#555;">
-            <div>
-                <b>Buyer :</b> {{ order['buyer_email'] }}
-            </div>
+            <div><b>Buyer :</b> {{ order['buyer_email'] }}</div>
             <div>
                 <b>Amount :</b>
                 <span style="color:#800000; font-weight:bold;">
@@ -66,6 +69,41 @@
             | {{ order['address'] }}, {{ order['city'] }}, {{ order['state'] }}
         </div>
 
+        <!-- Action buttons row -->
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+
+            <!-- Track button (same states as buyer) -->
+            {% if order['status'] in ['paid', 'shipped', 'delivered'] %}
+            <button onclick="showTracking('{{ order['id'] }}', '{{ order['status'] }}', '{{ order['created_at'][:16] }}')"
+                    style="padding:7px 16px; background:#800000; color:white;
+                           border:none; border-radius:6px; font-size:13px;
+                           font-weight:600; cursor:pointer;">
+                 Track Order
+            </button>
+            {% endif %}
+
+            <!-- Mark as Shipped -->
+            {% if order['status'] == 'paid' %}
+            <button onclick="updateStatus({{ order['id'] }}, 'shipped', this)"
+                    style="padding:7px 16px; background:#004085; color:white;
+                           border:none; border-radius:6px; font-size:13px;
+                           font-weight:600; cursor:pointer;">
+                 Mark as Shipped
+            </button>
+            {% endif %}
+
+            <!-- Mark as Delivered -->
+            {% if order['status'] == 'shipped' %}
+            <button onclick="updateStatus({{ order['id'] }}, 'delivered', this)"
+                    style="padding:7px 16px; background:#155724; color:white;
+                           border:none; border-radius:6px; font-size:13px;
+                           font-weight:600; cursor:pointer;">
+                 Mark as Delivered
+            </button>
+            {% endif %}
+
+        </div>
+
     </div>
     {% endfor %}
 
@@ -74,7 +112,7 @@
                 border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <p style="font-size:50px;">📋</p>
         <p style="font-size:18px; font-weight:bold; color:#555; margin:15px 0;">
-            No orders yet! 
+            No orders yet!
         </p>
         <p style="color:#888;">Orders will appear here when buyers purchase your products.</p>
     </div>
@@ -82,7 +120,165 @@
 
     <a href="/seller_dashboard"
        style="display:inline-block; margin-top:10px; color:#800000; font-size:14px;">
-        ← Back to Dashboard 
+        ← Back to Dashboard
     </a>
 </div>
+
+<!-- ── TRACKING MODAL (same UI as buyer) ───────────────────── -->
+<div id="trackingModal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+            z-index:1000; align-items:center; justify-content:center;">
+
+    <div style="background:white; border-radius:16px; padding:32px 28px;
+                max-width:460px; width:90%; box-shadow:0 8px 30px rgba(0,0,0,0.18);
+                position:relative;">
+
+        <button onclick="closeTracking()"
+                style="position:absolute; top:14px; right:16px; background:none;
+                       border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+
+        <h3 style="margin:0 0 6px; font-size:17px; color:#333;"> Order Tracking</h3>
+        <p id="trackOrderId" style="margin:0 0 24px; font-size:13px; color:#888;"></p>
+
+        <div style="position:relative; padding-left:28px;">
+            <div id="trackLine"
+                 style="position:absolute; left:10px; top:12px; width:2px;
+                        background:#e0e0e0; bottom:12px; border-radius:2px;">
+                <div id="trackLineFill"
+                     style="width:100%; background:#800000; border-radius:2px;
+                            transition:height 0.5s ease;"></div>
+            </div>
+
+            <!-- Step: Order Placed -->
+            <div style="display:flex; align-items:flex-start; margin-bottom:24px; position:relative;">
+                <div style="width:20px; height:20px; border-radius:50%;
+                     background:#800000; border:3px solid white; box-shadow:0 0 0 2px #800000;
+                     position:absolute; left:-28px; top:1px;"></div>
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#333;">Order Placed</div>
+                    <div id="track-placed-date" style="font-size:12px; color:#888; margin-top:2px;"></div>
+                </div>
+            </div>
+
+            <!-- Step: Payment Confirmed -->
+            <div style="display:flex; align-items:flex-start; margin-bottom:24px; position:relative;">
+                <div id="dot-paid" style="width:20px; height:20px; border-radius:50%;
+                     position:absolute; left:-28px; top:1px;"></div>
+                <div>
+                    <div id="lbl-paid" style="font-size:14px; font-weight:700;"></div>
+                    <div style="font-size:12px; color:#888; margin-top:2px;">Payment verified</div>
+                </div>
+            </div>
+
+            <!-- Step: Shipped -->
+            <div style="display:flex; align-items:flex-start; margin-bottom:24px; position:relative;">
+                <div id="dot-shipped" style="width:20px; height:20px; border-radius:50%;
+                     position:absolute; left:-28px; top:1px;"></div>
+                <div>
+                    <div id="lbl-shipped" style="font-size:14px; font-weight:700;"></div>
+                    <div style="font-size:12px; color:#888; margin-top:2px;">Order is on the way</div>
+                </div>
+            </div>
+
+            <!-- Step: Delivered -->
+            <div style="display:flex; align-items:flex-start; position:relative;">
+                <div id="dot-delivered" style="width:20px; height:20px; border-radius:50%;
+                     position:absolute; left:-28px; top:1px;"></div>
+                <div>
+                    <div id="lbl-delivered" style="font-size:14px; font-weight:700;"></div>
+                    <div style="font-size:12px; color:#888; margin-top:2px;">Package received</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="trackBanner"
+             style="margin-top:24px; padding:12px 16px; border-radius:10px;
+                    font-size:13px; font-weight:600; text-align:center;"></div>
+    </div>
+</div>
+
+<script>
+// ── Shared tracking modal (identical logic to buyer page) ──
+function showTracking(orderId, status, createdAt) {
+    document.getElementById('trackOrderId').textContent = 'Order #' + String(orderId).padStart(5, '0');
+    document.getElementById('track-placed-date').textContent = createdAt;
+
+    var steps     = ['paid', 'shipped', 'delivered'];
+    var stepIndex = steps.indexOf(status);
+    var labels    = { paid: 'Payment Confirmed', shipped: 'Out for Delivery', delivered: 'Delivered' };
+
+    steps.forEach(function(step, idx) {
+        var dot = document.getElementById('dot-' + step);
+        var lbl = document.getElementById('lbl-' + step);
+        lbl.textContent = labels[step];
+        if (idx <= stepIndex) {
+            dot.style.background  = '#800000';
+            dot.style.border      = '3px solid white';
+            dot.style.boxShadow   = '0 0 0 2px #800000';
+            lbl.style.color       = '#333';
+        } else {
+            dot.style.background  = '#e0e0e0';
+            dot.style.border      = '3px solid white';
+            dot.style.boxShadow   = '0 0 0 2px #ccc';
+            lbl.style.color       = '#aaa';
+        }
+    });
+
+    var fillPct = { paid: '33%', shipped: '66%', delivered: '100%' };
+    document.getElementById('trackLineFill').style.height = fillPct[status] || '0%';
+
+    var banners = {
+        paid:      { text: ' Payment confirmed — ready to ship',  bg: '#d4edda', color: '#155724' },
+        shipped:   { text: ' Order is on the way to the buyer',   bg: '#cce5ff', color: '#004085' },
+        delivered: { text: ' Order has been delivered!',           bg: '#d4edda', color: '#155724' }
+    };
+    var b = banners[status];
+    var banner = document.getElementById('trackBanner');
+    banner.textContent      = b.text;
+    banner.style.background = b.bg;
+    banner.style.color      = b.color;
+
+    document.getElementById('trackingModal').style.display = 'flex';
+}
+
+function closeTracking() {
+    document.getElementById('trackingModal').style.display = 'none';
+    document.getElementById('trackLineFill').style.height  = '0%';
+}
+
+document.getElementById('trackingModal').addEventListener('click', function(e) {
+    if (e.target === this) closeTracking();
+});
+
+// ── Update order status (seller only) ──
+function updateStatus(orderId, newStatus, btn) {
+    var label = newStatus === 'shipped' ? 'mark this order as Shipped' : 'mark this order as Delivered';
+    if (!confirm('Are you sure you want to ' + label + '?')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Updating…';
+
+    fetch('/seller/update_order_status/' + orderId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            // Reload page so badges + buttons refresh
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Could not update status.'));
+            btn.disabled = false;
+            btn.textContent = newStatus === 'shipped' ? ' Mark as Shipped' : ' Mark as Delivered';
+        }
+    })
+    .catch(function() {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+    });
+}
+</script>
+
 {% endblock %}
