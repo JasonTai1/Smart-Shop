@@ -34,9 +34,9 @@
 
     <div class="nav-top">
       <!-- Logo -->
-      <a class="logo" href="/">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" style="height: 70px;">
-      </a>
+    <span class="logo" style="cursor:default;">
+       <img src="{{ url_for('static', filename='images/logo.png') }}" style="height: 70px;">
+    </span>
 
       <!-- Nav Links -->
       <ul class="nav-links">
@@ -55,7 +55,6 @@
 
       <!-- Right Side -->
       <div class="nav-right">
-        <button class="icon-btn" title="Search">🔍</button>
 
         {% if session.get('user_id') %}
           <a href="/profile" class="elegant-profile-btn">

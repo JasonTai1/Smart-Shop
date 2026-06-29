@@ -2,7 +2,7 @@
 # app.py — Smart Shop
 # ════════════════════════════════════════════
 
-from flask import Flask, render_template, request, redirect, session,url_for
+from flask import Flask, render_template, request, redirect, session,url_for, flash, Response, abort
 from routes.main import main 
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,6 +16,9 @@ from email.mime.multipart import MIMEMultipart
 from models import db,Product,ForumPost,Comment
 import os
 from werkzeug.utils import secure_filename
+import csv
+import io
+from functools import wraps
 # secure_filename = makes filename safe to save
 # Example: "my photo!.jpg" → "my_photo_.jpg"
 
@@ -26,7 +29,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
-PRICE_ALERTS = []
+
 # ── Email Settings ──────────────────
 SMTP_EMAIL    = "smartshop.noreply1234@gmail.com"
 # The Gmail that SENDS the OTP
@@ -220,6 +223,104 @@ def init_db():
             FOREIGN KEY (seller_id) REFERENCES users(id)
         )
     """)
+
+# ── Price Alerts Table  ──
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS price_alerts (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            buyer_id     INTEGER NOT NULL,
+            product_id   INTEGER NOT NULL,
+            target_price REAL NOT NULL,
+            created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (buyer_id)   REFERENCES users(id),
+            FOREIGN KEY (product_id) REFERENCES products(id),
+            UNIQUE(buyer_id, product_id) 
+        )
+    """)
+
+# ── Payout History Log Table  ──
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS payout_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            seller_id INTEGER NOT NULL,
+            gross_amount REAL NOT NULL,
+            platform_fee REAL NOT NULL,
+            net_paid REAL NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (seller_id) REFERENCES users(id)
+        )
+    """)
+
+# ==============================================================================
+# RBAC (Role-Based Access Control) SECURITY ENGINE
+# ==============================================================================
+
+# ─── The Security Guard Decorator (@admin_required) ───
+def admin_required(f):
+    """
+    This is a custom Python decorator. It acts as a strict security checkpoint 
+    stacked directly on top of protected administrative routes.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Security Check 1: Does the browser have an active logged-in user session?
+        if "user_id" not in session:
+            flash("System Security: You must login first to access the administration portal.", "warning")
+            return redirect("/login")
+        
+        # Security Check 2: Is the logged-in user's role explicitly defined as 'admin'?
+        if session.get("role") != "admin":
+            # If the user is a standard 'buyer' or 'seller', trigger HTTP 403 Forbidden Error immediately!
+            abort(403)
+            
+        # If both security checks pass, grant access and execute the actual route function
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# ─── The HTTP 403 Access Denied Interceptor ───
+@app.errorhandler(403)
+def access_forbidden_error(error):
+    """
+    When abort(403) is triggered above, Flask catches it here and renders 
+    our custom security warning page instead of crashing the server.
+    """
+    # Grab the identity of the trespasser from their session
+    current_username = session.get("username", "Guest")
+    current_user_role = session.get("role", "Unknown")
+    
+    # Render the 403 violation page and send a 403 HTTP status code back to the browser
+    return render_template("403.html", username=current_username, role=current_user_role), 403
+
+
+# ─ Automated Super-Admin Account Generator (The Seeder) ───
+def seed_default_admin():
+    """
+    Runs automatically when the Flask app starts. If it detects that the database 
+    has zero 'admin' accounts, it injects an official master admin account.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Scan the users table to verify if an administrator already exists
+    cursor.execute("SELECT id FROM users WHERE role = 'admin'")
+    admin_exists = cursor.fetchone()
+    
+    # If the database is completely missing an admin user, create one!
+    if not admin_exists:
+        default_email = "admin@smartshop.com"
+        # Generate an encrypted cryptographic password hash for 'SmartShop_Admin_2026'
+        secure_pass = generate_password_hash("SmartShop_Admin_2026")
+        
+        cursor.execute("""
+            INSERT INTO users (first_name, last_name, username, email, password, role, city, state)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, ("System", "Administrator", "SuperAdmin", default_email, secure_pass, "admin", "Cyberjaya", "Selangor"))
+        
+        conn.commit()
+        print(" [SYSTEM BOOT]: Successfully auto-provisioned default root Admin (admin@smartshop.com)")
+
+
     # tng_phone    = TNG registered phone number 
     # bank_name    = bank name 
     # bank_account = account number 
@@ -581,6 +682,8 @@ def login():
                 session["state"]      = user["state"]
                 session["created_at"] = user["created_at"]
 
+                if user["role"] == "admin":
+                    return redirect("/admin")
                 if user["role"] == "seller":
                     return redirect("/seller_dashboard")
                 else:
@@ -656,6 +759,10 @@ def profile():
 def seller_dashboard():
     if "user_id" not in session:
         return redirect("/login")
+    
+    # ———— Admin Bounce Protection ——————
+    if session["role"] == "admin":
+        return redirect("admin")
     if session["role"] != "seller":
         return redirect("/buyer_dashboard")
 
@@ -900,6 +1007,10 @@ def delete_product(product_id):
 def buyer_dashboard():
     if "user_id" not in session:
         return redirect("/login")
+    
+    # —————— Admin Bounce Protection ————————
+    if session["role"] =="admin":
+        return redirect("/admin")
     if session["role"] != "buyer":
         return redirect("/seller_dashboard")
 
@@ -926,23 +1037,20 @@ def buyer_dashboard():
     result = cursor.fetchone()
     cart_count = result[0] if result[0] else 0
     # if result[0] is None (empty cart), use 0
+
+    cursor.execute("""
+        SELECT p.name, p.price, a.target_price, p.id as product_id
+        FROM price_alerts a
+        JOIN products p ON a.product_id = p.id
+        WHERE a.buyer_id = ? AND p.price <= a.target_price
+    """, (session["user_id"],))
+    triggered_alerts = cursor.fetchall()
+
+    for alert in triggered_alerts:
+        flash(f"🚨 PRICE DROP ALERT: '{alert['name']}' is now RM {alert['price']:.2f}! (Your target was RM {alert['target_price']:.2f})", "info")
+
+
     conn.close()
-
-#Jason part-----------
-    for alert in PRICE_ALERTS:
-        p_id = alert['product_id']
-        target = alert['target_price']
-        
-        product = Product.query.get(p_id)
-        if product:
-            try:
-                current_price_num = float(product.price.replace('RM', '').replace(',', '').strip())
-                if current_price_num <= target:
-                    # 以前是 print，现在换成 flash 发送给网页
-                    flash(f"🚨 Price Alert：{product.name} is now {product.price}，reaching your target of RM{target}！", "warning")
-            except ValueError:
-                pass 
-
 
     return render_template("buyer_dashboard.html",
         first_name = session["first_name"],
@@ -1020,7 +1128,7 @@ def view_cart():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get all cart items with product details
+     # Get all cart items with product details
     cursor.execute("""
         SELECT
             cart.id        as cart_id,
@@ -1043,7 +1151,6 @@ def view_cart():
     # Calculate total price 
     total = sum(item["subtotal"] for item in items)
     # sum() = adds up all subtotals
-
     conn.close()
 
     return render_template("cart.html",
@@ -1093,6 +1200,81 @@ def remove_from_cart(cart_id):
 
     return redirect("/cart")
 
+# ── CHECKOUT SELECTED ITEMS ──────
+@app.route("/checkout_selected", methods=["POST"])
+def checkout_selected():
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    # Get selected cart item IDs from form
+    selected_items = request.form.getlist("selected_items")
+    # getlist() = gets ALL values with same name
+    # Returns list like: ["3", "5", "7"]
+
+    if not selected_items:
+        return redirect("/cart")
+
+    # Save selected cart IDs in session
+    session["selected_cart_ids"] = selected_items
+    # We use this in checkout to only process selected items
+
+    return redirect("/checkout")
+
+# ── BUY NOW  ──────────────────────────
+@app.route("/buy_now/<int:product_id>", methods=["POST"])
+def buy_now(product_id):
+    if "user_id" not in session:
+        return redirect("/login")
+    if session["role"] != "buyer":
+        return redirect("/seller_dashboard")
+
+    quantity = int(request.form.get("quantity", 1))
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Check product exists and has stock
+    cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
+    product = cursor.fetchone()
+
+    if not product or product["stock"] < quantity:
+        conn.close()
+        return redirect("/")
+
+    # Check if already in cart
+    cursor.execute("""
+        SELECT * FROM cart
+        WHERE buyer_id=? AND product_id=?
+    """, (session["user_id"], product_id))
+    existing = cursor.fetchone()
+
+    if existing:
+        # Update quantity 
+        cursor.execute("""
+            UPDATE cart SET quantity = quantity + ?
+            WHERE buyer_id=? AND product_id=?
+        """, (quantity, session["user_id"], product_id))
+        cart_id = existing["id"]
+    else:
+        # Add to cart 
+        cursor.execute("""
+            INSERT INTO cart (buyer_id, product_id, quantity)
+            VALUES (?, ?, ?)
+        """, (session["user_id"], product_id, quantity))
+        cart_id = cursor.lastrowid
+        # lastrowid = ID of just inserted row
+
+    conn.commit()
+    conn.close()
+
+    # Set ONLY this item as selected for checkout
+    session["selected_cart_ids"] = [str(cart_id)]
+
+    # Go directly to checkout!
+    return redirect("/checkout")
+
 # ════════════════════════════════════════════
 # CHECKOUT SYSTEM 
 # ════════════════════════════════════════════
@@ -1102,14 +1284,21 @@ def remove_from_cart(cart_id):
 def checkout():
     if "user_id" not in session:
         return redirect("/login")
+    
+    selected_ids = session.get("selected_cart_ids", [])
+    
     if session["role"] != "buyer":
         return redirect("/seller_dashboard")
 
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get cart items
-    cursor.execute("""
+    # Create placeholders for SQL query
+    placeholders = ",".join(["?" for _ in selected_ids])
+    # If selected_ids = ["3","5","7"]
+    # placeholders = "?,?,?"
+
+    cursor.execute(f"""
         SELECT
             cart.id        as cart_id,
             cart.quantity,
@@ -1122,9 +1311,15 @@ def checkout():
         FROM cart
         JOIN products ON cart.product_id = products.id
         WHERE cart.buyer_id = ?
+        AND cart.id IN ({placeholders})
         ORDER BY cart.created_at DESC
-    """, (session["user_id"],))
+    """, [session["user_id"]] + list(selected_ids))
+    # AND cart.id IN (?,?,?) = only selected items!
     items = cursor.fetchall()
+
+    # Calculate total price 
+    total = sum(item["subtotal"] for item in items)
+    # sum() = adds up all subtotals
 
     # If cart is empty redirect back
     if not items:
@@ -1181,11 +1376,17 @@ def checkout():
             """, (item["quantity"], item["product_id"]))
             # stock = stock - quantity
 
-        # Clear the cart after order placed
-        cursor.execute("""
-            DELETE FROM cart WHERE buyer_id = ?
-        """, (session["user_id"],))
+       # Only delete SELECTED items from cart
+        placeholders = ",".join(["?" for _ in selected_ids])
+        cursor.execute(f"""
+            DELETE FROM cart
+            WHERE buyer_id = ?
+            AND id IN ({placeholders})
+        """, [session["user_id"]] + list(selected_ids))
+        # Other items STAY in cart! 
 
+        # Clear selected items from session
+        session.pop("selected_cart_ids", None)
         conn.commit()
         conn.close()
 
@@ -1275,15 +1476,11 @@ def payment():
 
         return redirect("/payment_success")
 
-    # Check if TNG QR exists 
-    tng_qr_exists = os.path.exists('static/images/tng_qr.png')
-
     return render_template("payment.html",
-        order_id      = order_id,
-        order_total   = order_total,
-        error         = error,
-        tng_qr_exists = tng_qr_exists
-    )
+         order_id    = order_id,
+         order_total = order_total,
+         error       = error
+        )
 
 # ── PAYMENT SUCCESS PAGE  ────────────
 @app.route("/payment_success")
@@ -1675,26 +1872,9 @@ def product_detail(id):
         cart_count=cart_count
     )
 
-@app.route('/set-alert/<int:id>/<int:target>')
-def set_alert(id, target):
-    already_exists = False
-    for alert in PRICE_ALERTS:
-        if alert['product_id'] == id:
-            alert['target_price'] = target
-            already_exists = True
-            break
-            
-    if not already_exists:
-        PRICE_ALERTS.append({
-            'product_id': id,
-            'target_price': target
-        })
-
-    print(PRICE_ALERTS)
-
-    return redirect(f'/product/{id}')
 
 @app.route("/admin")
+@admin_required
 def admin_dashboard():
     if "user_id" not in session:
         return redirect("/login")
@@ -1725,6 +1905,9 @@ def admin_dashboard():
     pending_approval_list = cursor.fetchall()
     
     conn.close()
+
+    # Fetch all forum posts ordered by newest first
+    all_posts = ForumPost.query.order_by(ForumPost.id.desc()).all()
     
     return render_template(
         "Admin/dashboard.html",
@@ -1734,6 +1917,263 @@ def admin_dashboard():
         revenue=revenue,
         pending_orders=pending_approval_list 
     )
+
+@app.route("/admin/delete_post/<int:post_id>")
+def admin_delete_post(post_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    post = ForumPost.query.get_or_404(post_id)
+
+    # Delete all associated comments first to prevent orphaned data
+    Comment.query.filter_by(post_id=post_id).delete()
+
+    db.session.delete(post)
+    db.session.commit()
+
+    return redirect("/admin/forum")
+
+@app.route("/admin/forum")
+def admin_forum_page():
+    if "user_id" not in session:
+        return redirect("/login")
+        
+    # Fetch all forum posts ordered by newest first
+    all_posts = ForumPost.query.order_by(ForumPost.id.desc()).all()
+    
+    return render_template("Admin/forum.html", forum_posts=all_posts)
+
+# ============================================================
+# ADMIN PAYOUT MANAGEMENT (Features 1, 2, & 3 combined)
+# ============================================================
+
+# ── ROUTE A: Main Payout Dashboard & 2% Fee Calculator ──
+@app.route("/admin/payouts")
+def admin_payouts():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # 1. Fetch all sellers who have configured their banking/TNG details
+    cursor.execute("""
+        SELECT u.id as seller_id, u.username, u.email,
+               p.tng_phone, p.bank_name, p.bank_account, p.bank_holder
+        FROM users u
+        JOIN seller_payout p ON u.id = p.seller_id
+    """)
+    sellers = cursor.fetchall()
+
+    payout_list = []
+    total_platform_pending = 0.0
+    total_platform_commission = 0.0
+
+    for s in sellers:
+        sid = s["seller_id"]
+
+        # 2. Calculate lifetime gross sales of this seller from completed orders
+        cursor.execute("""
+            SELECT COALESCE(SUM(oi.price * oi.quantity), 0)
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            JOIN orders o ON oi.order_id = o.id
+            WHERE p.seller_id = ?
+            AND o.status IN ('paid', 'shipped', 'delivered', 'completed')
+        """, (sid,))
+        gross_sales = cursor.fetchone()[0]
+
+        # 3. Apply Feature 3: Platform Service Fee (2%)
+        platform_fee = gross_sales * 0.02
+        net_earnings = gross_sales * 0.98
+
+        # 4. Check how much we have already paid this seller in the past
+        cursor.execute("""
+            SELECT COALESCE(SUM(net_paid), 0)
+            FROM payout_history
+            WHERE seller_id = ?
+        """, (sid,))
+        already_paid = cursor.fetchone()[0]
+
+        # 5. Calculate remaining unpaid balance
+        pending_payable = net_earnings - already_paid
+        
+        # Clean up weird floating point decimals (e.g., 0.000000001 -> 0)
+        if pending_payable < 0.01:
+            pending_payable = 0.0
+
+        total_platform_pending += pending_payable
+        total_platform_commission += platform_fee
+
+        payout_list.append({
+            "seller_id": sid,
+            "username": s["username"],
+            "email": s["email"],
+            "tng_phone": s["tng_phone"],
+            "bank_name": s["bank_name"],
+            "bank_account": s["bank_account"],
+            "bank_holder": s["bank_holder"],
+            "gross_sales": gross_sales,
+            "platform_fee": platform_fee,
+            "already_paid": already_paid,
+            "pending_payable": pending_payable
+        })
+
+    # 6. Fetch recent completed payout logs (Feature 1 History)
+    cursor.execute("""
+        SELECT ph.*, u.username
+        FROM payout_history ph
+        JOIN users u ON ph.seller_id = u.id
+        ORDER BY ph.created_at DESC
+        LIMIT 10
+    """)
+    history_logs = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "Admin/payouts.html",
+        payouts=payout_list,
+        total_pending=total_platform_pending,
+        total_commission=total_platform_commission,
+        history_logs=history_logs
+    )
+
+
+# ── ROUTE B: Trigger 'Mark as Paid' (Feature 1 Action) ──
+@app.route("/admin/payouts/mark_paid/<int:seller_id>", methods=["POST"])
+def mark_payout_paid(seller_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    # Retrieve financial breakdown from hidden form inputs
+    gross_sales = float(request.form.get("gross_sales", 0))
+    platform_fee = float(request.form.get("platform_fee", 0))
+    net_paid = float(request.form.get("net_paid", 0))
+
+    if net_paid > 0:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO payout_history (seller_id, gross_amount, platform_fee, net_paid)
+            VALUES (?, ?, ?, ?)
+        """, (seller_id, gross_sales, platform_fee, net_paid))
+        conn.commit()
+        conn.close()
+        flash("Payout successfully recorded into history log!", "success")
+
+    return redirect("/admin/payouts")
+
+
+# ── ROUTE C: Bulk Export CSV (Feature 2 Action) ──
+@app.route("/admin/payouts/export_csv")
+def export_payouts_csv():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT u.id as seller_id, u.username, u.email,
+               p.tng_phone, p.bank_name, p.bank_account, p.bank_holder
+        FROM users u
+        JOIN seller_payout p ON u.id = p.seller_id
+    """)
+    sellers = cursor.fetchall()
+
+    # Create an in-memory string buffer to write CSV data
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write CSV Column Headers
+    writer.writerow([
+        "Seller ID", "Seller Name", "Email", "TNG Phone", 
+        "Bank Name", "Bank Account", "Account Holder", 
+        "Gross Sales (RM)", "2% Fee (RM)", "Net Payable Owed (RM)"
+    ])
+
+    for s in sellers:
+        sid = s["seller_id"]
+        
+        cursor.execute("""
+            SELECT COALESCE(SUM(oi.price * oi.quantity), 0)
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            JOIN orders o ON oi.order_id = o.id
+            WHERE p.seller_id = ?
+            AND o.status IN ('paid', 'shipped', 'delivered', 'completed')
+        """, (sid,))
+        gross = cursor.fetchone()[0]
+        
+        already_paid = cursor.execute("SELECT COALESCE(SUM(net_paid), 0) FROM payout_history WHERE seller_id = ?", (sid,)).fetchone()[0]
+        net = (gross * 0.98) - already_paid
+        
+        # Only export sellers who actually have money owed to them
+        if net > 0.01:
+            writer.writerow([
+                sid, s["username"], s["email"], 
+                s["tng_phone"] or "-", s["bank_name"] or "-", 
+                s["bank_account"] or "-", s["bank_holder"] or "-",
+                f"{gross:.2f}", f"{gross*0.02:.2f}", f"{net:.2f}"
+            ])
+
+    conn.close()
+
+    # Convert buffer to Flask downloadable HTTP response
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=SmartShop_Pending_Payouts.csv"
+    return response
+
+# ── SET PRICE ALERT  ──
+@app.route("/set_price_alert/<int:product_id>", methods=["POST"])
+def set_price_alert(product_id):
+    if "user_id" not in session or session.get("role") != "buyer":
+        return redirect("/login")
+
+    target_price = request.form.get("target_price")
+    
+    if not target_price:
+        flash("Please enter a target price.", "warning")
+        return redirect(f"/product/{product_id}")
+
+    try:
+        target_price = float(target_price)
+        if target_price <= 0:
+            flash("Target price must be greater than RM 0.", "warning")
+            return redirect(f"/product/{product_id}")
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id FROM price_alerts 
+            WHERE buyer_id = ? AND product_id = ?
+        """, (session["user_id"], product_id))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute("""
+                UPDATE price_alerts 
+                SET target_price = ?, created_at = CURRENT_TIMESTAMP
+                WHERE buyer_id = ? AND product_id = ?
+            """, (target_price, session["user_id"], product_id))
+            msg = f"Target price updated to RM {target_price:.2f}!"
+        else:
+            cursor.execute("""
+                INSERT INTO price_alerts (buyer_id, product_id, target_price)
+                VALUES (?, ?, ?)
+            """, (session["user_id"], product_id, target_price))
+            msg = f"Price alert successfully set for RM {target_price:.2f}!"
+
+        conn.commit()
+        conn.close()
+        flash(msg, "success")
+
+    except ValueError:
+        flash("Invalid price format entered.", "warning")
+
+    return redirect(f"/product/{product_id}")
+
 
 @app.route("/admin/approve_payment/<int:order_id>")
 def admin_approve_payment(order_id):
@@ -2148,4 +2588,5 @@ with app.app_context():
 # ── RUN  ─────────────────────────────────
 if __name__ == "__main__":
     init_db()
+    seed_default_admin()
     app.run(debug=True)
