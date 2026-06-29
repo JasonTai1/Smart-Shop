@@ -1476,15 +1476,11 @@ def payment():
 
         return redirect("/payment_success")
 
-    # Check if TNG QR exists 
-    tng_qr_exists = os.path.exists('static/images/tng_qr.png')
-
     return render_template("payment.html",
-        order_id      = order_id,
-        order_total   = order_total,
-        error         = error,
-        tng_qr_exists = tng_qr_exists
-    )
+         order_id    = order_id,
+         order_total = order_total,
+         error       = error
+        )
 
 # ── PAYMENT SUCCESS PAGE  ────────────
 @app.route("/payment_success")
