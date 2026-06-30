@@ -46,9 +46,9 @@ class Comment(db.Model):
     
     content = db.Column(db.Text, nullable=False)
     
-    author = db.Column(db.String(100), nullable=False) # 存名字展示（如 session["username"]）
+    author = db.Column(db.String(100), nullable=False) 
     
-    user_id = db.Column(db.Integer, nullable=False)    # 🔥 核心：必须存是谁发的 ID
+    user_id = db.Column(db.Integer, nullable=False)   
     
     post_id = db.Column(db.Integer, db.ForeignKey('forum_post.id'), nullable=False)
 

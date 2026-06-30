@@ -139,21 +139,33 @@
       <!-- Add to Cart — only show if logged in as buyer -->
       {% if session.get('user_id') and session.get('role') == 'buyer' %}
       <form method="POST" action="/cart/add/{{ product['id'] }}"
-            style="display:flex; gap:6px; padding:0 15px 15px;">
-        <input type="number" name="quantity" value="1" min="1"
-               max="{{ product['stock'] }}"
-               style="width:55px; padding:7px; border:1px solid #ddd;
-                      border-radius:4px; text-align:center; font-size:14px;">
-        <a href="{{ url_for('product_detail',id=product['id']) }}" class="btn-view">
-        View
-        </a>
-        <button type="submit"
-                style="flex:1; padding:8px; background:#800000; color:white;
-                       border:none; border-radius:6px; cursor:pointer;
-                       font-weight:bold; font-size:13px;">
-          🛒 Add to Cart
-        </button>
-      </form>
+      style="display: flex; flex-direction: column; gap: 10px; padding: 0 15px 15px;">
+  
+  <div style="display: flex; gap: 8px; width: 100%;">
+    <input type="number" name="quantity" value="1" min="1" max="{{ product['stock'] }}"
+           style="width: 60px; height: 38px; padding: 0; border: 1px solid #ddd;
+                  border-radius: 6px; text-align: center; font-size: 14px; box-sizing: border-box;">
+    
+    <a href="{{ url_for('product_detail', id=product['id']) }}" 
+       style="flex: 1; display: inline-flex; align-items: center; justify-content: center;
+              height: 38px; border: 1px solid #800000; color: #800000;
+              border-radius: 6px; font-size: 14px; font-weight: bold; text-decoration: none; box-sizing: border-box;">
+      View Detail
+    </a>
+  </div>
+
+  <button type="submit"
+          style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+                 height: 40px; background: #800000; color: white;
+                 border: none; border-radius: 6px; cursor: pointer;
+                 font-weight: bold; font-size: 14px; white-space: nowrap; box-sizing: border-box;">
+    <span>🛒</span>
+    <span>Add to Cart</span>
+  </button>
+  
+</form>
+
+
 
       {% elif not session.get('user_id') %}
       <!-- Not logged in — show login prompt -->

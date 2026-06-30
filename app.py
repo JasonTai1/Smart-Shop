@@ -189,7 +189,8 @@ def init_db():
     # product_id = which product
     # quantity   = how many
     # price      = price at time of order
-    
+
+# __Forum page__    
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS forum_post (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -200,7 +201,7 @@ def init_db():
         views INTEGER DEFAULT 0
        )
    """)
-
+# __Comment__
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS comment (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2244,54 +2245,72 @@ def admin_approve_payment(order_id):
 def helpcentre():
     return render_template('helpcentre.html')
 
+# ==========================================
+# ROUTE : Forum Homepage - Displays All Posts
+# ==========================================
 @app.route('/forum')
 def forum():
-    
+     # 1. Fetch all post records from the database using ORM
     posts = ForumPost.query.all()
-
+     
+     # 2. Render the frontend page and pass the 'posts' list to the HTML template
     return render_template(
         'forum.html',
         posts=posts
     )
 
-
+# ==========================================
+# ROUTE : Create a New Post (Handles Files)
+# ==========================================
 @app.route('/forum/add', methods=['GET', 'POST'])
 def add_post():
     # Force user to login before they can create a post
     if "user_id" not in session:
         return redirect('/login')
-
+    
+    #Handle data submission when the user clicks "Submit" (POST request)
     if request.method == 'POST':
         title = request.form['title']
         content = request.form['content']
+    # Feature: Automatically fetch the current username from the session for identity security
         author = session["username"]
-        
+       
+        #[File Upload Handling] Get the uploaded image file object from the form
         file = request.files.get('post_image')
-        image_url = None 
-        
+        image_url = None # Default value if no image is uploaded
+
+        # If file exists, process it
         if file and file.filename != '':
+            # Secure the filename
             filename = secure_filename(file.filename)
             
+            # Add timestamp to prevent duplicate names
             import time
             filename = f"{int(time.time())}_{filename}"
-            
+            # Save file to server folder
             file.save(os.path.join(UPLOAD_FOLDER, filename))
-            
+            # Set image path for database
             image_url = f"/static/uploads/{filename}"
         
+        # Create new post object
         post = ForumPost(
             title=request.form['title'],
             content=request.form['content'],
             author=session["username"],  # <-- Automatically saves who created it
             image_url=image_url
         )
+        # Save to database
         db.session.add(post)
         db.session.commit()
 
+        # Go back to forum homepage
         return redirect('/forum')
-
+    # Show the blank form page (GET request)
     return render_template('add_post.html')
 
+# ==========================================
+# ROUTE : Delete forum post
+# ==========================================
 @app.route("/delete_post/<int:id>")
 def delete_post(id):
     # 1. Security Check: Is the user even logged in?
@@ -2315,29 +2334,30 @@ def delete_post(id):
 
     return redirect("/forum")
 
-@app.route('/')
-def index():
-    products = Product.query.all()
-    return render_template('index.html', products=products)
-
+# ==========================================
+# View Post Details & Comments
+# ==========================================
 @app.route("/post/<int:id>")
 def view_post(id):
 
     post = ForumPost.query.get_or_404(id)
-
+    # Increase view count by 1 and save
     post.views += 1
     db.session.commit()
-
+    # Get all comments belonging to this specific post
     comments = Comment.query.filter_by(
         post_id=id
     ).all()
-
+    # Show the single post page with its comments
     return render_template(
         "view_post.html",
         post=post,
         comments=comments
     )
 
+# ==========================================
+# Like Button Feature
+# =========================================
 @app.route("/like_post/<int:id>")
 def like_post(id):
 
@@ -2347,6 +2367,7 @@ def like_post(id):
 
     db.session.commit()
 
+# Refresh the post page to show the updated likes
     return redirect(
         url_for("view_post", id=id)
     )
