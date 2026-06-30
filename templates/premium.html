@@ -110,7 +110,7 @@
 </div>
 
 
-<!-- 🔴 PAYMENT MODAL (隐藏的付款弹窗) -->
+<!-- 🔴 PAYMENT MODAL  -->
 <div class="payment-modal-overlay" id="paymentModal">
   <div class="payment-modal">
     <button class="close-modal" onclick="closePaymentModal()">✕</button>
@@ -150,18 +150,15 @@
   </div>
 </div>
 
-<!-- 🔴 JAVASCRIPT (控制弹窗开启和关闭) -->
+<!-- 🔴 JAVASCRIPT -->
 <script>
   function openPaymentModal(event, price) {
     event.preventDefault(); 
-    // 动态把顾客选的价格放进弹窗里
     document.getElementById('modalPrice').innerText = 'RM' + price + '.00';
-    // 显示弹窗
     document.getElementById('paymentModal').classList.add('active');
   }
 
   function closePaymentModal() {
-    // 隐藏弹窗
     document.getElementById('paymentModal').classList.remove('active');
   }
 </script>

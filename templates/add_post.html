@@ -7,7 +7,6 @@
 
     <form action="/forum/add" method="POST" style="display: flex; flex-direction: column; gap: 20px;" enctype="multipart/form-data">
         
-        <!-- 标题输入框 -->
         <div style="display: flex; flex-direction: column; gap: 8px;">
             <label style="font-size: 14px; font-weight: 500; color: #800000;">Post Title</label>
             <input type="text" name="title" placeholder="What's on your mind?" required
@@ -15,7 +14,6 @@
                    onfocus="this.style.borderColor='#333'" onblur="this.style.borderColor='#ddd'">
         </div>
 
-        <!-- 内容输入框 -->
         <div style="display: flex; flex-direction: column; gap: 8px;">
             <label style="font-size: 14px; font-weight: 500; color: #800000;">Content</label>
             <textarea name="content" placeholder="Share your experiences or ask questions..." rows="6" required
@@ -26,7 +24,7 @@
             <label for="post_image" class="form-label" style="display: block; font-weight: bold; margin-bottom: 5px; color: #800000;">➕ Upload Photo (Optional)</label>
             <input type="file" id="post_image" name="post_image" accept="image/*" style="padding: 5px; border: 1px solid #ccc; width: 100%; border-radius: 4px;">
         </div>
-        <!-- 提交按钮 -->
+        
         <button type="submit" 
                 style="width: 100%; margin-top: 10px; padding: 14px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s;"
                 onmouseover="this.style.background='#444'" onmouseout="this.style.background='#222'">
