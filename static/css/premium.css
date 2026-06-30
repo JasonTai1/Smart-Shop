@@ -114,7 +114,7 @@
   }
 
   /* =====================
-     HERO (保留样式，防止可能复用)
+     HERO 
   ===================== */
   .premium-page .hero {
     position: relative;
@@ -504,7 +504,7 @@
   }
 
   /* =====================
-   PAYMENT MODAL (付款弹窗)
+   PAYMENT MODAL 
 ===================== */
 .payment-modal-overlay {
   position: fixed;
@@ -515,7 +515,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 默认隐藏，加上 active 才会浮现 */
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
